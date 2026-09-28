@@ -1,0 +1,673 @@
+{
+  "app": {
+    "name": "Prospector",
+    "tagline": "Recherche plein texte locale",
+    "ribbon": "mon carnet de fouille"
+  },
+  "rail": {
+    "sites": "Sites de fouille",
+    "addSite": "Ajouter un dossier",
+    "includeInSearch": "Inclure {name} dans la recherche",
+    "recent": "Récents",
+    "saved": "Recherches enregistrées",
+    "expand": "Déplier le panneau",
+    "collapse": "Replier le panneau",
+    "docs": {
+      "one": "{count} document",
+      "many": "{count} de documents",
+      "other": "{count} documents"
+    },
+    "indexedAgo": "Indexé {when}",
+    "indexingProgress": "Indexation… {percent}",
+    "status": {
+      "ready": "Prêt",
+      "indexing": "Indexation",
+      "watching": "Suivi en direct",
+      "error": "Erreur",
+      "empty": "Non indexé"
+    },
+    "errors": {
+      "rootUnavailable": "Dossier introuvable : {path}"
+    },
+    "scanning": {
+      "one": "Recherche des fichiers… {count} trouvé",
+      "many": "Recherche des fichiers… {count} de trouvés",
+      "other": "Recherche des fichiers… {count} trouvés"
+    },
+    "saving": "Enregistrement de l’index…",
+    "reindex": "Mettre à jour",
+    "remove": "Retirer ce site de fouille",
+    "removeConfirm": "Retirer le site de fouille « {name} » et son index ? Vos fichiers ne sont pas touchés.",
+    "cancel": "Arrêter l’indexation",
+    "emptyTitle": "Aucun site de fouille",
+    "emptyHint": "Ajoutez un dossier : Prospector lit ses documents une fois, puis y retrouve tout instantanément.",
+    "skipped": {
+      "one": "{count} fichier illisible",
+      "many": "{count} de fichiers illisibles",
+      "other": "{count} fichiers illisibles"
+    },
+    "pickFolder": "Choisir un dossier à fouiller"
+  },
+  "groups": {
+    "title": "Groupes",
+    "hint": "Ctrl + chiffre",
+    "all": "Tous",
+    "add": "Groupe",
+    "addHint": "Enregistrer les sites cochés comme un groupe",
+    "name": "Nom du groupe",
+    "keep": {
+      "one": "Le site coché",
+      "many": "Les {count} de sites cochés",
+      "other": "Les {count} sites cochés"
+    },
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "rename": "Renommer",
+    "replace": {
+      "one": "Remplacer par le site coché",
+      "many": "Remplacer par les {count} de sites cochés",
+      "other": "Remplacer par les {count} sites cochés"
+    },
+    "remove": "Supprimer",
+    "shortcut": "Ctrl+{n}"
+  },
+  "share": {
+    "byThisPc": "Index partagé · tenu à jour par ce PC",
+    "holderHint": "Les autres PC qui utilisent ce dossier lisent ce que celui-ci indexe.",
+    "byOther": "Index partagé · tenu à jour par {pc}",
+    "readerHint": "Ce PC le lit seulement : les sites s’ajoutent et se mettent à jour depuis {pc}. Si {pc} reste éteint, ce PC prend le relais sous 2 minutes.",
+    "localSite": "« {name} » est sur un disque de ce PC : les autres PC verront ses résultats et son aperçu, sans pouvoir ouvrir ses fichiers."
+  },
+  "terms": {
+    "add": "Liste de termes",
+    "pick": "Choisir une liste de termes",
+    "fileKind": "Listes de termes",
+    "chip": "Liste :",
+    "title": "Liste de termes",
+    "mode": "Quels fichiers",
+    "any": "Au moins un",
+    "all": "Tous",
+    "anyHint": "Les fichiers qui contiennent au moins un de ces termes, en plus des mots de la recherche.",
+    "allHint": "Les fichiers qui contiennent chacun de ces termes, en plus des mots de la recherche.",
+    "hint": "Termes lus dans un fichier : cliquez pour les voir, changer le mode ou retirer la liste",
+    "count": {
+      "one": "{count} terme",
+      "many": "{count} de termes",
+      "other": "{count} termes"
+    },
+    "skipped": {
+      "one": "{count} ligne ignorée",
+      "many": "{count} de lignes ignorées",
+      "other": "{count} lignes ignorées"
+    },
+    "more": "… et {count} autres",
+    "report": "Rapport par terme…",
+    "replace": "Remplacer…",
+    "remove": "Retirer la liste",
+    "empty": "Aucun terme dans {name} (un terme par ligne)."
+  },
+  "sense": {
+    "title": "Recherche par le sens (IA locale)",
+    "intro": "Trouve aussi les documents qui disent la même chose avec d’autres mots, ou dans une autre langue : « contrat de location » trouve ⁨bail⁩, ⁨lease agreement⁩, ⁨عقد إيجار⁩. Tout reste sur ce PC.",
+    "download": "Télécharger le module ({size})",
+    "fromFile": "Installer depuis un fichier…",
+    "notYet": "Le téléchargement sera possible avec la première version publiée.",
+    "downloading": "Téléchargement… {done} / {total}",
+    "cancel": "Annuler",
+    "installed": "Module installé · Granite Embedding 97M (IBM) · {size} sur ce PC",
+    "next": "Choisissez ensuite les sites à comprendre (case « Sens » de chaque site).",
+    "remove": "Supprimer le module",
+    "removeConfirm": "Supprimer le module de recherche par le sens de ce PC ? Vous pourrez le réinstaller plus tard.",
+    "privacy": "Le modèle tourne sur votre processeur : aucun texte ne quitte ce PC.",
+    "installedNotice": "Module de recherche par le sens installé.",
+    "pickZip": "Choisir le module de recherche par le sens (ZIP)",
+    "zipKind": "Module Prospector"
+  },
+  "search": {
+    "label": "Rechercher dans vos fichiers",
+    "placeholder": "Mots, « phrase exacte », AND / OR / NOT / NEAR…",
+    "submit": "Fouiller !",
+    "stop": "Arrêter",
+    "mode": {
+      "label": "Mode de recherche",
+      "indexed": "Indexée",
+      "live": "Scan direct"
+    },
+    "options": {
+      "caseSensitive": "Respecter la casse",
+      "wholeWord": "Mot entier",
+      "regex": "Expression régulière",
+      "fuzzy": "Tolérance aux fautes"
+    },
+    "filters": "Filtres",
+    "save": "Enregistrer cette recherche",
+    "settings": "Réglages",
+    "scope": {
+      "one": "{count} site",
+      "many": "{count} de sites",
+      "other": "{count} sites"
+    },
+    "lead": "Je cherche :",
+    "names": {
+      "toggle": "Nom de fichier",
+      "lead": "Nommé",
+      "placeholder": "*.pdf ; facture-* ; !brouillon*",
+      "label": "Nom de fichier : jokers * et ?, ; entre plusieurs, ! pour exclure, /regex/",
+      "folders": "Dossiers",
+      "foldersHint": "Chercher des dossiers au lieu de fichiers",
+      "clear": "Retirer le critère de nom"
+    }
+  },
+  "filters": {
+    "title": "Filtres",
+    "reset": "Réinitialiser",
+    "active": {
+      "one": "{count} filtre actif",
+      "many": "{count} de filtres actifs",
+      "other": "{count} filtres actifs"
+    },
+    "types": "Type de fichier",
+    "kinds": {
+      "pdf": "PDF",
+      "word": "Word",
+      "excel": "Excel",
+      "powerpoint": "PowerPoint",
+      "text": "Texte",
+      "code": "Code source",
+      "archive": "Archives",
+      "email": "E-mails",
+      "folder": "Dossier",
+      "image": "Images"
+    },
+    "size": "Taille",
+    "sizes": {
+      "any": "Toutes tailles",
+      "lt1": "Moins de 1 Mo",
+      "1to10": "De 1 à 10 Mo",
+      "10to100": "De 10 à 100 Mo",
+      "gt100": "Plus de 100 Mo"
+    },
+    "modified": "Modifié",
+    "dates": {
+      "any": "N’importe quand",
+      "day": "Dernières 24 heures",
+      "week": "7 derniers jours",
+      "month": "30 derniers jours",
+      "year": "12 derniers mois",
+      "custom": "Période personnalisée"
+    },
+    "language": "Langue du document",
+    "excluded": "Dossiers exclus",
+    "addExcluded": "Exclure un dossier",
+    "removeExcluded": "Ne plus exclure {path}",
+    "refine": "Affiner",
+    "removeToken": "Retirer {name}",
+    "date": "Date",
+    "dateField": "Type de date",
+    "dateFields": {
+      "modified": "Modifié",
+      "created": "Créé",
+      "accessed": "Dernier accès"
+    },
+    "dateFrom": "Du",
+    "dateTo": "au",
+    "dateRange": "{from} → {to}",
+    "dateSince": "depuis le {from}",
+    "dateUntil": "jusqu’au {to}",
+    "dateToken": "{field} · {range}",
+    "accessedHint": "Lue sur le disque au moment de la recherche. Windows ne tient pas toujours cette date à jour.",
+    "attributes": "Attributs",
+    "attrs": {
+      "readOnly": "Lecture seule",
+      "hidden": "Caché",
+      "system": "Système"
+    },
+    "attributesHint": "Lus sur le disque au moment de la recherche.",
+    "hiddenIndexed": "Les fichiers cachés ne sont pas indexés : passez en Scan direct pour les trouver.",
+    "hash": "Empreinte (MD5 ou SHA-256)",
+    "hashPlaceholder": "32 ou 64 caractères de 0 à 9 et a à f",
+    "hashInvalid": "Une empreinte MD5 a 32 caractères, une SHA-256 en a 64 (chiffres et lettres a à f).",
+    "hashMd5": "MD5 : calculée sur les fichiers qui passent les autres critères.",
+    "hashSha256": "SHA-256 : calculée sur les fichiers qui passent les autres critères.",
+    "hashToken": "Empreinte {hash}",
+    "copiesToken": "Copies de {name}"
+  },
+  "results": {
+    "label": "Résultats",
+    "files": {
+      "one": "{count} fichier",
+      "many": "{count} de fichiers",
+      "other": "{count} fichiers"
+    },
+    "folders": {
+      "one": "{count} dossier",
+      "many": "{count} de dossiers",
+      "other": "{count} dossiers"
+    },
+    "matches": {
+      "one": "{count} correspondance",
+      "many": "{count} de correspondances",
+      "other": "{count} correspondances"
+    },
+    "duration": "{ms} ms",
+    "scanned": {
+      "one": "{count} fichier parcouru",
+      "many": "{count} de fichiers parcourus",
+      "other": "{count} fichiers parcourus"
+    },
+    "scanning": "Fouille en cours…",
+    "done": "Recherche terminée",
+    "sort": {
+      "label": "Trier par",
+      "relevance": "Pertinence",
+      "matches": "Correspondances",
+      "modified": "Date de modification",
+      "name": "Nom"
+    },
+    "columns": {
+      "name": "Nom",
+      "folder": "Dossier",
+      "matches": "Corresp.",
+      "size": "Taille",
+      "modified": "Modifié",
+      "language": "Langue"
+    },
+    "export": "Exporter",
+    "exportCsv": "Exporter en CSV",
+    "exportJson": "Exporter en JSON",
+    "line": "ligne {line}",
+    "empty": "Rien déterré",
+    "emptyHint": "Essayez un autre mot, retirez un filtre ou activez la tolérance aux fautes.",
+    "idle": "Tapez un mot et appuyez sur Entrée pour lancer la fouille.",
+    "matchesIn": {
+      "one": "trouvaille dans {files}",
+      "many": "de trouvailles dans {files}",
+      "other": "trouvailles dans {files}"
+    },
+    "moreActions": "Plus d’actions",
+    "noSites": "Ajoutez un site de fouille (le bouton + à gauche) pour commencer à chercher.",
+    "exported": "Exporté : {path}",
+    "approximate": "Correspondance approchante (tolérance aux fautes)",
+    "noExact": "Aucune correspondance exacte pour « {query} ». Ces fichiers contiennent des mots proches (tolérance aux fautes).",
+    "exportPdf": "Rapport PDF…",
+    "quickFilter": {
+      "label": "Filtrer la liste par nom ou dossier",
+      "placeholder": "Filtrer la liste (nom, dossier)…",
+      "shown": "{shown} sur {total}",
+      "none": "Aucun fichier de la liste ne contient « {filter} » dans son nom ou son dossier.",
+      "clear": "Effacer le filtre"
+    },
+    "within": {
+      "button": "Chercher dans ces résultats",
+      "hint": "Les prochaines recherches ne regardent que les fichiers affichés",
+      "chip": "Dans les résultats de « {query} » · {files}",
+      "placeholder": "Mots à chercher dans ces résultats ({files})…",
+      "clear": "Chercher partout à nouveau"
+    },
+    "file": {
+      "save": "Enregistrer les résultats…",
+      "open": "Ouvrir des résultats…",
+      "kind": "Résultats Prospector",
+      "saved": "Résultats enregistrés : {path}",
+      "invalid": "{name} n’est pas un fichier de résultats Prospector.",
+      "openedFrom": "ouvert depuis {name}"
+    },
+    "folder": {
+      "chip": "Dans : {path}",
+      "hint": "Recherche limitée à ce dossier (clic droit dans l’Explorateur)",
+      "placeholder": "Mots à chercher dans ce dossier…",
+      "clear": "Chercher dans tous les sites à nouveau"
+    }
+  },
+  "tabs": {
+    "label": "Onglets de recherche",
+    "new": "Nouvel onglet",
+    "close": "Fermer l’onglet",
+    "untitled": "Nouvelle recherche",
+    "running": "Recherche en cours",
+    "back": "Recherche précédente",
+    "forward": "Recherche suivante"
+  },
+  "preview": {
+    "label": "Aperçu",
+    "none": "Sélectionnez un résultat pour l’afficher ici.",
+    "occurrence": "{current} / {total}",
+    "prev": "Occurrence précédente",
+    "next": "Occurrence suivante",
+    "open": "Ouvrir",
+    "reveal": "Afficher dans le dossier",
+    "copyPath": "Copier le chemin",
+    "copied": "Chemin copié",
+    "size": "Taille",
+    "modified": "Modifié",
+    "language": "Langue",
+    "type": "Type",
+    "truncated": "Document long : seuls le début et les passages autour des correspondances sont affichés.",
+    "loading": "Chargement…",
+    "skipped": "Lignes non affichées",
+    "folder": "C’est un dossier. « Ouvrir » l’affiche dans l’Explorateur.",
+    "openAtLine": "Ouvrir à la ligne {line}",
+    "openAtLineHint": "Dans votre éditeur de code (Réglages → Intégration Windows)",
+    "lineLink": "Ouvrir à la ligne {line} dans l’éditeur",
+    "created": "Créé le {date}",
+    "copies": "Trouver les copies",
+    "copiesHint": "Fichiers identiques (même taille et même empreinte SHA-256) dans les sites cochés",
+    "extract": "Extraire vers…",
+    "extractHint": "Enregistrer ce fichier, sorti de son archive ou de son e-mail, où vous voulez",
+    "extracted": "Extrait : {path}",
+    "openInnerHint": "Ouvre ce fichier (une copie extraite) avec son application",
+    "hashing": "Calcul de l’empreinte…",
+    "imageLocating": "Recherche des mots sur l’image…",
+    "imageBoxes": {
+      "one": "{count} mot entouré sur l’image",
+      "many": "{count} de mots entourés sur l’image",
+      "other": "{count} mots entourés sur l’image"
+    },
+    "imageNoBoxes": "Les mots trouvés sont dans le texte lu ci-dessous, sans position précise sur l’image."
+  },
+  "languages": {
+    "en": "Anglais",
+    "fr": "Français",
+    "es": "Espagnol",
+    "ar": "Arabe",
+    "und": "Inconnue"
+  },
+  "settings": {
+    "title": "Réglages",
+    "language": "Langue de l’interface",
+    "theme": "Thème",
+    "close": "Fermer",
+    "layout": "Mise en page",
+    "layouts": {
+      "journal": {
+        "name": "Journal",
+        "hint": "Extraits complets sous chaque fichier"
+      },
+      "ledger": {
+        "name": "Registre",
+        "hint": "Tableau dense, filtres dans le panneau latéral"
+      },
+      "strata": {
+        "name": "Strates",
+        "hint": "Groupé par dossier, aperçu large"
+      }
+    },
+    "themes": {
+      "crayons": "Crayons de couleur (clair)",
+      "sonar": "Sonar (sombre)"
+    },
+    "dataDir": "Dossier des index",
+    "dataDirHint": "Les index peuvent prendre de la place : gardez-les sur le disque de votre choix. Les déplacer conserve vos sites de fouille.",
+    "dataDirChange": "Déplacer…",
+    "portable": "Mode portable",
+    "portableHint": "Tout est enregistré ici, à côté du programme : rien n’est écrit sur ce PC. Si le support change de lettre, Prospector suit. Le menu de l’Explorateur et le lancement au démarrage ne sont pas proposés.",
+    "dataDirPick": "Choisir où ranger les index",
+    "dataDirMoved": "Index déplacés vers {path}",
+    "shortcut": "Raccourci global",
+    "shortcutHint": "Fait apparaître Prospector depuis n’importe quelle application ; appuyez de nouveau pour le renvoyer.",
+    "shortcutNone": "Aucun",
+    "shortcutTaken": "Déjà utilisé par une autre application : choisissez-en un autre.",
+    "ocr": "Texte des images (OCR)",
+    "ocrOn": "Lire le texte des images et des PDF scannés",
+    "ocrHint": "Utilise la reconnaissance de texte intégrée à Windows. Langues : {languages}. Indexation plus lente pour les dossiers pleins de photos.",
+    "ocrUnavailable": "Aucune langue de reconnaissance de texte n’est installée dans Windows (Paramètres → Heure et langue → Langue).",
+    "ocrUpdating": "Vos sites sont mis à jour : les images et les PDF scannés sont lus."
+  },
+  "saved": {
+    "name": "Nom de la recherche",
+    "confirm": "Enregistrer",
+    "remove": "Retirer",
+    "removeNamed": "Retirer « {label} » des recherches enregistrées",
+    "done": "Recherche « {label} » enregistrée",
+    "saved": "Recherche enregistrée"
+  },
+  "keys": {
+    "ctrl": "Ctrl",
+    "cmd": "⌘",
+    "shift": "Maj",
+    "alt": "Alt",
+    "space": "Espace"
+  },
+  "report": {
+    "title": "Rapport de recherche",
+    "generated": "Généré le {date}",
+    "query": "Recherche",
+    "options": "Options",
+    "sites": "Sites fouillés",
+    "none": "Aucun",
+    "legend": "Surligné : correspondance exacte · souligné en vague : correspondance approchante (tolérance aux fautes).",
+    "names": "Nom de fichier"
+  },
+  "updates": {
+    "title": "Mises à jour",
+    "current": "Version installée : {version}",
+    "auto": "Vérifier automatiquement au démarrage",
+    "check": "Rechercher une mise à jour",
+    "checking": "Recherche…",
+    "upToDate": "Prospector est à jour.",
+    "checkFailed": "Le serveur des mises à jour est injoignable. Vérifiez votre connexion.",
+    "available": "Prospector {version} est disponible",
+    "install": "Mettre à jour et redémarrer",
+    "download": "Télécharger",
+    "portableHint": "Version portable : téléchargez le nouveau ZIP et remplacez le programme sur votre support.",
+    "later": "Plus tard",
+    "downloading": "Téléchargement…",
+    "downloadingPercent": "Téléchargement… {percent}",
+    "installFailed": "La mise à jour n’a pas pu être installée. Réessayez plus tard."
+  },
+  "integration": {
+    "title": "Intégration Windows",
+    "menuLabel": "Chercher avec Prospector",
+    "menuOn": "« Chercher avec Prospector » dans le clic droit de l’Explorateur",
+    "menuHint": "Sur un dossier, dans un dossier ouvert ou sur un disque. Sous Windows 11 : dans « Afficher plus d’options ».",
+    "cliOn": "Ligne de commande dans le PATH",
+    "cliHint": "Tapez « prospector-cli search … » dans n’importe quel nouveau terminal (PowerShell, Invite de commandes). Pour votre compte seulement ; « prospector-cli --help » liste les commandes.",
+    "editor": "Éditeur de code",
+    "editorAuto": "Le premier trouvé ({name})",
+    "editorNone": "Aucun éditeur de code trouvé sur ce PC : indiquez une commande.",
+    "editorCustom": "Commande personnalisée",
+    "editorCommand": "Commande de l’éditeur",
+    "editorCommandHint": "{file} : le fichier, {line} : la ligne. Exemple : \"C:\\Program Files\\Vim\\gvim.exe\" +{line} \"{file}\""
+  },
+  "alerts": {
+    "start": "M'alerter des nouveaux fichiers pour « {label} »",
+    "stop": "Ne plus m'alerter pour « {label} »",
+    "on": "Alerte activée : Prospector vous préviendra dès qu'un nouveau fichier correspond à « {label} ».",
+    "off": "Alerte désactivée pour « {label} ».",
+    "news": {
+      "one": "{count} nouveau fichier",
+      "many": "{count} de nouveaux fichiers",
+      "other": "{count} nouveaux fichiers"
+    },
+    "newTag": "Nouveau",
+    "notificationTitle": "Nouveaux résultats : {label}"
+  },
+  "background": {
+    "title": "Arrière-plan",
+    "keep": "Fermer la fenêtre garde Prospector près de l'horloge",
+    "keepAuto": "Activé automatiquement dès qu'une alerte existe, pour qu'elle continue de veiller. Quitter : clic droit sur l'icône près de l'horloge.",
+    "keepHint": "Quitter : clic droit sur l'icône près de l'horloge → Quitter.",
+    "startup": "Lancer Prospector au démarrage de Windows",
+    "startupHint": "Il démarre caché, près de l'horloge : les alertes veillent dès l'ouverture de la session.",
+    "trayOpen": "Ouvrir Prospector",
+    "trayQuit": "Quitter"
+  },
+  "detectors": {
+    "title": "Détecteurs",
+    "audit": "Audit des données personnelles",
+    "hint": "Chaque donnée est vérifiée (clé de contrôle, Luhn…) : un numéro au hasard n'est pas signalé. Combinés aux mots de la recherche.",
+    "groups": {
+      "bank": "Banque",
+      "contact": "Contact",
+      "business": "Entreprise",
+      "identity": "Identité"
+    },
+    "names": {
+      "iban": "IBAN",
+      "bic": "BIC / SWIFT",
+      "rib": "RIB",
+      "card": "Carte bancaire",
+      "email": "E-mail",
+      "phone": "Téléphone",
+      "ip": "Adresse IP",
+      "amount": "Montant",
+      "vat": "N° de TVA",
+      "siren": "SIREN / SIRET",
+      "nir": "N° de sécurité sociale",
+      "dni": "DNI / NIE",
+      "mrz": "Passeport / CNI"
+    },
+    "hints": {
+      "iban": "IBAN de tout pays, clé mod 97 vérifiée",
+      "bic": "Code BIC avec un chiffre, ou précédé de « BIC » / « SWIFT »",
+      "rib": "RIB français, clé RIB vérifiée",
+      "card": "Visa, Mastercard, Amex… : 13 à 19 chiffres, contrôle de Luhn",
+      "email": "Adresses e-mail",
+      "phone": "International (+33, 00212…), national français ou maghrébin, espagnol",
+      "ip": "Adresses IPv4",
+      "amount": "Nombre avec une devise : €, $, £, EUR, MAD, DZD, DH, درهم…",
+      "vat": "TVA intracommunautaire (FR avec clé vérifiée, ES, DE, BE, IT, NL, LU, PT)",
+      "siren": "Après le mot SIREN ou SIRET, contrôle de Luhn",
+      "nir": "Numéro de sécurité sociale français, clé vérifiée",
+      "dni": "DNI ou NIE espagnol, lettre de contrôle vérifiée",
+      "mrz": "Zone lisible par machine d'un passeport ou d'une carte d'identité, chiffres de contrôle vérifiés"
+    },
+    "total": "{files} · {matches}",
+    "nothing": "Aucune donnée détectée.",
+    "reportTitle": "Données détectées",
+    "kind": "Type de donnée",
+    "files": "Fichiers",
+    "occurrences": "Occurrences",
+    "masked": "Les numéros de compte, de carte et d'identité sont masqués dans ce rapport (seuls les 4 derniers caractères restent)."
+  },
+  "facets": {
+    "years": "Années",
+    "siteFound": "Dans ce site : {files}"
+  },
+  "export": {
+    "menu": "Exporter…",
+    "copyMenu": "Copier les fichiers trouvés…",
+    "dialogTitle": "Exporter les résultats",
+    "copyTitle": "Copier les fichiers trouvés",
+    "scope": "Quels fichiers",
+    "scopeVisible": "Ceux affichés ({files})",
+    "scopeAll": "Tous les fichiers trouvés (jusqu'à {max})",
+    "scopeAllHint": "« Tous » demande de nouveau à l'index : en scan direct ou pour des résultats ouverts, seuls les fichiers affichés sont disponibles.",
+    "format": "Format",
+    "formats": {
+      "excel": "Excel (CSV)",
+      "html": "Page HTML",
+      "json": "JSON"
+    },
+    "separator": "séparateur « {sep} », s'ouvre directement dans Excel",
+    "columnsTitle": "Colonnes",
+    "noTerms": "La recherche n'a pas de mot à compter",
+    "noDetections": "Aucun détecteur dans cette recherche",
+    "keywordsHint": "Une colonne par mot de la recherche (nombre d'occurrences dans chaque fichier), et une ligne de totaux.",
+    "destination": "Destination",
+    "toFolder": "Un dossier",
+    "toZip": "Une archive ZIP",
+    "keepTree": "Garder les sous-dossiers",
+    "extractInner": "Extraire les fichiers des archives et des e-mails",
+    "extractInnerHint": "Décoché, l'archive ou la boîte mail entière est copiée, une fois. Un message (pas un fichier joint) apporte toujours sa boîte mail.",
+    "copyHint": "Rien n'est écrasé : un nom déjà pris devient « nom (2) ».",
+    "pickFolder": "Choisir où copier les fichiers",
+    "run": "Exporter…",
+    "copyRun": "Copier…",
+    "cancel": "Annuler",
+    "copied": "{files} copiés.",
+    "copyCancelled": "Copie arrêtée : {files} copiés.",
+    "fromContainers": {
+      "one": "{count} résultat était dans une archive ou un e-mail : son conteneur a été copié.",
+      "other": "{count} résultats étaient dans des archives ou des e-mails : leurs conteneurs ont été copiés."
+    },
+    "skipped": "{files} n'ont pas pu être lus (introuvables ou verrouillés)",
+    "title": "Résultats de « {query} »",
+    "byKeyword": "Par mot-clé",
+    "term": "Mot-clé",
+    "totalFiles": "Fichiers contenant le mot",
+    "columns": {
+      "name": "Nom",
+      "folder": "Dossier",
+      "path": "Chemin complet",
+      "kind": "Type",
+      "size": "Taille",
+      "modified": "Modifié",
+      "created": "Créé",
+      "lang": "Langue",
+      "site": "Site",
+      "matches": "Correspondances",
+      "excerpt": "Extrait",
+      "keywords": "Par mot-clé",
+      "detections": "Données détectées"
+    }
+  },
+  "dupes": {
+    "open": "Trouver les doublons dans les sites cochés",
+    "title": "Doublons",
+    "exactOption": "Fichiers identiques",
+    "similarOption": "Documents presque identiques",
+    "threshold": "Ressemblance minimale",
+    "sites": "Sites : {sites}",
+    "start": "Chercher",
+    "starting": "Préparation…",
+    "hashing": "Comparaison des fichiers de même taille… {done} / {total}",
+    "comparing": "Comparaison des textes… {done} / {total}",
+    "groups": {
+      "one": "{count} groupe",
+      "many": "{count} de groupes",
+      "other": "{count} groupes"
+    },
+    "wasted": "{size} récupérables",
+    "scanned": "{hashed} fichiers comparés octet par octet, {compared} textes comparés",
+    "cancelled": "recherche arrêtée, résultats partiels",
+    "exact": "Identiques",
+    "similar": "Presque identiques",
+    "similarAt": "Proches à {percent}",
+    "none": "Aucun doublon trouvé.",
+    "choose": "Choisir {name}",
+    "keepOne": "Un fichier de chaque groupe est toujours gardé",
+    "innerHint": "Document dans une archive ou un e-mail : il ne peut pas être mis à la corbeille seul",
+    "export": "Exporter la liste",
+    "trash": "Mettre à la corbeille",
+    "trashCount": {
+      "one": "Mettre {count} fichier à la corbeille",
+      "many": "Mettre {count} de fichiers à la corbeille",
+      "other": "Mettre {count} fichiers à la corbeille"
+    },
+    "trashConfirm": "Mettre {files} à la Corbeille de Windows ? Vous pourrez les restaurer depuis la Corbeille.",
+    "trashed": "{files} mis à la corbeille.",
+    "trashFailed": "{files} n'ont pas pu être mis à la corbeille (ouverts ailleurs ou introuvables).",
+    "group": "Groupe",
+    "kind": "Type",
+    "similarity": "Ressemblance"
+  },
+  "errors": {
+    "rootUnavailable": "Dossier introuvable : {path}",
+    "siteNotFound": "Ce site de fouille n’existe plus.",
+    "fileNotIndexed": "Ce fichier n’est plus dans l’index. Réindexez le site.",
+    "indexBusy": "Une indexation est déjà en cours. Attendez qu’elle se termine.",
+    "index": "L’index n’a pas pu être lu. Réindexez le site.",
+    "storage": "Impossible d’écrire dans le dossier des index.",
+    "invalidQuery": "Cette recherche n’a pas pu être comprise.",
+    "openFailed": "Impossible d’ouvrir {path}",
+    "writeFailed": "Impossible d’enregistrer {path}",
+    "taskFailed": "L’opération a été interrompue.",
+    "unknown": "Un problème est survenu.",
+    "dismiss": "Fermer",
+    "shortcutUnavailable": "Ce raccourci est déjà utilisé par une autre application : {shortcut}",
+    "readFailed": "Impossible de lire {path}",
+    "noEditor": "Aucun éditeur de code trouvé. Choisissez-en un dans les Réglages.",
+    "editorFailed": "Impossible de lancer l’éditeur : {program}",
+    "explorerMenuFailed": "Le menu de l’Explorateur n’a pas pu être modifié.",
+    "invalidHash": "Empreinte invalide : {value}. Une MD5 a 32 caractères, une SHA-256 en a 64.",
+    "savedSearchNotFound": "Cette recherche enregistrée n'existe plus.",
+    "autostartFailed": "Le lancement au démarrage de Windows n'a pas pu être modifié.",
+    "cliPathFailed": "Le PATH n’a pas pu être modifié.",
+    "notExtractable": "Ce document n’a pas pu être sorti de son archive ou de son e-mail : {path}",
+    "invalidGroup": "Un groupe a besoin d’un nom et d’au moins un site coché.",
+    "groupNotFound": "Ce groupe n’existe plus.",
+    "readOnly": "{pc} tient cet index partagé à jour : faites-le depuis ce PC.",
+    "sense": "Recherche par le sens : {message}"
+  }
+}

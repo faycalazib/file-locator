@@ -1,0 +1,331 @@
+/* Prospector — download page and user guide ("Colored pencils" identity of
+   the app, see ui/src/styles/themes/crayons.css). Static, no build step:
+   published as is on GitHub Pages. Logical properties only (Arabic = RTL). */
+
+@font-face { font-family: 'Patrick Hand SC'; src: url(fonts/patrick-hand-sc-latin-400-normal.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; font-display: swap; }
+@font-face { font-family: 'Patrick Hand SC'; src: url(fonts/patrick-hand-sc-latin-ext-400-normal.woff2) format('woff2'); unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; font-display: swap; }
+@font-face { font-family: 'Patrick Hand'; src: url(fonts/patrick-hand-latin-400-normal.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; font-display: swap; }
+@font-face { font-family: 'Patrick Hand'; src: url(fonts/patrick-hand-latin-ext-400-normal.woff2) format('woff2'); unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; font-display: swap; }
+@font-face { font-family: 'Courier Prime'; src: url(fonts/courier-prime-latin-400-normal.woff2) format('woff2'); font-display: swap; }
+@font-face { font-family: 'Baloo Bhaijaan 2'; font-weight: 500; src: url(fonts/baloo-bhaijaan-2-arabic-500-normal.woff2) format('woff2'); unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC; font-display: swap; }
+@font-face { font-family: 'Baloo Bhaijaan 2'; font-weight: 600 700; src: url(fonts/baloo-bhaijaan-2-arabic-600-normal.woff2) format('woff2'); unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC; font-display: swap; }
+
+:root {
+  --bg: #fffefa;
+  --text: #262431;
+  --dim: #5c5968;
+  --faint: #8a8697;
+  --green: #6cc04a;
+  --blue: #3b9be0;
+  --pink: #ee5a8e;
+  --orange: #f39a2b;
+  --purple: #9a6bd8;
+  --yellow: #f5c93a;
+  --pink-ink: #b8305f;
+  --blue-ink: #1d68a8;
+  --display: 'Patrick Hand SC', 'Baloo Bhaijaan 2', cursive;
+  --body: 'Patrick Hand', 'Baloo Bhaijaan 2', cursive;
+  --mono: 'Courier Prime', monospace;
+  /* A hand-drawn box: uneven corners. */
+  --hand: 255px 12px 225px 14px / 14px 225px 12px 255px;
+  color-scheme: light;
+}
+
+:lang(ar) {
+  --display: 'Baloo Bhaijaan 2', 'Patrick Hand SC', sans-serif;
+  --body: 'Baloo Bhaijaan 2', 'Patrick Hand', sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 19px/1.55 var(--body);
+}
+
+a { color: var(--blue-ink); }
+
+.wrap {
+  inline-size: min(1080px, 100% - 40px);
+  margin-inline: auto;
+}
+
+/* ── Top bar ───────────────────────────────────────────── */
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-block: 18px;
+}
+
+.top nav {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.top .home {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+  font: 24px/1 var(--display);
+  text-decoration: none;
+}
+
+.top .home img { inline-size: 36px; }
+
+.langs {
+  display: flex;
+  gap: 4px;
+}
+
+.langs button {
+  padding: 2px 10px;
+  border: 2px solid transparent;
+  border-radius: var(--hand);
+  background: none;
+  font: 17px var(--display);
+  color: var(--dim);
+  cursor: pointer;
+}
+
+.langs button[aria-pressed='true'] {
+  border-color: var(--text);
+  color: var(--text);
+  background: repeating-linear-gradient(-35deg, rgb(245 201 58 / 0.6) 0 3px, rgb(245 201 58 / 0.2) 3px 6px);
+}
+
+/* ── Brand: hatched letters, like the app's masthead ───── */
+.title {
+  margin: 0;
+  font: 88px/1 var(--display);
+  font-family: 'Patrick Hand SC', cursive;
+  letter-spacing: 4px;
+  direction: ltr;
+  text-align: center;
+}
+
+.title span {
+  color: transparent;
+  -webkit-text-stroke: 2px var(--text);
+  background-image: repeating-linear-gradient(-30deg, var(--c) 0 3px, color-mix(in srgb, var(--c) 55%, #fff) 3px 5px);
+  -webkit-background-clip: text;
+  background-clip: text;
+  padding-inline: 1px;
+}
+
+.ribbon {
+  display: table;
+  margin: 0 auto 8px;
+  padding: 0 26px;
+  border: 2.5px solid var(--text);
+  border-radius: var(--hand);
+  background: repeating-linear-gradient(-35deg, rgb(108 192 74 / 0.4) 0 3px, rgb(108 192 74 / 0.12) 3px 6px);
+  font: 20px/30px var(--display);
+  text-transform: uppercase;
+}
+
+.hero {
+  position: relative;
+  padding-block: 28px 20px;
+  text-align: center;
+}
+
+.hero .tagline {
+  max-inline-size: 30ch;
+  margin: 18px auto 26px;
+  font: 30px/1.3 var(--display);
+}
+
+.hero .doodle {
+  position: absolute;
+  inline-size: 86px;
+  opacity: 0.9;
+}
+
+.hero .d-start { inset-block-start: 40px; inset-inline-start: 0; rotate: -8deg; }
+.hero .d-end { inset-block-start: 36px; inset-inline-end: 0; rotate: 10deg; }
+
+/* ── Download ──────────────────────────────────────────── */
+.download {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 34px;
+  border: 3px solid var(--text);
+  border-radius: var(--hand);
+  background: repeating-linear-gradient(-35deg, rgb(238 90 142 / 0.55) 0 3px, rgb(238 90 142 / 0.2) 3px 6px);
+  color: var(--text);
+  font: 30px/1.2 var(--display);
+  text-transform: uppercase;
+  text-decoration: none;
+  box-shadow: 4px 5px 0 var(--text);
+  transition: translate 120ms, box-shadow 120ms;
+}
+
+.btn:hover { translate: -1px -1px; box-shadow: 6px 7px 0 var(--text); }
+.btn:focus-visible { outline: 3px solid var(--blue); outline-offset: 4px; }
+
+.download .meta { color: var(--dim); font-size: 17px; }
+.download .other { font-size: 17px; }
+
+/* ── First launch warning (unsigned installer) ─────────── */
+.notice {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  max-inline-size: 760px;
+  margin: 30px auto 0;
+  padding: 14px 20px;
+  border: 2.5px dashed var(--orange);
+  border-radius: var(--hand);
+  text-align: start;
+}
+
+.notice img { inline-size: 40px; flex: none; }
+.notice p { margin: 4px 0 0; }
+
+/* ── Screenshot ────────────────────────────────────────── */
+.shot {
+  display: block;
+  inline-size: 100%;
+  margin-block: 34px;
+  border: 3px solid var(--text);
+  border-radius: 14px;
+  box-shadow: 8px 9px 0 rgb(38 36 49 / 0.18);
+  rotate: -0.6deg;
+}
+
+/* ── Features ──────────────────────────────────────────── */
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 22px;
+  padding-block: 10px 40px;
+}
+
+.feature {
+  padding: 16px 18px;
+  border: 2.5px solid var(--text);
+  border-radius: var(--hand);
+  background: #fff;
+  rotate: var(--r, 0.4deg);
+}
+
+.feature:nth-child(2n) { --r: -0.5deg; }
+.feature img { inline-size: 44px; }
+.feature h3 { margin: 6px 0 4px; font: 24px/1.2 var(--display); }
+.feature p { margin: 0; color: var(--dim); }
+
+/* ── Guide ─────────────────────────────────────────────── */
+.guide h1 {
+  margin: 12px 0 4px;
+  font: 52px/1.1 var(--display);
+}
+
+.guide .lead { margin: 0 0 20px; color: var(--dim); font-size: 21px; }
+
+.toc {
+  columns: 2 260px;
+  margin: 0 0 30px;
+  padding: 14px 22px;
+  border: 2.5px solid var(--text);
+  border-radius: var(--hand);
+  background: #fff;
+}
+
+.toc li { break-inside: avoid; }
+
+.guide section {
+  padding-block: 18px;
+  border-block-start: 2px dashed var(--faint);
+}
+
+.guide h2 {
+  margin: 0 0 8px;
+  font: 32px/1.2 var(--display);
+}
+
+.guide h2::before {
+  content: '';
+  display: inline-block;
+  inline-size: 0.7em;
+  block-size: 0.7em;
+  margin-inline-end: 10px;
+  border: 2.5px solid var(--text);
+  border-radius: 50%;
+  background: repeating-linear-gradient(-35deg, var(--c, var(--yellow)) 0 3px, transparent 3px 5px);
+  vertical-align: 0.05em;
+}
+
+.guide section:nth-of-type(4n + 1) { --c: var(--pink); }
+.guide section:nth-of-type(4n + 2) { --c: var(--blue); }
+.guide section:nth-of-type(4n + 3) { --c: var(--green); }
+.guide section:nth-of-type(4n) { --c: var(--orange); }
+
+table {
+  border-collapse: collapse;
+  margin-block: 8px;
+}
+
+td, th {
+  padding: 6px 14px;
+  border: 1.5px solid var(--faint);
+  text-align: start;
+  vertical-align: top;
+}
+
+th { font-family: var(--display); font-weight: 400; }
+
+kbd, code {
+  padding: 0 6px;
+  border: 1.5px solid var(--faint);
+  border-radius: 6px;
+  background: #fff;
+  /* Arabic letters in an example come from Baloo (Courier has none). */
+  font: 16px 'Courier Prime', 'Baloo Bhaijaan 2', monospace;
+  white-space: nowrap;
+}
+
+/* Keys read left to right; an example follows its own text (an Arabic
+   query reads right to left, a regular expression left to right). */
+kbd { direction: ltr; unicode-bidi: isolate; }
+code { unicode-bidi: plaintext; }
+
+mark {
+  padding-inline: 3px;
+  background: repeating-linear-gradient(-35deg, rgb(245 201 58 / 0.8) 0 3px, rgb(245 201 58 / 0.32) 3px 5px);
+  color: inherit;
+}
+
+footer {
+  padding-block: 26px 40px;
+  border-block-start: 2.5px solid var(--text);
+  color: var(--dim);
+  font-size: 16px;
+}
+
+footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+
+@media (max-width: 640px) {
+  .title { font-size: 52px; letter-spacing: 2px; }
+  .hero .doodle { display: none; }
+  .hero .tagline { font-size: 24px; }
+  .btn { font-size: 24px; padding: 10px 22px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn { transition: none; }
+}

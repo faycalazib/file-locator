@@ -1,0 +1,100 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Prospector",
+  "version": "0.1.0",
+  "identifier": "app.prospector.desktop",
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "pnpm build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Prospector",
+        "width": 1400,
+        "height": 860,
+        "minWidth": 960,
+        "minHeight": 600,
+        "backgroundColor": "#FFFEFA",
+        "theme": "Light",
+        "visible": false,
+        "create": false
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "nsis",
+      "msi"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "publisher": "Faycal Azib",
+    "copyright": "© 2026 Faycal Azib — MIT",
+    "category": "Utility",
+    "shortDescription": "Local full-text search in your files",
+    "longDescription": "Prospector finds text inside your documents (PDF, Word, Excel, PowerPoint, e-mails, archives, code) in milliseconds, offline, in English, French, Spanish and Arabic.",
+    "license": "MIT",
+    "resources": {
+      "licenses/THIRD-PARTY-NOTICES.txt": "licenses/THIRD-PARTY-NOTICES.txt",
+      "licenses/UnRAR-license.txt": "licenses/UnRAR-license.txt",
+      "licenses/FluentEmoji-MIT.txt": "licenses/FluentEmoji-MIT.txt"
+    },
+    "windows": {
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper",
+        "silent": true
+      },
+      "nsis": {
+        "installMode": "currentUser",
+        "languages": [
+          "English",
+          "French",
+          "Spanish",
+          "Arabic"
+        ],
+        "displayLanguageSelector": true,
+        "installerIcon": "icons/icon.ico",
+        "installerHooks": "windows/hooks.nsh"
+      },
+      "wix": {
+        "language": [
+          "en-US",
+          "fr-FR",
+          "es-ES",
+          "ar-SA"
+        ],
+        "fragmentPaths": [
+          "windows/explorer-menu.wxs"
+        ],
+        "componentRefs": [
+          "ExplorerMenuCleanup"
+        ]
+      }
+    },
+    "useLocalToolsDir": true,
+    "fileAssociations": [
+      {
+        "ext": [
+          "prospector"
+        ],
+        "name": "Prospector results",
+        "description": "Prospector search results",
+        "role": "Viewer",
+        "mimeType": "application/json"
+      }
+    ]
+  }
+}

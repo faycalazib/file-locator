@@ -1,0 +1,41 @@
+[package]
+name = "prospector"
+description = "Prospector — local full-text search"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lib]
+name = "prospector_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+# `tray-icon`: Prospector keeps running near the clock for the alerts (lot 6.1).
+tauri = { version = "2", features = ["tray-icon"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+prospector-core = { path = "../core" }
+tauri-plugin-dialog = "2"
+tauri-plugin-opener = "2"
+tauri-plugin-global-shortcut = "2"
+tauri-plugin-updater = "2"
+tauri-plugin-process = "2"
+tauri-plugin-single-instance = "2"
+tauri-plugin-notification = "2"
+tauri-plugin-autostart = "2"
+# Duplicates sent to the Windows Recycle Bin (lot 6.5), never deleted for good.
+trash = "5"
+# Image thumbnails as data: URLs (lot 6.6); already in the tree.
+base64 = "0.22"
+# Downloading the meaning module (Étape 8): the same HTTP client and TLS as
+# the updater (already in the tree).
+reqwest = { version = "0.13", default-features = false, features = ["rustls-no-provider", "stream"] }
+rustls = { version = "0.23", default-features = false, features = ["ring"] }
+
+[target.'cfg(windows)'.dependencies]
+# Explorer right-click menu (HKCU, lot 5.7); already in the tree through Tauri.
+winreg = "0.55"

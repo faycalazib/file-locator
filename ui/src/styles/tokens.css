@@ -1,0 +1,43 @@
+/*
+ * Structural tokens, shared by every theme: spacing, type scale, motion.
+ * Colors, fonts and treatments (strokes, hatching) live in
+ * `themes/<name>.css`, selected via `<html data-theme="…">`.
+ *
+ * Semantic contract that every theme must define (see docs/THEMES.md):
+ *   --bg --surface --text --text-dim --text-faint --line
+ *   --accent --accent-ink --secondary --secondary-ink --ok --ok-ink
+ *   --warn --warn-ink --danger --danger-ink --purple --yellow --query-ink
+ *   --mark-bg --mark-text --mark-active-bg --mark-active-text
+ *   --font-display --font-body --font-mono
+ *   --stroke --r-sketch --wobble --focus-ring --syn-kw --syn-str --syn-com --syn-num
+ */
+:root {
+  /* ── Type scale (a theme may retune it) ──────────────────────── */
+  --fs-display: 56px;
+  --lh-display: 60px;
+  --fs-title: 26px;
+  --lh-title: 30px;
+  --fs-h2: 21px;
+  --lh-h2: 26px;
+  --fs-body: 17px;
+  --lh-body: 24px;
+  --fs-caption: 13px;
+  --lh-caption: 18px;
+
+  /* ── Spacing (base 4 px) ─────────────────────────────────────── */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+
+  --gutter: 18px;
+  --rail-w: 280px; /* a theme with a wider font may widen it */
+
+  /* ── Motion: sweep while digging + ping on each new result ───── */
+  --sweep-duration: 1.8s;
+  --ping-duration: 900ms;
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+}

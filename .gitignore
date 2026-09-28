@@ -1,0 +1,58 @@
+# ── Node / Vite / Svelte ─────────────────────────────
+node_modules/
+dist/
+.vite/
+.svelte-kit/
+*.tsbuildinfo
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── Rust / Tauri ─────────────────────────────────────
+# target/ also holds the installers, the portable ZIP
+# (scripts/portable.py) and the Sense module (scripts/sense-module.py)
+target/
+src-tauri/target/
+src-tauri/gen/
+**/*.rs.bk
+*.pdb
+
+# ── Python (scripts/) ────────────────────────────────
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# ── Secrets / signing (see docs/RELEASE.md) ──────────
+# The updater private key never goes in the repository.
+# The public key lives in tauri.conf.json, not in a file.
+*.key
+*.key.pub
+*.pem
+*.pfx
+*.p12
+.env
+.env.*
+!.env.example
+
+# ── Logs / temp ──────────────────────────────────────
+*.log
+*.tmp
+*.bak
+*.swp
+*~
+
+# ── OS ───────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+ehthumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# ── Editors / tools ──────────────────────────────────
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.iml
+.claude/settings.local.json

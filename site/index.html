@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-key="meta.title">Prospector</title>
+  <meta name="description" content="Prospector: local full-text search in your files — PDF, Word, Excel, e-mails, archives. Free, offline, EN/FR/ES/AR.">
+  <link rel="icon" href="img/icon.png">
+  <link rel="stylesheet" href="style.css">
+  <script src="config.js"></script>
+  <script src="i18n.js"></script>
+  <script src="download.js"></script>
+</head>
+<body>
+  <header class="wrap top">
+    <a class="home" href="index.html" data-keep-lang><img src="img/icon.png" alt="">Prospector</a>
+    <nav>
+      <a href="guide.html" data-keep-lang data-i18n="nav.guide">User guide</a>
+      <div class="langs" role="group" aria-label="Language">
+        <button type="button" data-lang="en" lang="en">EN</button>
+        <button type="button" data-lang="fr" lang="fr">FR</button>
+        <button type="button" data-lang="es" lang="es">ES</button>
+        <button type="button" data-lang="ar" lang="ar">العربية</button>
+      </div>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <img class="doodle d-start" src="img/magnifier.svg" alt="">
+      <img class="doodle d-end" src="img/gem.svg" alt="">
+      <p class="ribbon" data-i18n="ribbon">My dig notebook</p>
+      <h1 class="title" aria-label="Prospector"><span style="--c: var(--green)">P</span><span style="--c: var(--blue)">R</span><span style="--c: var(--pink)">O</span><span style="--c: var(--orange)">S</span><span style="--c: var(--purple)">P</span><span style="--c: var(--green)">E</span><span style="--c: var(--blue)">C</span><span style="--c: var(--pink)">T</span><span style="--c: var(--orange)">O</span><span style="--c: var(--purple)">R</span></h1>
+      <p class="tagline" data-i18n="tagline"></p>
+
+      <div class="download">
+        <a id="download" class="btn" href="#"><span data-i18n="download.button">Download for Windows</span></a>
+        <span class="meta" data-i18n="download.meta"></span>
+        <span class="meta" id="version"></span>
+        <a id="portable" class="other" href="#" data-i18n="download.portable"></a>
+        <a id="all-versions" class="other" href="#" data-i18n="download.all"></a>
+      </div>
+
+      <div class="notice">
+        <img src="img/warning.svg" alt="">
+        <div>
+          <strong data-i18n="warning.title"></strong>
+          <p data-i18n-html="warning.text"></p>
+        </div>
+      </div>
+    </section>
+
+    <img class="shot" id="shot" src="img/app-fr.png" alt="Prospector">
+
+    <section class="features">
+      <article class="feature"><img src="img/pdf.svg" alt=""><h3 data-i18n="f1.title"></h3><p data-i18n="f1.text"></p></article>
+      <article class="feature"><img src="img/sparkles.svg" alt=""><h3 data-i18n="f2.title"></h3><p data-i18n="f2.text"></p></article>
+      <article class="feature"><img src="img/star.svg" alt=""><h3 data-i18n="f3.title"></h3><p data-i18n="f3.text"></p></article>
+      <article class="feature"><img src="img/folder.svg" alt=""><h3 data-i18n="f4.title"></h3><p data-i18n="f4.text"></p></article>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span data-i18n="footer.licence"></span>
+      <a href="THIRD-PARTY-NOTICES.txt" data-i18n="footer.notices"></a>
+    </div>
+  </footer>
+  <script>
+    // The Arabic interface in the screenshot when the page is in Arabic.
+    window.addEventListener('langchange', (e) => {
+      document.getElementById('shot').src = e.detail === 'ar' ? 'img/app-ar.png' : 'img/app-fr.png';
+    });
+  </script>
+</body>
+</html>

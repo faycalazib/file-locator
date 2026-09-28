@@ -1,0 +1,70 @@
+# Windows release: push a tag `vX.Y.Z` (same version as tauri.conf.json).
+# Runs the checks and tests, builds the installers (NSIS .exe + 4 MSI) and the
+# portable ZIP (lot 6.8), signs
+# the update files with the updater key, and creates a *draft* release with
+# `latest.json` for the automatic updates. Publish the draft by hand after a
+# last check (docs/RELEASE.md).
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: '. -> target'
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Check interface
+        run: |
+          pnpm check
+          pnpm i18n:check
+
+      - name: Test engine and command line
+        run: cargo test -p prospector-core -p prospector-cli
+
+      - name: Build and draft the release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: Prospector ${{ github.ref_name }}
+          releaseBody: See CHANGELOG.md for what is new in this version.
+          releaseDraft: true
+          prerelease: false
+          includeUpdaterJson: true
+          # Adds prospector-cli.exe to the installers (lot 7.1).
+          args: --config src-tauri/tauri.release.conf.json
+
+      # Portable version (lot 6.8): the same program, with the `portable` file.
+      - name: Portable ZIP
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python scripts/portable.py
+          gh release upload ${{ github.ref_name }} (Get-ChildItem target/release/bundle/portable/*.zip).FullName --clobber

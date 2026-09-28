@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="fr" dir="ltr">
+<head>
+<meta charset="utf-8">
+<title>Prospector — Maquette F · Bandeaux pinceau</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Itim&family=Courier+Prime&family=Baloo+Bhaijaan+2:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1d1a22; --soft: #6f6878;
+    --p-pink: #f9c6d3; --p-lilac: #dccdfa; --p-yellow: #fbeaa1; --p-mint: #c4efd4; --p-blue: #c3e3fb; --p-peach: #fbd9c3; --p-rose: #f7bfd9;
+    --f-brush: 'Caveat Brush', 'Baloo Bhaijaan 2', cursive;
+    --f-body: 'Itim', 'Baloo Bhaijaan 2', cursive;
+    --f-mono: 'Courier Prime', 'Baloo Bhaijaan 2', monospace;
+    --E: https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { background: #fffdfb; color: var(--ink); font: 400 17px/1.4 var(--f-body); overflow: hidden; }
+  img.d { position: absolute; }
+  .app { position: relative; height: 100%; display: grid; grid-template-columns: 1fr 520px; gap: 40px; padding: 26px 46px 26px 60px; }
+
+  /* Brush stroke: the colored layer gets rough edges via an SVG turbulence filter */
+  .brush { position: relative; isolation: isolate; }
+  .brush::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--c); border-radius: 14px 30px 12px 26px; filter: url(#rough); }
+  .stitch::after { content: ''; position: absolute; inset: 6px 10px; z-index: -1; border: 2px dashed rgba(29,26,34,.22); border-radius: 12px 24px 10px 22px; }
+
+  h1 { margin: 0; font: 64px/1 var(--f-brush); display: flex; align-items: center; gap: 14px; }
+  h1 img { width: 54px; }
+  .tagline { color: var(--soft); font-size: 19px; margin: 2px 0 20px 4px; }
+
+  .search { display: flex; align-items: center; gap: 16px; }
+  .field { --c: var(--p-lilac); flex: 1; display: flex; align-items: center; gap: 12px; height: 72px; padding: 0 30px; font: 30px var(--f-brush); }
+  .field .op { font: 20px var(--f-body); color: #7a55d8; }
+  .field img { width: 34px; }
+  .go { --c: var(--ink); border: 0; background: none; color: #fff; font: 32px var(--f-brush); padding: 12px 34px; }
+  .go::before { border-radius: 30px 12px 26px 14px; }
+  .opts { display: flex; gap: 12px; margin: 14px 0 20px 6px; font-size: 16px; color: var(--soft); }
+  .opts span { padding: 2px 12px; border: 2px solid currentColor; border-radius: 999px; }
+  .opts span.on { color: var(--ink); background: var(--p-yellow); border-color: var(--ink); }
+
+  .summary { font: 34px var(--f-brush); margin-bottom: 8px; }
+  .summary b { color: #e0467f; font-weight: 400; }
+
+  /* ── Results as stacked ribbons ── */
+  .ribbons { display: flex; flex-direction: column; gap: 12px; }
+  .rib { display: grid; grid-template-columns: 44px 1fr 90px; gap: 14px; align-items: center; padding: 12px 22px 12px 18px; }
+  .rib:nth-child(odd) { transform: rotate(-.5deg); margin-right: 20px; } .rib:nth-child(even) { transform: rotate(.4deg); margin-left: 20px; }
+  .rib > img { width: 40px; }
+  .name { font: 26px/1.05 var(--f-brush); }
+  .path { font: 13px var(--f-mono); color: var(--soft); direction: ltr; unicode-bidi: isolate; }
+  .snip { font-size: 16px; margin-top: 2px; }
+  .snip[dir=rtl] { font-family: 'Baloo Bhaijaan 2'; text-align: left; }
+  mark { background: none; font-weight: 700; color: var(--ink); text-decoration: underline wavy #e0467f 2px; text-underline-offset: 4px; }
+  .cnt { justify-self: end; font: 40px/1 var(--f-brush); text-align: center; }
+  .cnt small { display: block; font: 13px var(--f-body); color: var(--soft); }
+  .rib.sel::after { border: 3px solid var(--ink); inset: 4px 8px; }
+
+  /* ── Preview ── */
+  .prev { position: relative; padding: 50px 30px 26px; margin-top: 30px; border: 2.5px dashed #b89be8; border-radius: 28px; background: #fffaff; display: flex; flex-direction: column; }
+  .banner { --c: var(--p-rose); position: absolute; top: -26px; left: 50%; transform: translateX(-50%) rotate(-1.5deg); padding: 6px 40px; font: 34px var(--f-brush); white-space: nowrap; }
+  .prev h2 { margin: 0; font: 36px/1.05 var(--f-brush); text-align: center; }
+  .prev .path { text-align: center; margin-bottom: 14px; }
+  .meta { display: flex; justify-content: center; gap: 10px; margin-bottom: 16px; font-size: 15px; }
+  .meta span { --c: var(--p-yellow); padding: 3px 14px; }
+  .prev p { margin: 0 0 12px; font-size: 17px; line-height: 1.55; }
+  .prev mark.cur { text-decoration: none; background: var(--p-pink); padding: 0 6px; border-radius: 8px 4px 9px 5px; }
+  .hl { font: 24px var(--f-brush); color: #7a55d8; }
+  .nav { display: flex; justify-content: center; align-items: center; gap: 18px; margin-top: auto; font: 30px var(--f-brush); }
+  .nav span { --c: var(--p-mint); padding: 2px 22px; }
+  .acts { display: flex; justify-content: center; gap: 12px; margin-top: 14px; }
+  .acts span { --c: var(--p-blue); padding: 6px 22px; font-size: 17px; }
+  .acts span.p { --c: var(--ink); color: #fff; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><filter id="rough"><feTurbulence type="fractalNoise" baseFrequency="0.035 0.09" numOctaves="3" seed="4"/><feDisplacementMap in="SourceGraphic" scale="9"/></filter></svg>
+<img class="d" style="left:14px;top:120px;width:38px;transform:rotate(-12deg)" src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Star/Color/star_color.svg" alt="">
+<img class="d" style="left:30px;top:560px;width:34px" src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Purple%20heart/Color/purple_heart_color.svg" alt="">
+<img class="d" style="left:960px;top:40px;width:46px" src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Butterfly/Color/butterfly_color.svg" alt="">
+<img class="d" style="left:18px;bottom:40px;width:44px" src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Cherry%20blossom/Color/cherry_blossom_color.svg" alt="">
+<img class="d" style="left:430px;bottom:40px;width:80px" src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Rainbow/Color/rainbow_color.svg" alt="">
+
+<div class="app">
+  <div>
+    <h1><img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Gem%20stone/Color/gem_stone_color.svg" alt="">Prospector</h1>
+    <div class="tagline">Tout ce que tu as écrit, retrouvé en un instant ♡</div>
+
+    <div class="search">
+      <div class="field brush stitch"><img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Magnifying%20glass%20tilted%20left/Color/magnifying_glass_tilted_left_color.svg" alt="">contrat <span class="op">ou</span> contrato <span class="op">ou</span> <span style="font-family:'Baloo Bhaijaan 2';font-size:26px">عقد</span></div>
+      <button class="go brush">Fouiller</button>
+    </div>
+    <div class="opts"><span class="on">✓ tolère les fautes</span><span>PDF</span><span>Word</span><span>Excel</span><span>E-mails</span><span>Code</span><span>+ affiner</span></div>
+
+    <div class="summary"><b>30 trouvailles</b> dans 11 fichiers <span style="font:16px var(--f-body);color:var(--soft)">· 38 ms</span></div>
+    <div class="ribbons">
+      <div class="rib brush stitch sel" style="--c:var(--p-pink)"><img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Red%20heart/Color/red_heart_color.svg" alt="">
+        <div><div class="name">contrat-prestation-v3.pdf</div><div class="path">D:\Clients\Dupont SARL\2024\</div><div class="snip">…le présent <mark>contrat</mark> de prestation prend effet à la date de signature…</div></div>
+        <div class="cnt">7<small>trouvailles</small></div></div>
+      <div class="rib brush stitch" style="--c:var(--p-lilac)"><img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Star/Color/star_color.svg" alt="">
+        <div><div class="name">contrato_servicios_2024.docx</div><div class="path">D:\Clients\García Hermanos\</div><div class="snip">…el presente <mark>contrato</mark> de prestación de servicios se regirá…</div></div>
+        <div class="cnt">5<small>trouvailles</small></div></div>
+      <div class="rib brush stitch" style="--c:var(--p-yellow)"><img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Light%20bulb/Color/light_bulb_color.svg" alt="">
+        <div><div class="name"><span dir="ltr" style="unicode-bidi:isolate;font-family:'Baloo Bhaijaan 2';font-size:22px">عقد_إيجار_2023.pdf</span></div><div class="path">D:\Archives\عقود\</div><div class="snip" dir="rtl">…يبدأ سريان هذا <mark>العقد</mark> اعتبارًا من تاريخ توقيعه…</div></div>
+        <div class="cnt">4<small>trouvailles</small></div></div>
+      <div class="rib brush stitch" style="--c:var(--p-mint)"><img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Blossom/Color/blossom_color.svg" alt="">
+        <div><div class="name">ContractService.ts</div><div class="path">H:\Development\billing-api\src\contracts\</div><div class="snip" style="font:15px var(--f-mono)">export class <mark>Contract</mark>Service {</div></div>
+        <div class="cnt">6<small>trouvailles</small></div></div>
+      <div class="rib brush stitch" style="--c:var(--p-blue)"><img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Sparkles/Color/sparkles_color.svg" alt="">
+        <div><div class="name">Re: signature du contrat</div><div class="path">E:\Mail\Archive 2019-2024.pst › Inbox</div><div class="snip">…ci-joint le <mark>contrat</mark> signé ainsi que l’annexe tarifaire.</div></div>
+        <div class="cnt">1<small>trouvaille</small></div></div>
+    </div>
+  </div>
+
+  <aside class="prev">
+    <div class="banner brush">✦ Aperçu ✦</div>
+    <h2>contrat-prestation-v3.pdf</h2>
+    <div class="path">D:\Clients\Dupont SARL\2024\</div>
+    <div class="meta"><span class="brush">PDF · 2,4 Mo</span><span class="brush" style="--c:var(--p-mint)">il y a 3 jours</span><span class="brush" style="--c:var(--p-blue)">Français</span></div>
+    <p class="hl">Article 2 — Objet et durée</p>
+    <p>Le présent <mark class="cur">contrat</mark> de prestation prend effet à la date de signature par les deux parties et est conclu pour une durée de vingt-quatre (24) mois.</p>
+    <p>À l’issue de cette période, le <mark>contrat</mark> pourra être renouvelé par avenant écrit.</p>
+    <p class="hl">Article 5 — Prix et paiement</p>
+    <p>Les prix figurant au <mark>contrat</mark> sont exprimés hors taxes et révisables annuellement.</p>
+    <div class="nav"><span class="brush">↑</span>1 / 7<span class="brush">↓</span></div>
+    <div class="acts"><span class="brush p">Ouvrir</span><span class="brush">Voir le dossier</span><span class="brush" style="--c:var(--p-peach)">Copier le chemin</span></div>
+  </aside>
+</div>
+</body>
+</html>

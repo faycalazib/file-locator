@@ -1,0 +1,139 @@
+/*
+ * Theme "Colored pencils" (default) — mockup docs/mockups/g-crayons.html.
+ * White paper, ink strokes that wobble slightly (SVG filter #wobble,
+ * defined in ThemeDefs.svelte), colored-pencil hatching, hand-drawn fonts.
+ *
+ * Contrast (WCAG AA on white paper): body text is in --text / --text-dim;
+ * the bright pencil colors (--accent, --secondary…) are only used for strokes,
+ * hatching and large text. Their `*-ink` variants are for small text.
+ */
+:root[data-theme='crayons'] {
+  /* Paper & ink */
+  --bg: #fffefa;
+  --surface: #ffffff;
+  --text: #262431;
+  --text-dim: #5c5968; /* 6.6:1 */
+  --text-faint: #8a8697; /* decoration only */
+  --line: #262431;
+
+  /* Pencil box */
+  --green: #6cc04a;
+  --blue: #3b9be0;
+  --pink: #ee5a8e;
+  --orange: #f39a2b;
+  --purple: #9a6bd8;
+  --yellow: #f5c93a;
+
+  --accent: var(--pink);
+  --accent-ink: #b8305f; /* 5.6:1 */
+  --secondary: var(--blue);
+  --secondary-ink: #1d68a8; /* 5.5:1 */
+  --ok: var(--green);
+  --ok-ink: #37801d; /* 4.9:1 */
+  --warn: var(--orange);
+  --warn-ink: #9a5a06; /* 5.6:1 */
+  --danger: #e2474b;
+  --danger-ink: #b3262b; /* 6.3:1 */
+
+  /* Ink used for the query being typed (plum, like a fountain pen). */
+  --query-ink: #6b2e5b;
+
+  /* Search matches = highlighter-pencil hatching */
+  --mark-text: var(--text);
+  --mark-bg: repeating-linear-gradient(-35deg, rgb(245 201 58 / 0.8) 0 3px, rgb(245 201 58 / 0.32) 3px 5px);
+  --mark-active-text: var(--text);
+  --mark-active-bg: repeating-linear-gradient(-35deg, rgb(238 90 142 / 0.75) 0 3px, rgb(238 90 142 / 0.35) 3px 5px);
+
+  /* Pencil fills (hatching colors, --h) */
+  --fill-accent: rgb(238 90 142 / 0.3);
+  --fill-accent-strong: rgb(238 90 142 / 0.55);
+  --fill-secondary: rgb(59 155 224 / 0.3);
+  --fill-ok: rgb(108 192 74 / 0.33);
+  --fill-warn: rgb(243 154 43 / 0.7);
+  --fill-yellow: rgb(245 201 58 / 0.55);
+
+  /* Effects */
+  --shadow-pop: 0 18px 30px -20px rgb(38 36 49 / 0.45);
+  --tilt: 0.3deg; /* cards placed by hand */
+  --doodle-opacity: 0.9;
+  --sweep-bg: repeating-linear-gradient(-35deg, rgb(238 90 142 / 0.3) 0 2px, transparent 2px 5px);
+  --ping-bg: repeating-linear-gradient(-35deg, rgb(245 201 58 / 0.6) 0 3px, transparent 3px 6px);
+
+  /* PROSPECTOR title: pencil-hatched letters, ink outline, offset shadow */
+  --title-stroke: 2.5px;
+  --title-mix: #fff;
+  --title-mix-pct: 55%;
+  --title-shadow: drop-shadow(3px 3px 0 rgb(38 36 49 / 0.85));
+
+  /* Code preview syntax colors */
+  --syn-kw: #6f45b0;
+  --syn-str: #37801d;
+  --syn-com: #6d6878; /* 5.3:1 */
+  --syn-num: #9a5a06;
+
+  /* Fonts (--font-brand: title and panel headers only) */
+  --font-brand: 'Patrick Hand SC', 'Baloo Bhaijaan 2', cursive;
+  --font-display: 'Patrick Hand SC', 'Baloo Bhaijaan 2', cursive;
+  --font-body: 'Patrick Hand', 'Baloo Bhaijaan 2', cursive;
+  --font-mono: 'Courier Prime', 'Baloo Bhaijaan 2', monospace;
+
+  /* Pencil strokes */
+  --stroke: 2.5px;
+  --r-sketch: 10px 16px 12px 14px;
+  --wobble: url(#wobble);
+  --focus-ring: 2.5px dashed var(--secondary);
+
+  color-scheme: light;
+}
+
+/* Arabic: the rounded Baloo Bhaijaan 2 leads, for titles and text alike. */
+:root[data-theme='crayons']:lang(ar) {
+  --font-brand: 'Baloo Bhaijaan 2', 'Patrick Hand SC', sans-serif;
+  --font-display: 'Baloo Bhaijaan 2', 'Patrick Hand SC', sans-serif;
+  --font-body: 'Baloo Bhaijaan 2', 'Patrick Hand', sans-serif;
+}
+
+/* ── Treatments (scoped to this theme) ─────────────────────────────── */
+
+/* Positioning is shared by every theme (the outline is a pseudo-element). */
+.sketch {
+  position: relative;
+}
+
+/* Hand-drawn outline: the stroke wobbles, the content stays sharp.
+   --k = pencil color (ink by default), --sw = stroke width. */
+[data-theme='crayons'] .sketch::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border: var(--sw, var(--stroke)) solid var(--k, var(--line));
+  border-radius: var(--r-sketch);
+  filter: var(--wobble);
+  pointer-events: none;
+}
+
+[data-theme='crayons'] .sketch.dashed::before {
+  border-style: dashed;
+}
+
+[data-theme='crayons'] .sketch.round::before {
+  border-radius: 50%;
+}
+
+/* Colored-pencil hatching. --h = color (with transparency). */
+[data-theme='crayons'] .hatch {
+  background-image: repeating-linear-gradient(-35deg, var(--h, rgb(245 201 58 / 0.45)) 0 2px, transparent 2px 5px);
+}
+
+/* Paper grain over the whole page (never intercepts clicks). */
+[data-theme='crayons'] body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0.45;
+  background-image: radial-gradient(rgb(0 0 0 / 0.035) 1px, transparent 1.2px);
+  background-size: 5px 5px;
+}

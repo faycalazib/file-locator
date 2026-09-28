@@ -1,0 +1,18 @@
+[workspace]
+resolver = "2"
+members = ["core", "cli", "src-tauri"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["Faycal Azib"]
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+strip = true
+# No `panic = "abort"`: a damaged PDF can make pdf-extract panic, and
+# core/src/extract/pdf.rs catches it with catch_unwind (BUG-027).
+panic = "unwind"

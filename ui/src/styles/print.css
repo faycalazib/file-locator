@@ -1,0 +1,56 @@
+/*
+ * Search report (Étape 3, goal.md §4 "rapport PDF"). The report
+ * (`ReportView.svelte`) exists only while printing: the system print dialog
+ * offers "Save as PDF", with the fonts, Arabic shaping and RTL of the page.
+ * Printing shows the report alone, on white paper, whatever the theme.
+ */
+.report {
+  display: none;
+}
+
+@media print {
+  @page {
+    margin: 16mm 14mm;
+  }
+
+  /* White paper even with the dark theme (its color scheme would darken the
+     page margins). */
+  :root {
+    color-scheme: light !important;
+  }
+
+  html,
+  body,
+  #app {
+    block-size: auto;
+    overflow: visible;
+    background: #fff !important;
+  }
+
+  #app > :not(.report) {
+    display: none !important;
+  }
+
+  .report {
+    display: block;
+  }
+}
+
+/* `?report` in the browser demo: the report on screen (screenshots). */
+@media screen {
+  :root.report-preview,
+  :root.report-preview body,
+  :root.report-preview #app {
+    block-size: auto;
+    overflow: auto;
+    background: #fff;
+  }
+
+  :root.report-preview #app > :not(.report) {
+    display: none !important;
+  }
+
+  :root.report-preview .report {
+    display: block;
+  }
+}

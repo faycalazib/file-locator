@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Prospector — icônes (concepts)</title>
+<style>
+  body { margin: 0; padding: 28px 36px; background: #fffefa; color: #262431; font: 16px/1.4 "Segoe UI", sans-serif; }
+  h1 { margin: 0 0 18px; font-size: 22px; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; }
+  .card { border: 2px solid #262431; border-radius: 14px; padding: 16px; }
+  .card h2 { margin: 0 0 10px; font-size: 18px; }
+  .card p { margin: 8px 0 0; font-size: 13px; color: #5c5968; }
+  .sizes { display: flex; align-items: flex-end; gap: 12px; padding: 10px; border-radius: 10px; }
+  .light { background: #f3f1ea; }
+  .dark { background: #202020; margin-top: 8px; }
+  .big { display: block; margin: 0 auto 10px; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <filter id="wob" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves="2" seed="4"/>
+      <feDisplacementMap in="SourceGraphic" scale="9"/>
+    </filter>
+    <pattern id="hy" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(-35)">
+      <rect width="16" height="16" fill="#f5c93a" opacity=".35"/><rect width="9" height="16" fill="#f5c93a"/>
+    </pattern>
+    <pattern id="hp" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(-35)">
+      <rect width="16" height="16" fill="#ee5a8e" opacity=".35"/><rect width="9" height="16" fill="#ee5a8e"/>
+    </pattern>
+    <pattern id="hb" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(-35)">
+      <rect width="16" height="16" fill="#3b9be0" opacity=".3"/><rect width="8" height="16" fill="#3b9be0"/>
+    </pattern>
+    <pattern id="hg" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(-35)">
+      <rect width="16" height="16" fill="#6cc04a" opacity=".3"/><rect width="8" height="16" fill="#6cc04a"/>
+    </pattern>
+
+    <!-- Paper tile shared by every concept -->
+    <g id="tile">
+      <rect x="56" y="56" width="912" height="912" rx="210" fill="#fffefa" stroke="#262431" stroke-width="40" filter="url(#wob)"/>
+    </g>
+    <path id="spark" d="M0 -70 C10 -18 18 -10 70 0 C18 10 10 18 0 70 C-10 18 -18 10 -70 0 C-18 -10 -10 -18 0 -70Z"/>
+
+    <!-- A · Loupe crayonnée -->
+    <symbol id="a" viewBox="0 0 1024 1024">
+      <use href="#tile"/>
+      <g filter="url(#wob)" stroke="#262431" stroke-linejoin="round">
+        <rect x="-62" y="0" width="124" height="330" rx="48" transform="translate(640 640) rotate(-45)" fill="url(#hp)" stroke-width="40"/>
+        <circle cx="430" cy="420" r="238" fill="#fff" stroke-width="54"/>
+        <circle cx="430" cy="420" r="238" fill="url(#hy)" stroke-width="54"/>
+        <path d="M300 360 A150 150 0 0 1 400 262" fill="none" stroke="#fff" stroke-width="34" stroke-linecap="round"/>
+      </g>
+      <use href="#spark" transform="translate(810 230)" fill="#ee5a8e" stroke="#262431" stroke-width="16"/>
+    </symbol>
+
+    <!-- B · Pépite -->
+    <symbol id="b" viewBox="0 0 1024 1024">
+      <use href="#tile"/>
+      <g filter="url(#wob)" stroke="#262431" stroke-width="40" stroke-linejoin="round">
+        <polygon points="300,330 724,330 846,478 512,830 178,478" fill="#fff"/>
+        <polygon points="300,330 724,330 846,478 178,478" fill="url(#hb)"/>
+        <polygon points="400,478 624,478 512,830" fill="url(#hp)"/>
+        <polygon points="178,478 846,478 512,830" fill="none"/>
+        <polyline points="300,330 400,478 512,330 624,478 724,330" fill="none"/>
+      </g>
+      <use href="#spark" transform="translate(808 222) scale(.9)" fill="#f5c93a" stroke="#262431" stroke-width="16"/>
+      <use href="#spark" transform="translate(222 232) scale(.55)" fill="#f5c93a" stroke="#262431" stroke-width="22"/>
+    </symbol>
+
+    <!-- C · Lettre P hachurée -->
+    <symbol id="c" viewBox="0 0 1024 1024">
+      <use href="#tile"/>
+      <g filter="url(#wob)" stroke="#262431" stroke-width="44" stroke-linejoin="round">
+        <path fill-rule="evenodd" fill="url(#hp)"
+              d="M300 200 H590 A200 200 0 0 1 590 600 H470 V824 H300 Z M470 340 H578 A70 70 0 0 1 578 480 H470 Z"/>
+      </g>
+      <rect x="250" y="846" width="520" height="54" rx="20" fill="url(#hy)"/>
+      <use href="#spark" transform="translate(812 250) scale(.8)" fill="#3b9be0" stroke="#262431" stroke-width="18"/>
+    </symbol>
+
+    <!-- D · Page + loupe -->
+    <symbol id="d" viewBox="0 0 1024 1024">
+      <use href="#tile"/>
+      <g filter="url(#wob)" stroke="#262431" stroke-linejoin="round">
+        <path d="M230 170 H600 L740 310 V850 H230 Z" fill="#fff" stroke-width="36"/>
+        <path d="M600 170 V310 H740" fill="none" stroke-width="30"/>
+        <rect x="290" y="468" width="330" height="62" rx="10" fill="url(#hy)" stroke="none"/>
+        <g stroke="#8a8697" stroke-width="24" stroke-linecap="round">
+          <line x1="300" y1="380" x2="520" y2="380"/><line x1="300" y1="500" x2="600" y2="500"/>
+          <line x1="300" y1="620" x2="480" y2="620"/><line x1="300" y1="720" x2="420" y2="720"/>
+        </g>
+        <rect x="-50" y="0" width="100" height="220" rx="40" transform="translate(716 716) rotate(-45)" fill="url(#hp)" stroke-width="32"/>
+        <circle cx="620" cy="620" r="140" fill="#fff" stroke-width="42"/>
+        <circle cx="620" cy="620" r="140" fill="url(#hb)" opacity=".55" stroke="none"/>
+        <circle cx="620" cy="620" r="140" fill="none" stroke-width="42"/>
+      </g>
+    </symbol>
+  </defs>
+</svg>
+
+<h1>Icône de l'application — 4 pistes « Crayons de couleur »</h1>
+<div class="grid">
+  <section class="card"><h2>A · Loupe crayonnée</h2>
+    <svg class="big" width="256" height="256"><use href="#a"/></svg>
+    <div class="sizes light"><svg width="64" height="64"><use href="#a"/></svg><svg width="32" height="32"><use href="#a"/></svg><svg width="16" height="16"><use href="#a"/></svg></div>
+    <div class="sizes dark"><svg width="64" height="64"><use href="#a"/></svg><svg width="32" height="32"><use href="#a"/></svg><svg width="16" height="16"><use href="#a"/></svg></div>
+    <p>La recherche, dit simplement : verre surligné en jaune, manche rose. Très lisible en petit.</p>
+  </section>
+  <section class="card"><h2>B · Pépite</h2>
+    <svg class="big" width="256" height="256"><use href="#b"/></svg>
+    <div class="sizes light"><svg width="64" height="64"><use href="#b"/></svg><svg width="32" height="32"><use href="#b"/></svg><svg width="16" height="16"><use href="#b"/></svg></div>
+    <div class="sizes dark"><svg width="64" height="64"><use href="#b"/></svg><svg width="32" height="32"><use href="#b"/></svg><svg width="16" height="16"><use href="#b"/></svg></div>
+    <p>« Prospector » : on trouve la pépite. Reprend le diamant de l'en-tête de l'application.</p>
+  </section>
+  <section class="card"><h2>C · Lettre P</h2>
+    <svg class="big" width="256" height="256"><use href="#c"/></svg>
+    <div class="sizes light"><svg width="64" height="64"><use href="#c"/></svg><svg width="32" height="32"><use href="#c"/></svg><svg width="16" height="16"><use href="#c"/></svg></div>
+    <div class="sizes dark"><svg width="64" height="64"><use href="#c"/></svg><svg width="32" height="32"><use href="#c"/></svg><svg width="16" height="16"><use href="#c"/></svg></div>
+    <p>Le « P » hachuré du titre PROSPECTOR, souligné au surligneur. Marque forte, moins explicite.</p>
+  </section>
+  <section class="card"><h2>D · Page + loupe</h2>
+    <svg class="big" width="256" height="256"><use href="#d"/></svg>
+    <div class="sizes light"><svg width="64" height="64"><use href="#d"/></svg><svg width="32" height="32"><use href="#d"/></svg><svg width="16" height="16"><use href="#d"/></svg></div>
+    <div class="sizes dark"><svg width="64" height="64"><use href="#d"/></svg><svg width="32" height="32"><use href="#d"/></svg><svg width="16" height="16"><use href="#d"/></svg></div>
+    <p>Recherche dans les fichiers : une ligne surlignée sous la loupe. Le plus explicite, plus chargé en 16 px.</p>
+  </section>
+</div>
+</body>
+</html>

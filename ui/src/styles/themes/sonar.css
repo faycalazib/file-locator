@@ -1,0 +1,142 @@
+/*
+ * Theme "Sonar" (dark) — mockup docs/mockups/c-sonar-quest.html.
+ * Deep purple night, glowing neon strokes, pixel font for the brand only.
+ *
+ * Readability: the pixel font (Tiny5) is only used for --font-brand (title,
+ * panel headers, no digits). Everything else, counts included, uses Chakra
+ * Petch. Pixelify Sans, from the mockup, was dropped: "C" looked like "O" and
+ * "3" like "8".
+ * Contrast measured on --surface #1b1436: --text 14.6:1, --text-dim 7.9:1.
+ */
+:root[data-theme='sonar'] {
+  /* Night & neon */
+  --bg: #120d24;
+  --surface: #1b1436;
+  --text: #ecebff;
+  --text-dim: #b3acd9;
+  --text-faint: #6f6799; /* decoration only */
+  --line: #8f7cf0;
+
+  --green: #69f58c;
+  --blue: #35e6d8;
+  --pink: #ff4fd8;
+  --orange: #ff8a3d;
+  --purple: #9b7bff;
+  --yellow: #ffd23f;
+
+  --accent: var(--pink);
+  --accent-ink: #ff8ae6;
+  --secondary: var(--blue);
+  --secondary-ink: #5ff0e4;
+  --ok: var(--green);
+  --ok-ink: #7df79c;
+  --warn: var(--yellow);
+  --warn-ink: #ffdc66;
+  --danger: #ff4d6d;
+  --danger-ink: #ff8098;
+
+  --query-ink: var(--blue);
+
+  /* Matches: a glowing yellow tag, the active one filled */
+  --mark-text: var(--yellow);
+  --mark-bg: rgb(255 210 63 / 0.16);
+  --mark-active-text: #2a1a00;
+  --mark-active-bg: var(--yellow);
+
+  /* Neon fills (--h) */
+  --fill-accent: rgb(255 79 216 / 0.2);
+  --fill-accent-strong: rgb(255 79 216 / 0.35);
+  --fill-secondary: rgb(53 230 216 / 0.18);
+  --fill-ok: rgb(105 245 140 / 0.16);
+  --fill-warn: rgb(255 210 63 / 0.75);
+  --fill-yellow: rgb(255 210 63 / 0.2);
+
+  /* Effects */
+  --shadow-pop: 0 0 0 1px rgb(0 0 0 / 0.4), 0 20px 40px -18px rgb(0 0 0 / 0.8);
+  --tilt: 0deg;
+  --doodle-opacity: 0;
+  --sweep-bg: linear-gradient(90deg, transparent, rgb(53 230 216 / 0.08) 70%, rgb(53 230 216 / 0.55) 98%, transparent);
+  --ping-bg: linear-gradient(90deg, rgb(255 210 63 / 0.28), transparent 70%);
+
+  /* PROSPECTOR title: solid neon letters with a glow, no ink outline */
+  --title-stroke: 0px;
+  --title-mix: #fff;
+  --title-mix-pct: 80%;
+  --title-shadow: drop-shadow(0 0 10px rgb(155 123 255 / 0.55));
+
+  /* Code preview syntax colors */
+  --syn-kw: #b69bff;
+  --syn-str: #7df79c;
+  --syn-com: #8c84b8;
+  --syn-num: #ffdc66;
+
+  /* Fonts */
+  --font-brand: 'Tiny5', 'Baloo Bhaijaan 2', sans-serif;
+  --font-display: 'Chakra Petch', 'Baloo Bhaijaan 2', sans-serif;
+  --font-body: 'Chakra Petch', 'Baloo Bhaijaan 2', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Baloo Bhaijaan 2', monospace;
+
+  /* Strokes: straight, glowing. --wobble must stay a valid filter:
+     it is combined with others (`filter: var(--title-shadow) var(--wobble)`). */
+  --stroke: 2px;
+  --r-sketch: 10px;
+  --wobble: opacity(1);
+  --focus-ring: 2px solid var(--yellow);
+
+  /* Chakra Petch is wider than Patrick Hand: a slightly smaller scale and a wider rail. */
+  --fs-body: 16px;
+  --lh-body: 24px;
+  --fs-title: 22px;
+  --lh-title: 28px;
+  --rail-w: 300px;
+
+  color-scheme: dark;
+}
+
+:root[data-theme='sonar']:lang(ar) {
+  --font-brand: 'Baloo Bhaijaan 2', 'Tiny5', sans-serif;
+  --font-display: 'Baloo Bhaijaan 2', 'Chakra Petch', sans-serif;
+  --font-body: 'Baloo Bhaijaan 2', 'Chakra Petch', sans-serif;
+}
+
+/* ── Treatments ───────────────────────────────────────────────────── */
+
+/* Neon outline: straight stroke + halo in the same color. */
+[data-theme='sonar'] .sketch::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border: var(--sw, var(--stroke)) solid var(--k, var(--line));
+  border-radius: var(--r-sketch);
+  box-shadow:
+    0 0 14px -5px var(--k, var(--line)),
+    inset 0 0 0 1px rgb(0 0 0 / 0.35);
+  pointer-events: none;
+}
+
+[data-theme='sonar'] .sketch.dashed::before {
+  border-style: dashed;
+}
+
+[data-theme='sonar'] .sketch.round::before {
+  border-radius: 50%;
+}
+
+/* Flat translucent fill instead of hatching. */
+[data-theme='sonar'] .hatch {
+  background-image: linear-gradient(var(--h, var(--fill-yellow)), var(--h, var(--fill-yellow)));
+}
+
+/* Night sky: a violet glow in the middle and a dot grid. */
+[data-theme='sonar'] body {
+  background:
+    radial-gradient(ellipse at 50% 55%, rgb(155 123 255 / 0.16), transparent 60%),
+    radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.07) 1px, transparent 1.5px) 0 0 / 22px 22px,
+    var(--bg);
+}
+
+/* Upper case letters read better with a little tracking in Chakra Petch. */
+[data-theme='sonar'] .sketch {
+  letter-spacing: 0.02em;
+}

@@ -1,0 +1,655 @@
+{
+  "app": {
+    "name": "Prospector",
+    "tagline": "Local full-text search",
+    "ribbon": "my dig notebook"
+  },
+  "rail": {
+    "sites": "Dig sites",
+    "addSite": "Add a folder",
+    "includeInSearch": "Include {name} in the search",
+    "recent": "Recent",
+    "saved": "Saved searches",
+    "expand": "Expand the panel",
+    "collapse": "Collapse the panel",
+    "docs": {
+      "one": "{count} document",
+      "other": "{count} documents"
+    },
+    "indexedAgo": "Indexed {when}",
+    "indexingProgress": "Indexing… {percent}",
+    "status": {
+      "ready": "Ready",
+      "indexing": "Indexing",
+      "watching": "Live watch",
+      "error": "Error",
+      "empty": "Not indexed"
+    },
+    "errors": {
+      "rootUnavailable": "Folder not found: {path}"
+    },
+    "scanning": {
+      "one": "Looking for files… {count} found",
+      "other": "Looking for files… {count} found"
+    },
+    "saving": "Saving the index…",
+    "reindex": "Update now",
+    "remove": "Remove this dig site",
+    "removeConfirm": "Remove the dig site “{name}” and its index? Your files are not touched.",
+    "cancel": "Stop indexing",
+    "emptyTitle": "No dig site yet",
+    "emptyHint": "Add a folder: Prospector reads its documents once, then finds anything in them instantly.",
+    "skipped": {
+      "one": "{count} unreadable file",
+      "other": "{count} unreadable files"
+    },
+    "pickFolder": "Choose a folder to dig"
+  },
+  "groups": {
+    "title": "Groups",
+    "hint": "Ctrl + digit",
+    "all": "All",
+    "add": "Group",
+    "addHint": "Save the ticked sites as a group",
+    "name": "Group name",
+    "keep": {
+      "one": "The {count} ticked site",
+      "other": "The {count} ticked sites"
+    },
+    "save": "Save",
+    "cancel": "Cancel",
+    "rename": "Rename",
+    "replace": {
+      "one": "Use the {count} ticked site",
+      "other": "Use the {count} ticked sites"
+    },
+    "remove": "Remove",
+    "shortcut": "Ctrl+{n}"
+  },
+  "share": {
+    "byThisPc": "Shared index · kept up to date by this PC",
+    "holderHint": "Other PCs using this folder read what this one indexes.",
+    "byOther": "Shared index · kept up to date by {pc}",
+    "readerHint": "This PC only reads it: sites are added and updated from {pc}. If {pc} stays off, this PC takes over within 2 minutes.",
+    "localSite": "“{name}” is on a disk of this PC: the other PCs will see its results and preview, but cannot open its files."
+  },
+  "terms": {
+    "add": "Term list",
+    "pick": "Choose a list of terms",
+    "fileKind": "Term lists",
+    "chip": "List:",
+    "title": "Term list",
+    "mode": "Which files",
+    "any": "At least one",
+    "all": "All",
+    "anyHint": "Files holding at least one of these terms, besides the words of the search.",
+    "allHint": "Files holding every one of these terms, besides the words of the search.",
+    "hint": "Terms read from a file: click to see them, change the mode or remove the list",
+    "count": {
+      "one": "{count} term",
+      "other": "{count} terms"
+    },
+    "skipped": {
+      "one": "{count} line left out",
+      "other": "{count} lines left out"
+    },
+    "more": "… and {count} more",
+    "report": "Report per term…",
+    "replace": "Replace…",
+    "remove": "Remove the list",
+    "empty": "No term found in {name} (one term per line)."
+  },
+  "sense": {
+    "title": "Meaning search (local AI)",
+    "intro": "Also finds documents that say the same thing in other words, or in another language: “lease agreement” finds ⁨contrat de location⁩, ⁨contrato de arrendamiento⁩, ⁨عقد إيجار⁩. Everything stays on this PC.",
+    "download": "Download the module ({size})",
+    "fromFile": "Install from a file…",
+    "notYet": "Downloading will be possible with the first published version.",
+    "downloading": "Downloading… {done} / {total}",
+    "cancel": "Cancel",
+    "installed": "Module installed · Granite Embedding 97M (IBM) · {size} on this PC",
+    "next": "Then choose the sites to understand (“Meaning” box of each site).",
+    "remove": "Remove the module",
+    "removeConfirm": "Remove the meaning-search module from this PC? You can install it again later.",
+    "privacy": "The model runs on your processor: no text leaves this PC.",
+    "installedNotice": "Meaning search module installed.",
+    "pickZip": "Choose the meaning-search module (ZIP)",
+    "zipKind": "Prospector module"
+  },
+  "search": {
+    "label": "Search in your files",
+    "placeholder": "Words, \"exact phrase\", AND / OR / NOT / NEAR…",
+    "submit": "Dig!",
+    "stop": "Stop",
+    "mode": {
+      "label": "Search mode",
+      "indexed": "Indexed",
+      "live": "Live scan"
+    },
+    "options": {
+      "caseSensitive": "Match case",
+      "wholeWord": "Whole word",
+      "regex": "Regular expression",
+      "fuzzy": "Typo tolerance"
+    },
+    "filters": "Filters",
+    "save": "Save this search",
+    "settings": "Settings",
+    "scope": {
+      "one": "{count} site",
+      "other": "{count} sites"
+    },
+    "lead": "I'm looking for:",
+    "names": {
+      "toggle": "File name",
+      "lead": "Named",
+      "placeholder": "*.pdf ; invoice-* ; !draft*",
+      "label": "File name: * and ? wildcards, ; between several, ! to exclude, /regex/",
+      "folders": "Folders",
+      "foldersHint": "Look for folders instead of files",
+      "clear": "Remove the file-name criterion"
+    }
+  },
+  "filters": {
+    "title": "Filters",
+    "reset": "Reset",
+    "active": {
+      "one": "{count} active filter",
+      "other": "{count} active filters"
+    },
+    "types": "File type",
+    "kinds": {
+      "pdf": "PDF",
+      "word": "Word",
+      "excel": "Excel",
+      "powerpoint": "PowerPoint",
+      "text": "Text",
+      "code": "Source code",
+      "archive": "Archives",
+      "email": "Emails",
+      "folder": "Folder",
+      "image": "Images"
+    },
+    "size": "Size",
+    "sizes": {
+      "any": "Any size",
+      "lt1": "Under 1 MB",
+      "1to10": "1 to 10 MB",
+      "10to100": "10 to 100 MB",
+      "gt100": "Over 100 MB"
+    },
+    "modified": "Modified",
+    "dates": {
+      "any": "Any time",
+      "day": "Last 24 hours",
+      "week": "Last 7 days",
+      "month": "Last 30 days",
+      "year": "Last 12 months",
+      "custom": "Custom period"
+    },
+    "language": "Document language",
+    "excluded": "Excluded folders",
+    "addExcluded": "Exclude a folder",
+    "removeExcluded": "Stop excluding {path}",
+    "refine": "Refine",
+    "removeToken": "Remove {name}",
+    "date": "Date",
+    "dateField": "Kind of date",
+    "dateFields": {
+      "modified": "Modified",
+      "created": "Created",
+      "accessed": "Last access"
+    },
+    "dateFrom": "From",
+    "dateTo": "to",
+    "dateRange": "{from} → {to}",
+    "dateSince": "since {from}",
+    "dateUntil": "until {to}",
+    "dateToken": "{field} · {range}",
+    "accessedHint": "Read on the disk when searching. Windows does not always keep this date up to date.",
+    "attributes": "Attributes",
+    "attrs": {
+      "readOnly": "Read-only",
+      "hidden": "Hidden",
+      "system": "System"
+    },
+    "attributesHint": "Read on the disk when searching.",
+    "hiddenIndexed": "Hidden files are not indexed: switch to Live scan to find them.",
+    "hash": "Digest (MD5 or SHA-256)",
+    "hashPlaceholder": "32 or 64 characters, 0–9 and a–f",
+    "hashInvalid": "An MD5 digest has 32 characters, a SHA-256 one has 64 (digits and letters a to f).",
+    "hashMd5": "MD5: computed on the files that pass the other criteria.",
+    "hashSha256": "SHA-256: computed on the files that pass the other criteria.",
+    "hashToken": "Digest {hash}",
+    "copiesToken": "Copies of {name}"
+  },
+  "results": {
+    "label": "Results",
+    "files": {
+      "one": "{count} file",
+      "other": "{count} files"
+    },
+    "folders": {
+      "one": "{count} folder",
+      "other": "{count} folders"
+    },
+    "matches": {
+      "one": "{count} match",
+      "other": "{count} matches"
+    },
+    "duration": "{ms} ms",
+    "scanned": {
+      "one": "{count} file scanned",
+      "other": "{count} files scanned"
+    },
+    "scanning": "Digging…",
+    "done": "Search finished",
+    "sort": {
+      "label": "Sort by",
+      "relevance": "Relevance",
+      "matches": "Matches",
+      "modified": "Date modified",
+      "name": "Name"
+    },
+    "columns": {
+      "name": "Name",
+      "folder": "Folder",
+      "matches": "Matches",
+      "size": "Size",
+      "modified": "Modified",
+      "language": "Lang."
+    },
+    "export": "Export",
+    "exportCsv": "Export as CSV",
+    "exportJson": "Export as JSON",
+    "line": "line {line}",
+    "empty": "Nothing dug up",
+    "emptyHint": "Try another word, remove a filter or turn on typo tolerance.",
+    "idle": "Type a word and press Enter to start digging.",
+    "matchesIn": {
+      "one": "find in {files}",
+      "other": "finds in {files}"
+    },
+    "moreActions": "More actions",
+    "noSites": "Add a dig site (the + button on the left) to start searching.",
+    "exported": "Exported: {path}",
+    "approximate": "Approximate match (typo tolerance)",
+    "noExact": "No exact match for “{query}”. These files contain close words (typo tolerance).",
+    "exportPdf": "PDF report…",
+    "quickFilter": {
+      "label": "Filter the list by name or folder",
+      "placeholder": "Filter the list (name, folder)…",
+      "shown": "{shown} of {total}",
+      "none": "No file in the list has “{filter}” in its name or folder.",
+      "clear": "Clear the filter"
+    },
+    "within": {
+      "button": "Search within these results",
+      "hint": "The next searches only look at the files shown",
+      "chip": "Within the results of “{query}” · {files}",
+      "placeholder": "Words to find in these results ({files})…",
+      "clear": "Search everywhere again"
+    },
+    "file": {
+      "save": "Save results…",
+      "open": "Open results…",
+      "kind": "Prospector results",
+      "saved": "Results saved: {path}",
+      "invalid": "{name} is not a Prospector results file.",
+      "openedFrom": "opened from {name}"
+    },
+    "folder": {
+      "chip": "In: {path}",
+      "hint": "Search limited to this folder (Explorer right-click)",
+      "placeholder": "Words to find in this folder…",
+      "clear": "Search all sites again"
+    }
+  },
+  "tabs": {
+    "label": "Search tabs",
+    "new": "New tab",
+    "close": "Close tab",
+    "untitled": "New search",
+    "running": "Search running",
+    "back": "Previous search",
+    "forward": "Next search"
+  },
+  "preview": {
+    "label": "Preview",
+    "none": "Select a result to see it here.",
+    "occurrence": "{current} / {total}",
+    "prev": "Previous match",
+    "next": "Next match",
+    "open": "Open",
+    "reveal": "Show in folder",
+    "copyPath": "Copy path",
+    "copied": "Path copied",
+    "size": "Size",
+    "modified": "Modified",
+    "language": "Language",
+    "type": "Type",
+    "truncated": "Long document: only the start and the passages around the matches are shown.",
+    "loading": "Loading…",
+    "skipped": "Lines skipped",
+    "folder": "This is a folder. “Open” shows it in the Explorer.",
+    "openAtLine": "Open at line {line}",
+    "openAtLineHint": "In your code editor (Settings → Windows integration)",
+    "lineLink": "Open at line {line} in the editor",
+    "created": "Created {date}",
+    "copies": "Find copies",
+    "copiesHint": "Identical files (same size and same SHA-256 digest) in the checked sites",
+    "extract": "Extract to…",
+    "extractHint": "Save this file, taken out of its archive or e-mail, wherever you like",
+    "extracted": "Extracted: {path}",
+    "openInnerHint": "Opens this file (an extracted copy) with its application",
+    "hashing": "Computing the digest…",
+    "imageLocating": "Locating the words on the image…",
+    "imageBoxes": {
+      "one": "{count} word boxed on the image",
+      "other": "{count} words boxed on the image"
+    },
+    "imageNoBoxes": "The words found are in the text read below, without an exact position on the image."
+  },
+  "languages": {
+    "en": "English",
+    "fr": "French",
+    "es": "Spanish",
+    "ar": "Arabic",
+    "und": "Unknown"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Interface language",
+    "theme": "Theme",
+    "close": "Close",
+    "layout": "Layout",
+    "layouts": {
+      "journal": {
+        "name": "Log",
+        "hint": "Full excerpts under each file"
+      },
+      "ledger": {
+        "name": "Ledger",
+        "hint": "Dense table, filters in the side panel"
+      },
+      "strata": {
+        "name": "Strata",
+        "hint": "Grouped by folder, wide preview"
+      }
+    },
+    "themes": {
+      "crayons": "Colored pencils (light)",
+      "sonar": "Sonar (dark)"
+    },
+    "dataDir": "Index folder",
+    "dataDirHint": "Indexes can take a lot of space: keep them on the disk you prefer. Moving them keeps your dig sites.",
+    "dataDirChange": "Move…",
+    "portable": "Portable mode",
+    "portableHint": "Everything is kept here, next to the program: nothing is written on this PC. If the drive gets another letter, Prospector follows. The Explorer menu and starting with Windows are not offered.",
+    "dataDirPick": "Choose where to store the indexes",
+    "dataDirMoved": "Indexes moved to {path}",
+    "shortcut": "Global shortcut",
+    "shortcutHint": "Brings Prospector up from any application; press it again to send it back.",
+    "shortcutNone": "None",
+    "shortcutTaken": "Already used by another application: pick another one.",
+    "ocr": "Text in images (OCR)",
+    "ocrOn": "Read the text of images and scanned PDFs",
+    "ocrHint": "Uses the text recognition built into Windows. Languages: {languages}. Slower indexing for folders full of photos.",
+    "ocrUnavailable": "No text-recognition language is installed in Windows (Settings → Time & language → Language).",
+    "ocrUpdating": "Your sites are being updated: images and scanned PDFs are read."
+  },
+  "saved": {
+    "name": "Name of the search",
+    "confirm": "Save",
+    "remove": "Remove",
+    "removeNamed": "Remove “{label}” from saved searches",
+    "done": "Search “{label}” saved",
+    "saved": "Saved search"
+  },
+  "keys": {
+    "ctrl": "Ctrl",
+    "cmd": "⌘",
+    "shift": "Shift",
+    "alt": "Alt",
+    "space": "Space"
+  },
+  "report": {
+    "title": "Search report",
+    "generated": "Generated on {date}",
+    "query": "Search",
+    "options": "Options",
+    "sites": "Dig sites",
+    "none": "None",
+    "legend": "Highlighted: exact match · wavy underline: approximate match (typo tolerance).",
+    "names": "File name"
+  },
+  "updates": {
+    "title": "Updates",
+    "current": "Installed version: {version}",
+    "auto": "Check automatically at startup",
+    "check": "Check for updates",
+    "checking": "Checking…",
+    "upToDate": "Prospector is up to date.",
+    "checkFailed": "Could not reach the update server. Check your connection.",
+    "available": "Prospector {version} is available",
+    "install": "Update and restart",
+    "download": "Download",
+    "portableHint": "Portable version: download the new ZIP and replace the program on your drive.",
+    "later": "Later",
+    "downloading": "Downloading…",
+    "downloadingPercent": "Downloading… {percent}",
+    "installFailed": "The update could not be installed. Try again later."
+  },
+  "integration": {
+    "title": "Windows integration",
+    "menuLabel": "Search with Prospector",
+    "menuOn": "“Search with Prospector” in the Explorer’s right-click menu",
+    "menuHint": "On a folder, inside an open folder or on a drive. On Windows 11: under “Show more options”.",
+    "cliOn": "Command line in the PATH",
+    "cliHint": "Type “prospector-cli search …” in any new terminal (PowerShell, Command Prompt). For your account only; “prospector-cli --help” lists the commands.",
+    "editor": "Code editor",
+    "editorAuto": "The first one found ({name})",
+    "editorNone": "No code editor found on this PC: enter a command.",
+    "editorCustom": "Custom command",
+    "editorCommand": "Editor command",
+    "editorCommandHint": "{file}: the file, {line}: the line. Example: \"C:\\Program Files\\Vim\\gvim.exe\" +{line} \"{file}\""
+  },
+  "alerts": {
+    "start": "Alert me about new files for “{label}”",
+    "stop": "Stop alerting me for “{label}”",
+    "on": "Alert on: Prospector will tell you as soon as a new file matches “{label}”.",
+    "off": "Alert off for “{label}”.",
+    "news": {
+      "one": "{count} new file",
+      "other": "{count} new files"
+    },
+    "newTag": "New",
+    "notificationTitle": "New results: {label}"
+  },
+  "background": {
+    "title": "Background",
+    "keep": "Closing the window keeps Prospector near the clock",
+    "keepAuto": "Turned on automatically as soon as an alert exists, so it keeps watching. To quit: right-click the icon near the clock.",
+    "keepHint": "To quit: right-click the icon near the clock → Quit.",
+    "startup": "Start Prospector with Windows",
+    "startupHint": "It starts hidden, near the clock: the alerts watch from the moment you sign in.",
+    "trayOpen": "Open Prospector",
+    "trayQuit": "Quit"
+  },
+  "detectors": {
+    "title": "Detectors",
+    "audit": "Personal-data audit",
+    "hint": "Every item is validated (check digits, Luhn…): a random number is not reported. Combined with the words searched.",
+    "groups": {
+      "bank": "Bank",
+      "contact": "Contact",
+      "business": "Business",
+      "identity": "Identity"
+    },
+    "names": {
+      "iban": "IBAN",
+      "bic": "BIC / SWIFT",
+      "rib": "French RIB",
+      "card": "Bank card",
+      "email": "E-mail",
+      "phone": "Phone",
+      "ip": "IP address",
+      "amount": "Amount",
+      "vat": "VAT number",
+      "siren": "SIREN / SIRET",
+      "nir": "French social security no.",
+      "dni": "Spanish DNI / NIE",
+      "mrz": "Passport / ID card"
+    },
+    "hints": {
+      "iban": "IBAN from any country, mod-97 key checked",
+      "bic": "BIC code with a digit, or after “BIC” / “SWIFT”",
+      "rib": "French bank details, RIB key checked",
+      "card": "Visa, Mastercard, Amex…: 13 to 19 digits, Luhn check",
+      "email": "E-mail addresses",
+      "phone": "International (+33, 00212…), French or Maghreb national, Spanish",
+      "ip": "IPv4 addresses",
+      "amount": "A number with a currency: €, $, £, EUR, MAD, DZD, DH, درهم…",
+      "vat": "EU VAT number (FR with its key checked, ES, DE, BE, IT, NL, LU, PT)",
+      "siren": "After the word SIREN or SIRET, Luhn check",
+      "nir": "French social security number, key checked",
+      "dni": "Spanish DNI or NIE, check letter verified",
+      "mrz": "Machine-readable zone of a passport or an ID card, check digits verified"
+    },
+    "total": "{files} · {matches}",
+    "nothing": "No data detected.",
+    "reportTitle": "Data detected",
+    "kind": "Kind of data",
+    "files": "Files",
+    "occurrences": "Occurrences",
+    "masked": "Account, card and identity numbers are masked in this report (only the last 4 characters remain)."
+  },
+  "facets": {
+    "years": "Years",
+    "siteFound": "In this site: {files}"
+  },
+  "export": {
+    "menu": "Export…",
+    "copyMenu": "Copy the files found…",
+    "dialogTitle": "Export the results",
+    "copyTitle": "Copy the files found",
+    "scope": "Which files",
+    "scopeVisible": "Those shown ({files})",
+    "scopeAll": "All the files found (up to {max})",
+    "scopeAllHint": "“All” asks the index again: in live scan or for opened results, only the files shown are available.",
+    "format": "Format",
+    "formats": {
+      "excel": "Excel (CSV)",
+      "html": "HTML page",
+      "json": "JSON"
+    },
+    "separator": "“{sep}” separator, opens directly in Excel",
+    "columnsTitle": "Columns",
+    "noTerms": "The search has no word to count",
+    "noDetections": "No detector in this search",
+    "keywordsHint": "One column per word of the search (occurrences in each file), and a totals row.",
+    "destination": "Destination",
+    "toFolder": "A folder",
+    "toZip": "A ZIP archive",
+    "keepTree": "Keep the subfolders",
+    "extractInner": "Extract the files from archives and e-mails",
+    "extractInnerHint": "Unticked, the whole archive or mailbox is copied, once. A message (not an attached file) always brings its mailbox.",
+    "copyHint": "Nothing is overwritten: a name already taken becomes “name (2)”.",
+    "pickFolder": "Choose where to copy the files",
+    "run": "Export…",
+    "copyRun": "Copy…",
+    "cancel": "Cancel",
+    "copied": "{files} copied.",
+    "copyCancelled": "Copy stopped: {files} copied.",
+    "fromContainers": {
+      "one": "{count} result was inside an archive or an e-mail: its container was copied.",
+      "other": "{count} results were inside archives or e-mails: their containers were copied."
+    },
+    "skipped": "{files} could not be read (missing or locked)",
+    "title": "Results for “{query}”",
+    "byKeyword": "Per keyword",
+    "term": "Keyword",
+    "totalFiles": "Files containing the word",
+    "columns": {
+      "name": "Name",
+      "folder": "Folder",
+      "path": "Full path",
+      "kind": "Type",
+      "size": "Size",
+      "modified": "Modified",
+      "created": "Created",
+      "lang": "Language",
+      "site": "Site",
+      "matches": "Matches",
+      "excerpt": "Excerpt",
+      "keywords": "Per keyword",
+      "detections": "Detected data"
+    }
+  },
+  "dupes": {
+    "open": "Find duplicates in the checked sites",
+    "title": "Duplicates",
+    "exactOption": "Identical files",
+    "similarOption": "Near-identical documents",
+    "threshold": "Minimum similarity",
+    "sites": "Sites: {sites}",
+    "start": "Search",
+    "starting": "Preparing…",
+    "hashing": "Comparing files of the same size… {done} / {total}",
+    "comparing": "Comparing texts… {done} / {total}",
+    "groups": {
+      "one": "{count} group",
+      "other": "{count} groups"
+    },
+    "wasted": "{size} to reclaim",
+    "scanned": "{hashed} files compared byte by byte, {compared} texts compared",
+    "cancelled": "search stopped, partial results",
+    "exact": "Identical",
+    "similar": "Near-identical",
+    "similarAt": "{percent} similar",
+    "none": "No duplicate found.",
+    "choose": "Choose {name}",
+    "keepOne": "One file of each group is always kept",
+    "innerHint": "Document inside an archive or an e-mail: it cannot be sent to the Recycle Bin on its own",
+    "export": "Export the list",
+    "trash": "Send to the Recycle Bin",
+    "trashCount": {
+      "one": "Send {count} file to the Recycle Bin",
+      "other": "Send {count} files to the Recycle Bin"
+    },
+    "trashConfirm": "Send {files} to the Windows Recycle Bin? You can restore them from the Recycle Bin.",
+    "trashed": "{files} sent to the Recycle Bin.",
+    "trashFailed": "{files} could not be sent to the Recycle Bin (open elsewhere or missing).",
+    "group": "Group",
+    "kind": "Kind",
+    "similarity": "Similarity"
+  },
+  "errors": {
+    "rootUnavailable": "Folder not found: {path}",
+    "siteNotFound": "This dig site no longer exists.",
+    "fileNotIndexed": "This file is not in the index anymore. Re-index the site.",
+    "indexBusy": "An indexing is already running. Wait for it to finish.",
+    "index": "The index could not be read. Re-index the site.",
+    "storage": "Could not write to the index folder.",
+    "invalidQuery": "This search could not be understood.",
+    "openFailed": "Could not open {path}",
+    "writeFailed": "Could not save {path}",
+    "taskFailed": "The operation was interrupted.",
+    "unknown": "Something went wrong.",
+    "dismiss": "Dismiss",
+    "shortcutUnavailable": "This shortcut is already used by another application: {shortcut}",
+    "readFailed": "Could not read {path}",
+    "noEditor": "No code editor found. Choose one in Settings.",
+    "editorFailed": "The editor could not be started: {program}",
+    "explorerMenuFailed": "The Explorer menu could not be changed.",
+    "invalidHash": "Invalid digest: {value}. An MD5 has 32 characters, a SHA-256 has 64.",
+    "savedSearchNotFound": "This saved search no longer exists.",
+    "autostartFailed": "Starting with Windows could not be changed.",
+    "cliPathFailed": "The PATH could not be changed.",
+    "notExtractable": "This document could not be taken out of its archive or e-mail: {path}",
+    "invalidGroup": "A group needs a name and at least one ticked site.",
+    "groupNotFound": "This group no longer exists.",
+    "readOnly": "{pc} keeps this shared index up to date: do it from that PC.",
+    "sense": "Meaning search: {message}"
+  }
+}

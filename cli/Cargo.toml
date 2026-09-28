@@ -1,0 +1,24 @@
+[package]
+name = "prospector-cli"
+description = "Prospector from the command line: search, live scan, index update"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "prospector-cli"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+prospector-core = { path = "../core" }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+
+[target.'cfg(windows)'.dependencies]
+# Tells whether the Prospector app is open (its single-instance mutex).
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_System_Threading"] }
+
+[dev-dependencies]
+tempfile = "3.27.0"

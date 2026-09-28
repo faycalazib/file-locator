@@ -1,0 +1,43 @@
+/*
+ * Fonts embedded locally (Fontsource, OFL licence): no CDN, the app works
+ * offline. Only the useful subsets are imported: latin + latin-ext (EN/FR/ES)
+ * and arabic (AR).
+ *
+ * "Colored pencils" theme (default):
+ *   - Patrick Hand SC  → titles (hand-drawn capitals)
+ *   - Patrick Hand     → body text (handwriting with unambiguous digits:
+ *                        Architects Daughter was dropped, its "1" looked like an "l")
+ *   - Courier Prime    → paths, code, regex (typewriter)
+ *   - Baloo Bhaijaan 2 → Arabic (rounded, readable, shared by every theme)
+ *
+ * "Sonar" theme (dark):
+ *   - Tiny5            → brand only (title, panel headers). Pixelify Sans was dropped:
+ *                        its "C" looked like an "O" ("PROSPEOTOR")
+ *   - Chakra Petch     → everything else, counts included
+ *   - JetBrains Mono   → paths, code, regex
+ */
+@import '@fontsource/patrick-hand-sc/latin-400.css';
+@import '@fontsource/patrick-hand-sc/latin-ext-400.css';
+
+@import '@fontsource/patrick-hand/latin-400.css';
+@import '@fontsource/patrick-hand/latin-ext-400.css';
+
+@import '@fontsource/courier-prime/latin-400.css';
+@import '@fontsource/courier-prime/latin-700.css';
+@import '@fontsource/courier-prime/latin-ext-400.css';
+
+@import '@fontsource/baloo-bhaijaan-2/arabic-500.css';
+@import '@fontsource/baloo-bhaijaan-2/arabic-600.css';
+@import '@fontsource/baloo-bhaijaan-2/arabic-700.css';
+@import '@fontsource/baloo-bhaijaan-2/latin-600.css';
+
+@import '@fontsource/tiny5/latin-400.css';
+@import '@fontsource/tiny5/latin-ext-400.css';
+
+@import '@fontsource/chakra-petch/latin-500.css';
+@import '@fontsource/chakra-petch/latin-600.css';
+@import '@fontsource/chakra-petch/latin-ext-500.css';
+@import '@fontsource/chakra-petch/latin-ext-600.css';
+
+@import '@fontsource/jetbrains-mono/latin-400.css';
+@import '@fontsource/jetbrains-mono/latin-ext-400.css';

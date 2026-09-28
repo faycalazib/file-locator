@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="fr" dir="ltr">
+<head>
+<meta charset="utf-8">
+<title>Prospector — Maquette A · Clay Spotlight</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;600;700;800&family=DM+Mono:wght@400;500&family=Baloo+Bhaijaan+2:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #fbf3e6;
+    --paper: #fffdf8;
+    --cocoa: #3d2b2f;
+    --cocoa-soft: #7c6a6e;
+    --lilac: #a98bea;
+    --lilac-deep: #8a6bd8;
+    --lilac-soft: #e9e0fc;
+    --pink: #f47fa9;
+    --pink-soft: #ffe0ea;
+    --mint: #7fd1a6;
+    --mint-soft: #d7f4e3;
+    --butter: #ffd36b;
+    --butter-soft: #fff1c4;
+    --sky: #86c3ef;
+    --sky-soft: #ddeffc;
+    --hl: #ffe27a;
+    --f-display: 'Fredoka', 'Baloo Bhaijaan 2', sans-serif;
+    --f-body: 'Nunito', 'Baloo Bhaijaan 2', sans-serif;
+    --f-mono: 'DM Mono', 'Baloo Bhaijaan 2', monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--cream);
+    color: var(--cocoa);
+    font: 600 15px/1.45 var(--f-body);
+    overflow: hidden;
+    position: relative;
+  }
+  /* Soft clay blobs in the background */
+  .blob { position: absolute; border-radius: 50%; filter: blur(2px); opacity: .55; z-index: 0; }
+  .b1 { width: 420px; height: 420px; background: radial-gradient(circle at 35% 30%, #d9cbfb, #b9a1f2); left: -160px; top: 380px; }
+  .b2 { width: 300px; height: 300px; background: radial-gradient(circle at 35% 30%, #ffe3ec, #f9b3cb); right: 520px; top: -150px; }
+  .b3 { width: 260px; height: 260px; background: radial-gradient(circle at 35% 30%, #e2f7ea, #a9e3c3); left: 560px; bottom: -170px; }
+
+  /* Clay material */
+  .clay {
+    background: var(--paper);
+    border-radius: 26px;
+    box-shadow:
+      0 18px 40px -18px rgba(110, 80, 160, .35),
+      0 3px 0 rgba(255,255,255,.8) inset,
+      0 -5px 0 rgba(61,43,47,.05) inset;
+  }
+  .emoji { width: 1em; height: 1em; display: inline-block; vertical-align: -0.15em; }
+
+  .app { position: relative; z-index: 1; height: 100%; display: grid; grid-template-columns: 1fr 560px; gap: 28px; padding: 26px 30px; }
+
+  /* ── Top bar ── */
+  .top { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
+  .logo { display: flex; align-items: center; gap: 10px; font: 700 26px var(--f-display); letter-spacing: -.01em; }
+  .logo img { width: 38px; height: 38px; }
+  .spacer { flex: 1; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 14px; border-radius: 999px; border: 0;
+    font: 700 14px var(--f-body); color: var(--cocoa);
+    background: var(--paper);
+    box-shadow: 0 8px 18px -10px rgba(110,80,160,.4), 0 -3px 0 rgba(61,43,47,.06) inset, 0 2px 0 #fff inset;
+  }
+  .pill img { width: 22px; height: 22px; }
+
+  /* ── Search ── */
+  .main { display: flex; flex-direction: column; min-height: 0; max-width: 900px; width: 100%; justify-self: center; }
+  .hello { font: 700 34px/1.1 var(--f-display); margin: 4px 0 16px 8px; }
+  .hello span { color: var(--lilac-deep); }
+  .search { display: flex; gap: 12px; align-items: stretch; }
+  .field { flex: 1; display: flex; align-items: center; gap: 14px; padding: 0 22px; height: 68px; font: 600 22px var(--f-display); }
+  .field img { width: 34px; height: 34px; }
+  .op { color: var(--lilac-deep); font-weight: 700; font-size: 16px; padding: 2px 8px; background: var(--lilac-soft); border-radius: 8px; }
+  .caret { width: 2px; height: 26px; background: var(--lilac-deep); border-radius: 2px; margin-left: -8px; }
+  .dig {
+    display: flex; align-items: center; gap: 10px; padding: 0 28px; border: 0; border-radius: 26px;
+    background: linear-gradient(180deg, #b79cf1, var(--lilac-deep));
+    color: #fff; font: 700 20px var(--f-display);
+    box-shadow: 0 16px 30px -14px rgba(138,107,216,.9), 0 3px 0 rgba(255,255,255,.35) inset, 0 -6px 0 rgba(60,20,120,.25) inset;
+  }
+  .dig img { width: 30px; height: 30px; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0 0 4px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 7px; padding: 7px 14px 7px 9px; border-radius: 999px;
+    font: 700 13px var(--f-body); color: var(--cocoa);
+    box-shadow: 0 -3px 0 rgba(61,43,47,.08) inset, 0 2px 0 rgba(255,255,255,.7) inset;
+  }
+  .chip img { width: 22px; height: 22px; }
+  .chip.on { outline: 2.5px solid var(--cocoa); outline-offset: -2.5px; }
+  .c-lilac { background: var(--lilac-soft); } .c-pink { background: var(--pink-soft); }
+  .c-mint { background: var(--mint-soft); } .c-butter { background: var(--butter-soft); } .c-sky { background: var(--sky-soft); }
+  .sep { width: 2px; background: rgba(61,43,47,.1); border-radius: 2px; margin: 4px 4px; }
+
+  /* ── Results ── */
+  .summary { display: flex; align-items: center; gap: 12px; margin: 26px 8px 12px; }
+  .summary .gem { width: 40px; height: 40px; }
+  .summary b { font: 700 30px var(--f-display); color: var(--pink); }
+  .summary .t { font: 700 18px var(--f-display); }
+  .summary small { color: var(--cocoa-soft); font-weight: 700; margin-left: 4px; }
+  .sort { margin-left: auto; }
+
+  .list { display: flex; flex-direction: column; gap: 12px; overflow: hidden; padding: 4px 6px 20px; }
+  .res { display: grid; grid-template-columns: 58px 1fr auto; gap: 16px; align-items: center; padding: 14px 18px 14px 14px; }
+  .res.sel { outline: 3px solid var(--lilac); outline-offset: -3px; background: #fff; }
+  .ico { width: 58px; height: 58px; border-radius: 18px; display: grid; place-items: center;
+         box-shadow: 0 -4px 0 rgba(61,43,47,.07) inset, 0 2px 0 rgba(255,255,255,.8) inset; }
+  .ico img { width: 38px; height: 38px; }
+  .name { font: 800 16px var(--f-body); }
+  .path { font: 400 12px var(--f-mono); color: var(--cocoa-soft); margin-top: 1px; direction: ltr; unicode-bidi: isolate; }
+  .snip { margin-top: 6px; color: #5a474b; font-weight: 600; }
+  .snip[dir=rtl] { font-family: 'Baloo Bhaijaan 2', sans-serif; text-align: left; }
+  mark { background: linear-gradient(180deg, transparent 18%, var(--hl) 18%, var(--hl) 88%, transparent 88%); color: var(--cocoa); padding: 0 3px; border-radius: 4px; font-weight: 800; }
+  .yield { display: flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 16px; background: var(--pink-soft);
+           font: 700 20px var(--f-display); color: #d4467c; box-shadow: 0 -3px 0 rgba(212,70,124,.12) inset; }
+  .yield img { width: 24px; height: 24px; }
+
+  /* ── Preview sheet ── */
+  .sheet { display: flex; flex-direction: column; min-height: 0; padding: 26px 30px; position: relative; border-radius: 34px; }
+  .sheet-top { display: flex; align-items: center; gap: 14px; }
+  .big-ico { width: 72px; height: 72px; border-radius: 22px; background: var(--sky-soft); display: grid; place-items: center;
+             box-shadow: 0 -5px 0 rgba(61,43,47,.07) inset, 0 2px 0 #fff inset; }
+  .big-ico img { width: 48px; height: 48px; }
+  .sheet h2 { margin: 0; font: 700 26px/1.15 var(--f-display); }
+  .sheet .path { font-size: 12.5px; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 18px; }
+  .meta .chip { padding: 6px 12px; }
+  .actions { display: flex; gap: 10px; margin-bottom: 18px; }
+  .btn { flex: 1; justify-content: center; }
+  .btn.primary { background: var(--mint); color: #174d33; }
+  .doc { flex: 1; overflow: hidden; background: #fffaf0; border-radius: 22px; padding: 18px 22px;
+         box-shadow: 0 3px 10px -4px rgba(61,43,47,.12) inset; }
+  .doc p { margin: 0 0 14px; font: 600 15px/1.6 var(--f-body); color: #4d3b3f; }
+  .doc .h { font: 700 14px var(--f-display); color: var(--lilac-deep); letter-spacing: .02em; margin-top: 4px; }
+  .doc mark.cur { background: var(--pink); color: #fff; box-shadow: 0 4px 10px -4px rgba(244,127,169,.9); }
+  .nav { position: absolute; left: 50%; bottom: 44px; transform: translateX(-50%); display: flex; align-items: center; gap: 12px;
+         padding: 8px 10px; border-radius: 999px; background: var(--cocoa); color: #fff; font: 700 16px var(--f-display);
+         box-shadow: 0 16px 28px -12px rgba(61,43,47,.7); }
+  .nav button { width: 36px; height: 36px; border-radius: 50%; border: 0; background: rgba(255,255,255,.14); color: #fff; font-size: 16px; }
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+<div class="app">
+  <div class="main">
+    <div class="top">
+      <div class="logo"><img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Pick/3D/pick_3d.png" alt="">Prospector</div>
+      <div class="spacer"></div>
+      <button class="pill"><img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Card%20index%20dividers/3D/card_index_dividers_3d.png" alt="">4 sites de fouille</button>
+      <button class="pill">Français</button>
+      <button class="pill"><img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Gear/3D/gear_3d.png" alt=""></button>
+    </div>
+
+    <div class="hello">On creuse quoi <span>aujourd’hui</span> ?</div>
+
+    <div class="search">
+      <div class="field clay">
+        <img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Magnifying%20glass%20tilted%20left/3D/magnifying_glass_tilted_left_3d.png" alt="">
+        contrat <span class="op">OU</span> contrato <span class="op">OU</span> <span style="font-family:'Baloo Bhaijaan 2'">عقد</span><span class="caret"></span>
+      </div>
+      <button class="dig"><img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Pick/3D/pick_3d.png" alt="">Creuser</button>
+    </div>
+
+    <div class="chips">
+      <span class="chip c-lilac on"><img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Sparkles/3D/sparkles_3d.png" alt="">Tolère les fautes</span>
+      <span class="sep"></span>
+      <span class="chip c-sky"><img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Page%20facing%20up/3D/page_facing_up_3d.png" alt="">PDF</span>
+      <span class="chip c-lilac"><img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Memo/3D/memo_3d.png" alt="">Word</span>
+      <span class="chip c-mint"><img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Bar%20chart/3D/bar_chart_3d.png" alt="">Excel</span>
+      <span class="chip c-pink"><img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Envelope/3D/envelope_3d.png" alt="">E-mails</span>
+      <span class="chip c-butter"><img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Laptop/3D/laptop_3d.png" alt="">Code</span>
+      <span class="chip c-sky">+ Affiner</span>
+    </div>
+
+    <div class="summary">
+      <img class="gem" src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Gem%20stone/3D/gem_stone_3d.png" alt="">
+      <b>30</b><span class="t">trouvailles dans 11 fichiers</span><small>en 38 ms</small>
+      <button class="pill sort">Les plus pertinents ▾</button>
+    </div>
+
+    <div class="list">
+      <div class="res clay sel">
+        <div class="ico" style="background:var(--sky-soft)"><img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Page%20facing%20up/3D/page_facing_up_3d.png" alt=""></div>
+        <div><div class="name">contrat-prestation-v3.pdf</div><div class="path">D:\Clients\Dupont SARL\2024\</div>
+          <div class="snip">…le présent <mark>contrat</mark> de prestation prend effet à la date de signature par les deux parties…</div></div>
+        <div class="yield"><img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Gem%20stone/3D/gem_stone_3d.png" alt="">7</div>
+      </div>
+      <div class="res clay">
+        <div class="ico" style="background:var(--lilac-soft)"><img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Memo/3D/memo_3d.png" alt=""></div>
+        <div><div class="name">contrato_servicios_2024.docx</div><div class="path">D:\Clients\García Hermanos\</div>
+          <div class="snip">…el presente <mark>contrato</mark> de prestación de servicios se regirá por la legislación española…</div></div>
+        <div class="yield"><img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Gem%20stone/3D/gem_stone_3d.png" alt="">5</div>
+      </div>
+      <div class="res clay">
+        <div class="ico" style="background:var(--sky-soft)"><img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Page%20facing%20up/3D/page_facing_up_3d.png" alt=""></div>
+        <div><div class="name" style="font-family:'Baloo Bhaijaan 2'"><span dir="ltr" style="unicode-bidi:isolate">عقد_إيجار_2023.pdf</span></div><div class="path">D:\Archives\عقود\</div>
+          <div class="snip" dir="rtl">…يبدأ سريان هذا <mark>العقد</mark> اعتبارًا من تاريخ توقيعه من قبل الطرفين…</div></div>
+        <div class="yield"><img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Gem%20stone/3D/gem_stone_3d.png" alt="">4</div>
+      </div>
+      <div class="res clay">
+        <div class="ico" style="background:var(--butter-soft)"><img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Laptop/3D/laptop_3d.png" alt=""></div>
+        <div><div class="name">ContractService.ts</div><div class="path">H:\Development\billing-api\src\contracts\</div>
+          <div class="snip" style="font-family:var(--f-mono);font-size:13px">export class <mark>Contract</mark>Service {</div></div>
+        <div class="yield"><img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Gem%20stone/3D/gem_stone_3d.png" alt="">6</div>
+      </div>
+      <div class="res clay">
+        <div class="ico" style="background:var(--pink-soft)"><img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Envelope/3D/envelope_3d.png" alt=""></div>
+        <div><div class="name">Re: signature du contrat</div><div class="path">E:\Mail\Archive 2019-2024.pst › Inbox</div>
+          <div class="snip">Bonjour Julien, vous trouverez ci-joint le <mark>contrat</mark> signé ainsi que l’annexe tarifaire.</div></div>
+        <div class="yield"><img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Gem%20stone/3D/gem_stone_3d.png" alt="">1</div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="sheet clay">
+    <div class="sheet-top">
+      <div class="big-ico"><img src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Page%20facing%20up/3D/page_facing_up_3d.png" alt=""></div>
+      <div><h2>contrat-prestation-v3.pdf</h2><div class="path">D:\Clients\Dupont SARL\2024\</div></div>
+    </div>
+    <div class="meta">
+      <span class="chip c-sky">PDF · 2,4 Mo</span>
+      <span class="chip c-butter">Modifié il y a 3 jours</span>
+      <span class="chip c-mint">Français</span>
+    </div>
+    <div class="actions">
+      <button class="pill btn primary">Ouvrir le fichier</button>
+      <button class="pill btn">Voir le dossier</button>
+      <button class="pill btn">Copier le chemin</button>
+    </div>
+    <div class="doc">
+      <p class="h">ARTICLE 2 — OBJET ET DURÉE</p>
+      <p>Le Prestataire s’engage à réaliser pour le Client les prestations décrites en annexe 1.</p>
+      <p>Le présent <mark class="cur">contrat</mark> de prestation prend effet à la date de signature par les deux parties et est conclu pour une durée de vingt-quatre (24) mois.</p>
+      <p>À l’issue de cette période, le <mark>contrat</mark> pourra être renouvelé par avenant écrit.</p>
+      <p class="h">ARTICLE 5 — PRIX ET PAIEMENT</p>
+      <p>Les prix figurant au <mark>contrat</mark> sont exprimés hors taxes et révisables annuellement.</p>
+      <p>Les factures sont payables à trente (30) jours à compter de leur date d’émission.</p>
+    </div>
+    <div class="nav"><button>↑</button> 💎 1 / 7 <button>↓</button></div>
+  </aside>
+</div>
+</body>
+</html>

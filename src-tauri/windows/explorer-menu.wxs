@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Prospector: removes the Explorer right-click menu when the MSI is
+     uninstalled. The app writes it (src-tauri/src/explorer.rs, same keys).
+     Lot 7.1: the command line removes its folder from the user's PATH
+     ("Command line in the PATH" in Settings) before the files go. -->
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Fragment>
+    <DirectoryRef Id="INSTALLDIR">
+      <Component Id="ExplorerMenuCleanup" Guid="6B0E3F52-2D7C-4E0A-9C1B-7F4A5D8E2C31">
+        <RegistryValue Root="HKCU" Key="Software\Faycal Azib\Prospector" Name="ExplorerMenuCleanup" Type="integer" Value="1" KeyPath="yes" />
+        <RemoveRegistryKey Root="HKCU" Key="Software\Classes\Directory\shell\Prospector" Action="removeOnUninstall" />
+        <RemoveRegistryKey Root="HKCU" Key="Software\Classes\Directory\Background\shell\Prospector" Action="removeOnUninstall" />
+        <RemoveRegistryKey Root="HKCU" Key="Software\Classes\Drive\shell\Prospector" Action="removeOnUninstall" />
+      </Component>
+    </DirectoryRef>
+    <CustomAction Id="CliPathCleanup" Directory="INSTALLDIR" ExeCommand="&quot;[INSTALLDIR]prospector-cli.exe&quot; uninstall-cleanup" Execute="immediate" Return="ignore" />
+    <InstallExecuteSequence>
+      <Custom Action="CliPathCleanup" Before="RemoveFiles">REMOVE="ALL" AND NOT UPGRADINGPRODUCTCODE</Custom>
+    </InstallExecuteSequence>
+  </Fragment>
+</Wix>

@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="fr" dir="ltr">
+<head>
+<meta charset="utf-8">
+<title>Prospector — Maquette C · Sonar Quest</title>
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;600;700&family=Press+Start+2P&family=Chakra+Petch:wght@500;600;700&family=VT323&family=Baloo+Bhaijaan+2:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #120d24; --panel: #1b1436; --panel-2: #231a45;
+    --cyan: #35e6d8; --magenta: #ff4fd8; --yellow: #ffd23f; --green: #69f58c; --orange: #ff8a3d; --red: #ff4d6d; --violet: #9b7bff;
+    --text: #ecebff; --dim: #9a92c9;
+    --f-pix: 'Pixelify Sans', 'Baloo Bhaijaan 2', sans-serif;
+    --f-8bit: 'Press Start 2P', monospace;
+    --f-body: 'Chakra Petch', 'Baloo Bhaijaan 2', sans-serif;
+    --f-term: 'VT323', 'Baloo Bhaijaan 2', monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background:
+      radial-gradient(ellipse at 50% 55%, rgba(155,123,255,.18), transparent 60%),
+      radial-gradient(circle at 1px 1px, rgba(255,255,255,.07) 1px, transparent 1.5px) 0 0/22px 22px,
+      var(--bg);
+    color: var(--text); font: 500 15px/1.4 var(--f-body); overflow: hidden;
+  }
+  .app { height: 100%; display: grid; grid-template-rows: auto 1fr; gap: 16px; padding: 18px 22px; }
+  .panel { background: linear-gradient(180deg, var(--panel-2), var(--panel)); border: 2px solid var(--c, var(--violet)); border-radius: 10px;
+           box-shadow: 0 0 0 2px rgba(0,0,0,.4) inset, 0 0 18px -6px var(--c, var(--violet)); position: relative; }
+  .ph { font: 700 18px var(--f-pix); letter-spacing: 1px; color: var(--c, var(--violet)); display: flex; align-items: center; gap: 8px; }
+  .tiny { font: 9px var(--f-8bit); letter-spacing: .5px; color: var(--dim); }
+
+  /* ── Header ── */
+  header { display: grid; grid-template-columns: 290px 1fr 380px; gap: 16px; align-items: stretch; }
+  .logo { display: flex; flex-direction: column; justify-content: center; padding: 10px 16px; }
+  .logo b { font: 700 30px/1 var(--f-pix); background: linear-gradient(90deg, var(--cyan), var(--magenta)); -webkit-background-clip: text; color: transparent; letter-spacing: 1px; }
+  .quest { display: flex; gap: 12px; padding: 10px; --c: var(--cyan); }
+  .input { flex: 1; display: flex; align-items: center; gap: 10px; padding: 0 16px; background: #0c0819; border-radius: 6px; font: 28px var(--f-term); color: var(--cyan); }
+  .input .op { color: var(--magenta); }
+  .input .cur { width: 12px; height: 24px; background: var(--cyan); animation: none; }
+  .go { border: 0; border-radius: 6px; padding: 0 22px; background: var(--yellow); color: #2a1a00; font: 700 20px var(--f-pix); letter-spacing: 1px;
+        box-shadow: 0 -4px 0 rgba(0,0,0,.25) inset, 0 0 18px -4px var(--yellow); }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); padding: 10px 14px; gap: 8px; --c: var(--magenta); }
+  .stat b { display: block; font: 700 30px/1.1 var(--f-body); }
+  .stat:nth-child(1) b { color: var(--yellow); } .stat:nth-child(2) b { color: var(--cyan); } .stat:nth-child(3) b { color: var(--green); }
+
+  /* ── Body ── */
+  .body { display: grid; grid-template-columns: 290px 1fr 540px; gap: 16px; min-height: 0; }
+  .col { display: flex; flex-direction: column; gap: 16px; min-height: 0; }
+
+  .sites { padding: 14px; --c: var(--green); }
+  .site { margin-top: 12px; }
+  .site-top { display: flex; justify-content: space-between; font: 600 15px var(--f-body); }
+  .site-top span { font: 9px var(--f-8bit); color: var(--dim); align-self: center; }
+  .hp { height: 12px; margin-top: 5px; background: #0c0819; border: 2px solid #2d2456; border-radius: 3px; overflow: hidden; }
+  .hp i { display: block; height: 100%; background: repeating-linear-gradient(90deg, var(--k) 0 10px, color-mix(in srgb, var(--k) 75%, #000) 10px 12px); }
+  .err { color: var(--red); font: 9px var(--f-8bit); margin-top: 6px; }
+  .quests { padding: 14px; --c: var(--yellow); flex: 1; }
+  .q { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px dashed #3a2f6b; font-weight: 600; }
+  .q i { width: 14px; height: 14px; border: 2px solid var(--yellow); border-radius: 2px; }
+  .q small { margin-left: auto; font: 20px var(--f-term); color: var(--yellow); }
+
+  /* ── Radar ── */
+  .radar-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; --c: var(--cyan); }
+  .radar { position: relative; width: 620px; height: 620px; }
+  .radar svg { position: absolute; inset: 0; }
+  .sweep { position: absolute; inset: 30px; border-radius: 50%;
+           background: conic-gradient(from 20deg, rgba(53,230,216,.0) 0deg, rgba(53,230,216,.0) 290deg, rgba(53,230,216,.28) 355deg, rgba(53,230,216,.6) 360deg); }
+  .sector { position: absolute; font: 700 16px var(--f-pix); letter-spacing: 1px; }
+  .legend { display: flex; gap: 16px; margin-top: 6px; font: 600 13px var(--f-body); color: var(--dim); }
+  .legend i { background: currentColor; display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; box-shadow: 0 0 8px currentColor; }
+
+  /* ── Leaderboard + loot ── */
+  .board { padding: 14px 16px; --c: var(--magenta); }
+  .row { display: grid; grid-template-columns: 30px 1fr 150px; gap: 12px; align-items: center; padding: 7px 8px; border-radius: 6px; }
+  .row.me { background: rgba(255,79,216,.12); outline: 2px solid var(--magenta); }
+  .rank { font: 11px var(--f-8bit); color: var(--dim); }
+  .fname { font: 600 15px var(--f-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fpath { font: 17px/1 var(--f-term); color: var(--dim); direction: ltr; unicode-bidi: isolate; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .xp { display: flex; align-items: center; gap: 8px; }
+  .xp .bar { flex: 1; height: 10px; background: #0c0819; border: 2px solid #2d2456; border-radius: 3px; overflow: hidden; }
+  .xp .bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--magenta), var(--yellow)); }
+  .xp b { font: 700 18px var(--f-body); color: var(--yellow); min-width: 28px; text-align: right; }
+
+  .loot { flex: 1; padding: 14px 16px; --c: var(--yellow); display: flex; flex-direction: column; min-height: 0; }
+  .loot h3 { margin: 6px 0 0; font: 700 22px var(--f-pix); color: var(--text); }
+  .excerpt { margin-top: 10px; padding: 12px 14px; background: #0c0819; border-radius: 6px; font: 500 14.5px/1.55 var(--f-body); color: #d7d3f5; flex: 1; overflow: hidden; }
+  .excerpt p { margin: 0 0 10px; }
+  mark { background: rgba(255,210,63,.18); color: var(--yellow); padding: 0 3px; border-radius: 3px; box-shadow: 0 0 10px -2px rgba(255,210,63,.6); font-weight: 700; }
+  mark.cur { background: var(--yellow); color: #2a1a00; }
+  .loot-bar { display: flex; gap: 10px; margin-top: 12px; align-items: center; }
+  .btn { border: 2px solid var(--c2, var(--cyan)); background: transparent; color: var(--c2, var(--cyan)); font: 700 15px var(--f-pix); letter-spacing: 1px; padding: 7px 14px; border-radius: 6px; }
+  .btn.solid { background: var(--cyan); color: #06201d; }
+  .nav { margin-left: auto; font: 700 18px var(--f-body); color: var(--yellow); display: flex; gap: 10px; align-items: center; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="panel logo" style="--c:var(--violet)"><b>PROSPECTOR</b><span class="tiny" style="margin-top:8px">SONAR DE FICHIERS · v0.1</span></div>
+    <div class="panel quest">
+      <div class="input">&gt; contrat <span class="op">OU</span> contrato <span class="op">OU</span> <span style="font-family:'Baloo Bhaijaan 2';font-size:24px">عقد</span><span class="cur"></span></div>
+      <button class="go">SONDER ▶</button>
+    </div>
+    <div class="panel stats">
+      <div class="stat"><span class="tiny">ÉCHOS</span><b>30</b></div>
+      <div class="stat"><span class="tiny">FICHIERS</span><b>11</b></div>
+      <div class="stat"><span class="tiny">TEMPS</span><b>38ms</b></div>
+    </div>
+  </header>
+
+  <div class="body">
+    <div class="col">
+      <div class="panel sites">
+        <div class="ph">⛏ SITES DE FOUILLE</div>
+        <div class="site" style="--k:var(--green)"><div class="site-top">Clients &amp; RH <span>SUIVI LIVE</span></div><div class="hp"><i style="width:100%"></i></div></div>
+        <div class="site" style="--k:var(--yellow)"><div class="site-top">Mail 2019–2024 <span>62%</span></div><div class="hp"><i style="width:62%"></i></div></div>
+        <div class="site" style="--k:var(--cyan)"><div class="site-top">Development <span>PRÊT</span></div><div class="hp"><i style="width:100%"></i></div></div>
+        <div class="site" style="--k:var(--red)"><div class="site-top">Archives <span style="color:var(--red)">HORS LIGNE</span></div><div class="hp"><i style="width:18%"></i></div><div class="err">F:\SCANS INTROUVABLE</div></div>
+      </div>
+      <div class="panel quests">
+        <div class="ph">★ QUÊTES SAUVÉES</div>
+        <div class="q"><i></i>Factures en attente <small>12</small></div>
+        <div class="q"><i></i>Contratos a renovar <small>4</small></div>
+        <div class="q"><i></i>TODO / FIXME <small>87</small></div>
+        <div class="q"><i></i>« clause de confidentialité » <small>9</small></div>
+      </div>
+    </div>
+
+    <div class="panel radar-wrap">
+      <div class="radar">
+        <div class="sweep"></div>
+        <svg viewBox="0 0 620 620">
+          <defs><filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+          <g fill="none" stroke="#35e6d8" stroke-opacity=".28" stroke-width="1.5">
+            <circle cx="310" cy="310" r="280"/><circle cx="310" cy="310" r="210"/><circle cx="310" cy="310" r="140"/><circle cx="310" cy="310" r="70"/>
+            <line x1="30" y1="310" x2="590" y2="310"/><line x1="310" y1="30" x2="310" y2="590"/>
+          </g>
+          <g font-family="VT323" font-size="16" fill="#9a92c9"><text x="316" y="236">75%</text><text x="316" y="166">50%</text><text x="316" y="96">25%</text></g>
+          <g filter="url(#glow)">
+            <circle cx="342" cy="278" r="13" fill="#ff8a3d"/>
+            <circle cx="334" cy="244" r="11" fill="#35e6d8"/>
+            <circle cx="423" cy="269" r="8" fill="#35e6d8"/>
+            <circle cx="380" cy="189" r="6" fill="#ff8a3d"/>
+            <circle cx="457" cy="207" r="6" fill="#ffd23f"/>
+            <circle cx="349" cy="88" r="6" fill="#ffd23f"/>
+            <circle cx="394" cy="381" r="6" fill="#ff4fd8"/>
+            <circle cx="239" cy="381" r="12" fill="#69f58c"/>
+            <circle cx="242" cy="498" r="6" fill="#69f58c"/>
+            <circle cx="253" cy="253" r="10" fill="#ff8a3d"/>
+            <circle cx="169" cy="259" r="6" fill="#35e6d8"/>
+          </g>
+          <!-- reticle on the selected echo -->
+          <g stroke="#ffd23f" stroke-width="3" fill="none">
+            <path d="M318 256 h-8 v8 M366 256 h8 v8 M318 300 h-8 v-8 M366 300 h8 v-8"/>
+          </g>
+          <g font-family="Pixelify Sans" font-size="15" fill="#ffd23f"><text x="378" y="300">#1 · 7 échos</text></g>
+        </svg>
+        <span class="sector" style="right:40px;top:30px;color:var(--green)">CLIENTS &amp; RH</span>
+        <span class="sector" style="right:40px;bottom:30px;color:var(--yellow)">MAIL</span>
+        <span class="sector" style="left:40px;bottom:30px;color:var(--cyan)">DEV</span>
+        <span class="sector" style="left:40px;top:30px;color:var(--red)">ARCHIVES</span>
+      </div>
+      <div class="legend">
+        <span style="color:var(--orange)"><i></i>PDF</span><span style="color:var(--cyan)"><i></i>Word</span><span style="color:var(--yellow)"><i></i>Excel · PPT</span>
+        <span style="color:var(--green)"><i></i>Code</span><span style="color:var(--magenta)"><i></i>E-mail</span>
+        <span style="color:var(--dim)">centre = plus pertinent · taille = nb d’échos</span>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="panel board">
+        <div class="ph">🏆 TROUVAILLES</div>
+        <div class="row me"><span class="rank">#1</span><div><div class="fname">contrat-prestation-v3.pdf</div><div class="fpath">D:\Clients\Dupont SARL\2024\</div></div><div class="xp"><span class="bar"><i style="width:58%"></i></span><b>7</b></div></div>
+        <div class="row"><span class="rank">#2</span><div><div class="fname">contrato_servicios_2024.docx</div><div class="fpath">D:\Clients\García Hermanos\</div></div><div class="xp"><span class="bar"><i style="width:42%"></i></span><b>5</b></div></div>
+        <div class="row"><span class="rank">#3</span><div><div class="fname"><span dir="ltr" style="unicode-bidi:isolate;font-family:'Baloo Bhaijaan 2'">عقد_إيجار_2023.pdf</span></div><div class="fpath">D:\Archives\عقود\</div></div><div class="xp"><span class="bar"><i style="width:33%"></i></span><b>4</b></div></div>
+        <div class="row"><span class="rank">#4</span><div><div class="fname">ContractService.ts</div><div class="fpath">H:\Development\billing-api\src\contracts\</div></div><div class="xp"><span class="bar"><i style="width:50%"></i></span><b>6</b></div></div>
+        <div class="row"><span class="rank">#5</span><div><div class="fname">Re: signature du contrat</div><div class="fpath">E:\Mail\Archive 2019-2024.pst › Inbox</div></div><div class="xp"><span class="bar"><i style="width:9%"></i></span><b>1</b></div></div>
+      </div>
+      <div class="panel loot">
+        <div class="ph">✦ BUTIN SÉLECTIONNÉ</div>
+        <h3>contrat-prestation-v3.pdf</h3>
+        <div class="fpath">PDF · 2,4 Mo · modifié il y a 3 jours · FR</div>
+        <div class="excerpt">
+          <p>Le présent <mark class="cur">contrat</mark> de prestation prend effet à la date de signature par les deux parties et est conclu pour une durée de vingt-quatre (24) mois.</p>
+          <p>À l’issue de cette période, le <mark>contrat</mark> pourra être renouvelé par avenant écrit.</p>
+          <p>Les prix figurant au <mark>contrat</mark> sont exprimés hors taxes et révisables annuellement.</p>
+        </div>
+        <div class="loot-bar"><button class="btn solid">OUVRIR</button><button class="btn" style="--c2:var(--violet)">DOSSIER</button><span class="nav">◀ 1/7 ▶</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="fr" dir="ltr">
+<head>
+<meta charset="utf-8">
+<title>Prospector — Maquette B · Carnet</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Kalam:wght@400;700&family=Courier+Prime&family=Baloo+Bhaijaan+2:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --desk: #ecdcc4;
+    --page: #fffdf6;
+    --ink: #2f2a3a;
+    --ink-soft: #7a7186;
+    --rule: #dbe6f3;
+    --margin: #f3b7c3;
+    --hl-yellow: #ffe16b;
+    --hl-pink: #ffb8cf;
+    --hl-green: #b8ebc4;
+    --hl-lilac: #d6c6ff;
+    --hl-blue: #b9dcff;
+    --f-hand: 'Caveat', 'Baloo Bhaijaan 2', cursive;
+    --f-body: 'Kalam', 'Baloo Bhaijaan 2', cursive;
+    --f-mono: 'Courier Prime', 'Baloo Bhaijaan 2', monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background:
+      radial-gradient(circle at 12% 18%, rgba(255,255,255,.35), transparent 40%),
+      radial-gradient(circle at 88% 80%, rgba(120,80,40,.10), transparent 45%),
+      var(--desk);
+    color: var(--ink); font: 400 17px/1.5 var(--f-body); overflow: hidden;
+  }
+  .desk { position: relative; height: 100%; display: flex; justify-content: center; padding: 28px 0; }
+
+  /* ── The notebook page ── */
+  .page {
+    position: relative; z-index: 1; width: 1060px; height: 100%;
+    background:
+      linear-gradient(90deg, transparent 86px, var(--margin) 86px, var(--margin) 88px, transparent 88px),
+      repeating-linear-gradient(180deg, transparent 0 33px, var(--rule) 33px 34px),
+      var(--page);
+    background-position: 0 0, 0 10px, 0 0;
+    border-radius: 6px 14px 14px 6px;
+    box-shadow: 0 30px 60px -30px rgba(80,50,20,.55), 0 2px 0 #fff inset, -10px 0 0 -4px #f4ecdd, -18px 0 0 -8px #e9dfcc;
+    padding: 34px 70px 30px 124px;
+    overflow: hidden;
+  }
+  /* binding holes */
+  .holes { position: absolute; left: 26px; top: 40px; bottom: 40px; display: flex; flex-direction: column; justify-content: space-around; }
+  .holes i { width: 22px; height: 22px; border-radius: 50%; background: var(--desk); box-shadow: 0 2px 3px rgba(0,0,0,.18) inset; }
+
+  /* ── Washi tape tabs = dig sites ── */
+  .tabs { position: absolute; right: 0; z-index: 0; top: 110px; display: flex; flex-direction: column; gap: 14px; transform: translateX(100%); }
+  .tab { width: 180px; padding: 10px 14px 10px 18px; border-radius: 0 10px 10px 0; font: 700 20px var(--f-hand); color: var(--ink);
+         box-shadow: 4px 6px 12px -8px rgba(0,0,0,.35); position: relative; }
+  .tab small { display: block; font: 400 13px var(--f-body); color: var(--ink-soft); margin-top: -4px; }
+  .tab { background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.35) 0 6px, transparent 6px 12px); }
+  .tab.off { width: 170px; filter: saturate(.6); }
+
+  /* ── Header ── */
+  h1 { margin: 0; font: 700 50px/1 var(--f-hand); letter-spacing: .5px; }
+  h1 .u { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 12'%3E%3Cpath d='M2 8 C 40 2, 80 12, 120 6 S 180 4, 198 7' fill='none' stroke='%23f47fa9' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E") bottom/100% 12px no-repeat; padding-bottom: 6px; }
+  .brand { position: absolute; top: 26px; right: 70px; font: 700 26px var(--f-hand); color: var(--ink-soft); }
+  .brand b { color: var(--ink); }
+
+  .searchrow { display: flex; gap: 16px; align-items: center; margin: 22px 0 14px; }
+  .field { position: relative; flex: 1; display: flex; align-items: center; gap: 12px; height: 62px; padding: 0 22px;
+           background: #fff; border: 2.5px dashed #9b8fd6; border-radius: 16px; font: 700 24px var(--f-body); transform: rotate(-.4deg); }
+  .field .op { font: 700 16px var(--f-hand); color: #7b5fd6; font-size: 22px; }
+  .tape { position: absolute; width: 70px; height: 24px; background: rgba(255,214,110,.75); top: -12px; transform: rotate(-6deg); box-shadow: 0 2px 4px rgba(0,0,0,.08); }
+  .tape.l { left: -18px; } .tape.r { right: -16px; transform: rotate(7deg); background: rgba(160,210,255,.7); }
+  .go { height: 62px; padding: 0 30px; border: 0; border-radius: 14px 18px 12px 20px; background: var(--ink); color: #fff; font: 700 28px var(--f-hand);
+        box-shadow: 4px 5px 0 #f47fa9; transform: rotate(1deg); }
+
+  .stickers { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+  .st { font: 700 15px var(--f-body); padding: 3px 14px; border-radius: 999px; border: 2px solid var(--ink); background: #fff; }
+  .st.on { background: var(--hl-lilac); }
+  .st:nth-child(odd) { transform: rotate(-1.5deg); } .st:nth-child(even) { transform: rotate(1.2deg); }
+
+  .summary { font: 700 30px var(--f-hand); margin: 6px 0 4px; display: flex; align-items: baseline; gap: 10px; }
+  .circled { position: relative; padding: 0 10px; color: #d4467c; }
+  .circled svg { position: absolute; inset: -8px -6px; width: calc(100% + 12px); height: calc(100% + 16px); }
+  .summary small { font: 400 16px var(--f-body); color: var(--ink-soft); }
+
+  /* ── Results on the ruled lines ── */
+  .res { display: grid; grid-template-columns: 1fr 70px; gap: 12px; padding: 10px 0; border-bottom: 2px dotted #e2d9ec; }
+  .name { font: 700 19px var(--f-body); }
+  .path { font: 13px var(--f-mono); color: var(--ink-soft); direction: ltr; unicode-bidi: isolate; }
+  .snip { margin-top: 2px; }
+  .snip[dir=rtl] { text-align: left; font-family: 'Baloo Bhaijaan 2'; }
+  mark { color: var(--ink); padding: 0 5px; border-radius: 8px 4px 9px 5px; font-weight: 700;
+         background: linear-gradient(100deg, transparent 1%, var(--c, var(--hl-yellow)) 4% 95%, transparent 99%); }
+  .count { justify-self: end; align-self: center; width: 54px; height: 54px; display: grid; place-items: center; font: 700 30px var(--f-hand); position: relative; }
+  .count svg { position: absolute; inset: 0; }
+
+  /* expanded preview (accordion) */
+  .open { position: relative; margin: 8px 0 14px; padding: 18px 22px 16px; border: 2.5px dashed #f47fa9; border-radius: 18px; background: #fffaf2; }
+  .open .label { position: absolute; top: -16px; left: 20px; padding: 2px 16px; font: 700 20px var(--f-hand); background: var(--hl-yellow); transform: rotate(-2deg); box-shadow: 0 2px 4px rgba(0,0,0,.08); }
+  .open p { margin: 0 0 8px; font-size: 16px; }
+  .open .h { font: 700 22px var(--f-hand); color: #7b5fd6; margin-top: 2px; }
+  .open mark.cur { --c: var(--hl-pink); outline: 2px solid #d4467c; outline-offset: 1px; }
+  .bar { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+  .bar .st { font-size: 14px; }
+  .bar .nav { margin-left: auto; font: 700 24px var(--f-hand); display: flex; gap: 10px; align-items: center; }
+  .bar .nav b { width: 34px; height: 34px; border: 2px solid var(--ink); border-radius: 50%; display: grid; place-items: center; font-size: 18px; }
+
+  /* ── Post-its in the margin ── */
+  .postit { position: absolute; z-index: 5; width: 210px; padding: 16px 18px 18px; font: 400 16px/1.35 var(--f-body); box-shadow: 4px 10px 18px -10px rgba(0,0,0,.4); }
+  .postit h3 { margin: 0 0 6px; font: 700 26px var(--f-hand); }
+  .postit div { padding: 2px 0; }
+  .p1 { background: #fff3a8; left: 70px; top: 150px; transform: rotate(-4deg); }
+  .p2 { background: #ffd0df; left: 90px; top: 420px; transform: rotate(3deg); }
+  .pin { position: absolute; top: -9px; left: 50%; width: 18px; height: 18px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ff9dbd, #d4467c); box-shadow: 0 3px 4px rgba(0,0,0,.25); }
+</style>
+</head>
+<body>
+<div class="postit p1"><span class="pin"></span><h3>Récents</h3>
+  <div>✎ contrat OU contrato</div><div>✎ “clause de confidentialité”</div><div>✎ résiliation SAUF avenant</div></div>
+<div class="postit p2"><span class="pin"></span><h3>Favoris ♡</h3>
+  <div>★ Factures en attente</div><div>★ Contratos a renovar</div><div>★ TODO / FIXME</div></div>
+
+<div class="desk">
+  <div class="book" style="position:relative;height:100%">
+    <div class="tabs">
+      <div class="tab" style="background-color:#ffc2d6">Clients &amp; RH<small>48 213 docs · suivi ♡</small></div>
+      <div class="tab" style="background-color:#d9cbff">Mail 2019–2024<small>indexation… 62 %</small></div>
+      <div class="tab" style="background-color:#c4f0d3">Development<small>93 117 docs</small></div>
+      <div class="tab off" style="background-color:#ffe6a3">Archives ⚠<small>F:\Scans introuvable</small></div>
+    </div>
+  <div class="page">
+    <div class="holes"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="brand"><b>Prospector</b> · mon carnet de fouille</div>
+    <h1>On cherche <span class="u">quoi</span> aujourd’hui ?</h1>
+
+    <div class="searchrow">
+      <div class="field"><span class="tape l"></span><span class="tape r"></span>
+        contrat <span class="op">ou</span> contrato <span class="op">ou</span> <span style="font-family:'Baloo Bhaijaan 2'">عقد</span></div>
+      <button class="go">Fouiller ✎</button>
+    </div>
+
+    <div class="stickers">
+      <span class="st on">✓ tolère les fautes</span><span class="st">PDF</span><span class="st">Word</span><span class="st">Excel</span><span class="st">E-mails</span><span class="st">Code</span><span class="st">+ affiner</span>
+    </div>
+
+    <div class="summary">
+      <span class="circled">30<svg viewBox="0 0 100 60" preserveAspectRatio="none"><path d="M10 32 C 8 8, 88 4, 92 28 S 30 62, 12 40" fill="none" stroke="#d4467c" stroke-width="3" stroke-linecap="round"/></svg></span>
+      trouvailles dans 11 fichiers <small>— en 38 ms</small>
+    </div>
+
+    <div class="res">
+      <div><div class="name">contrat-prestation-v3.pdf</div><div class="path">D:\Clients\Dupont SARL\2024\</div></div>
+      <div class="count">7<svg viewBox="0 0 54 54"><path d="M27 6 C 44 5, 50 20, 48 30 C 46 46, 12 50, 7 32 C 3 16, 16 7, 30 7" fill="none" stroke="#f47fa9" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="open"><span class="label">aperçu ✦</span>
+      <p class="h">Article 2 — Objet et durée</p>
+      <p>Le présent <mark class="cur">contrat</mark> de prestation prend effet à la date de signature par les deux parties et est conclu pour une durée de vingt-quatre (24) mois.</p>
+      <p>À l’issue de cette période, le <mark>contrat</mark> pourra être renouvelé par avenant écrit.</p>
+      <div class="bar"><span class="st">Ouvrir</span><span class="st">Voir le dossier</span><span class="st">Copier le chemin</span>
+        <span class="nav"><b>↑</b> 1 / 7 <b>↓</b></span></div>
+    </div>
+
+    <div class="res">
+      <div><div class="name">contrato_servicios_2024.docx</div><div class="path">D:\Clients\García Hermanos\</div>
+        <div class="snip">…el presente <mark style="--c:var(--hl-green)">contrato</mark> de prestación de servicios se regirá por la legislación española…</div></div>
+      <div class="count">5<svg viewBox="0 0 54 54"><path d="M27 6 C 44 5, 50 20, 48 30 C 46 46, 12 50, 7 32 C 3 16, 16 7, 30 7" fill="none" stroke="#7fd1a6" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="res">
+      <div><div class="name"><span dir="ltr" style="unicode-bidi:isolate;font-family:'Baloo Bhaijaan 2'">عقد_إيجار_2023.pdf</span></div><div class="path">D:\Archives\عقود\</div>
+        <div class="snip" dir="rtl">…يبدأ سريان هذا <mark style="--c:var(--hl-lilac)">العقد</mark> اعتبارًا من تاريخ توقيعه من قبل الطرفين…</div></div>
+      <div class="count">4<svg viewBox="0 0 54 54"><path d="M27 6 C 44 5, 50 20, 48 30 C 46 46, 12 50, 7 32 C 3 16, 16 7, 30 7" fill="none" stroke="#a98bea" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="res">
+      <div><div class="name">ContractService.ts</div><div class="path">H:\Development\billing-api\src\contracts\</div>
+        <div class="snip" style="font-family:var(--f-mono);font-size:15px">export class <mark style="--c:var(--hl-blue)">Contract</mark>Service {</div></div>
+      <div class="count">6<svg viewBox="0 0 54 54"><path d="M27 6 C 44 5, 50 20, 48 30 C 46 46, 12 50, 7 32 C 3 16, 16 7, 30 7" fill="none" stroke="#86c3ef" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+    </div>
+
+  </div>
+  </div>
+</div>
+</body>
+</html>

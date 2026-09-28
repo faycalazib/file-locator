@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Prospector app icon, concept A "Loupe crayonnée" (docs/mockups/icons/concepts.html).
+       Regenerate every size: see docs/RELEASE.md ("App icon"). -->
+  <defs>
+    <filter id="wob" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves="2" seed="4"/>
+      <feDisplacementMap in="SourceGraphic" scale="9"/>
+    </filter>
+    <pattern id="hy" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(-35)">
+      <rect width="16" height="16" fill="#f5c93a" opacity=".35"/><rect width="9" height="16" fill="#f5c93a"/>
+    </pattern>
+    <pattern id="hp" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(-35)">
+      <rect width="16" height="16" fill="#ee5a8e" opacity=".35"/><rect width="9" height="16" fill="#ee5a8e"/>
+    </pattern>
+  </defs>
+  <rect x="56" y="56" width="912" height="912" rx="210" fill="#fffefa" stroke="#262431" stroke-width="40" filter="url(#wob)"/>
+  <g filter="url(#wob)" stroke="#262431" stroke-linejoin="round">
+    <rect x="-62" y="0" width="124" height="330" rx="48" transform="translate(640 640) rotate(-45)" fill="url(#hp)" stroke-width="40"/>
+    <circle cx="430" cy="420" r="238" fill="#fff" stroke-width="54"/>
+    <circle cx="430" cy="420" r="238" fill="url(#hy)" stroke-width="54"/>
+    <path d="M300 360 A150 150 0 0 1 400 262" fill="none" stroke="#fff" stroke-width="34" stroke-linecap="round"/>
+  </g>
+  <path transform="translate(810 230)" d="M0 -70 C10 -18 18 -10 70 0 C18 10 10 18 0 70 C-10 18 -18 10 -70 0 C-18 -10 -10 -18 0 -70Z" fill="#ee5a8e" stroke="#262431" stroke-width="16"/>
+</svg>

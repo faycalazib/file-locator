@@ -1,0 +1,57 @@
+[package]
+name = "prospector-core"
+description = "Prospector search engine: crawler, extractors, Tantivy index"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+bzip2 = "0.6"
+calamine = "0.36.1"
+cfb = "0.14"
+# Same folders as Tauri for the app's data (lot 7.1: shared with prospector-cli).
+dirs = "7"
+chardetng = "1.0.0"
+encoding_rs = "0.8.42"
+flate2 = "1"
+globset = "0.4.20"
+ignore = "0.4.33"
+lopdf = { version = "0.42", default-features = false }
+mail-parser = "0.11"
+# Digests for "find copies" and the hash criterion (lot 5.8); already in the tree.
+md-5 = "0.10"
+msg_parser = "0.3.6"
+# Meaning search (Étape 8): ONNX Runtime loaded at run time from the module folder
+# (nothing linked, nothing downloaded at build time), and the model's tokenizer.
+ort = { version = "=2.0.0-rc.13", default-features = false, features = ["std", "load-dynamic"] }
+notify-debouncer-full = "0.6"
+outlook-pst = "1.2.0"
+pdf-extract = "0.12.1"
+quick-xml = "0.42.0"
+rayon = "1.12.0"
+regex = "1.13.1"
+rust-stemmers = "1.2"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+sevenz-rust2 = { version = "0.23", default-features = false, features = ["aes256", "bzip2", "deflate", "ppmd"] }
+sha2 = "0.10"
+tantivy = "0.26"
+tar = "0.4"
+thiserror = "2.0.21"
+tokenizers = { version = "0.22", default-features = false, features = ["fancy-regex"] }
+unicode-normalization = "0.1.25"
+unrar = "0.5.8"
+whatlang = "0.18.0"
+zip = { version = "8.6.0", default-features = false, features = ["deflate"] }
+
+[dev-dependencies]
+# `compress`: only the fixture generator (examples/make_7z.rs) writes 7z archives.
+sevenz-rust2 = { version = "0.23", default-features = false, features = ["compress", "util"] }
+serde_json = "1.0.151"
+tempfile = "3.27.0"
+
+[target."cfg(windows)".dependencies]
+windows = { version = "0.62", features = ["Foundation", "Foundation_Collections", "Globalization", "Graphics_Imaging", "Media_Ocr", "Security_Cryptography", "Storage_Streams", "Win32_Foundation", "Win32_UI_WindowsAndMessaging", "Win32_NetworkManagement_WNet", "Win32_Storage_FileSystem"] }
+# The user's PATH (lot 7.1, "Command line in the PATH"); already in the tree through Tauri.
+winreg = "0.55"

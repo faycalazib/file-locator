@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="fr" dir="ltr">
+<head>
+<meta charset="utf-8">
+<title>Prospector — Maquette G · Crayons de couleur</title>
+<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand+SC&family=Architects+Daughter&family=Courier+Prime&family=Baloo+Bhaijaan+2:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #262431; --soft: #6b6878;
+    --green: #6cc04a; --blue: #3b9be0; --pink: #ee5a8e; --orange: #f39a2b; --purple: #9a6bd8; --yellow: #f5c93a;
+    --f-title: 'Patrick Hand SC', 'Baloo Bhaijaan 2', cursive;
+    --f-body: 'Architects Daughter', 'Baloo Bhaijaan 2', cursive;
+    --f-mono: 'Courier Prime', 'Baloo Bhaijaan 2', monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { background: #fffefa; color: var(--ink); font: 400 16px/1.45 var(--f-body); overflow: hidden; }
+  /* paper grain */
+  body::before { content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .5;
+    background-image: radial-gradient(rgba(0,0,0,.035) 1px, transparent 1.2px); background-size: 5px 5px; }
+
+  .sketch { position: relative; }
+  .sketch::before { content: ''; position: absolute; inset: 0; border: 2.5px solid var(--k, var(--ink)); border-radius: 10px 16px 12px 14px; filter: url(#wobble); pointer-events: none; }
+  /* colored-pencil hatching fill */
+  .hatch { background-image: repeating-linear-gradient(-35deg, var(--h) 0 2px, transparent 2px 5px); }
+  img.doodle { position: absolute; filter: url(#wobble) saturate(1.1); }
+
+  .app { position: relative; height: 100%; padding: 18px 50px; display: grid; grid-template-rows: auto auto 1fr; gap: 12px; }
+
+  /* ── Title ── */
+  .head { text-align: center; position: relative; }
+  .ribbon { display: inline-block; position: relative; padding: 4px 46px; font: 26px var(--f-title); --h: rgba(108,192,74,.35); }
+  .ribbon.sketch::before { border-color: var(--green); border-radius: 4px; }
+  .big { font: 86px/1 var(--f-title); letter-spacing: 3px; margin-top: 2px; }
+  .big span { -webkit-text-stroke: 2.5px var(--ink); color: transparent; background-clip: text; -webkit-background-clip: text;
+              background-image: repeating-linear-gradient(-30deg, var(--c) 0 3px, color-mix(in srgb, var(--c) 55%, #fff) 3px 5px);
+              filter: drop-shadow(4px 4px 0 rgba(38,36,49,.85)) url(#wobble); padding: 0 1px; }
+  .sub { font: 22px var(--f-title); letter-spacing: 2px; margin-top: -2px; }
+  .sub u { text-decoration: none; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 10'%3E%3Cpath d='M2 6 C 60 2, 120 9, 180 5 S 270 3, 298 6' fill='none' stroke='%236cc04a' stroke-width='3'/%3E%3C/svg%3E") bottom/100% 8px no-repeat; }
+
+  /* ── Search: the wavy dashed "NOM" box ── */
+  .search { display: flex; justify-content: center; gap: 18px; align-items: center; }
+  .box { position: relative; width: 820px; padding: 14px 26px; border: 3px dashed var(--purple); border-radius: 26px; filter: url(#wobble); }
+  .box .row { display: flex; align-items: baseline; gap: 14px; font: 22px var(--f-title); }
+  .box .line { flex: 1; border-bottom: 2px solid var(--ink); font: 26px var(--f-body); color: #6b2e5b; padding: 0 6px; }
+  .box .op { color: var(--purple); font-size: 18px; }
+  .go { font: 30px var(--f-title); padding: 8px 30px; --k: var(--pink); --h: rgba(238,90,142,.35); background-color: transparent; border: 0; color: var(--ink); }
+  .chips { display: flex; justify-content: center; gap: 12px; margin-top: 4px; font: 17px var(--f-title); }
+  .chip { padding: 2px 14px; }
+  .chip.on { --h: rgba(245,201,58,.5); }
+
+  /* ── Body ── */
+  .body { display: grid; grid-template-columns: 1fr 540px; gap: 34px; min-height: 0; padding: 14px 30px 0 60px; }
+  .count { font: 28px var(--f-title); margin: 2px 0 8px; }
+  .count b { color: var(--pink); }
+  .res { display: grid; grid-template-columns: 1fr 64px; gap: 12px; padding: 10px 16px; margin-bottom: 12px; background: #fff; }
+  .res:nth-child(even) { transform: rotate(.35deg); } .res:nth-child(odd) { transform: rotate(-.35deg); }
+  .name { font: 21px/1.1 var(--f-title); letter-spacing: .5px; }
+  .path { font: 12.5px var(--f-mono); color: var(--soft); direction: ltr; unicode-bidi: isolate; }
+  .snip { margin-top: 3px; }
+  .snip[dir=rtl] { font-family: 'Baloo Bhaijaan 2'; text-align: left; }
+  mark { background: repeating-linear-gradient(-35deg, var(--m, rgba(245,201,58,.75)) 0 3px, rgba(245,201,58,.3) 3px 5px); color: var(--ink); padding: 0 3px; font-weight: 700; }
+  .num { align-self: center; justify-self: end; width: 54px; height: 54px; display: grid; place-items: center; font: 30px var(--f-title); --h: rgba(238,90,142,.28); border-radius: 50%; }
+  .num.sketch::before { border-radius: 50%; border-color: var(--pink); }
+  .res.sel { --k: var(--blue); }
+  .res.sel::before { border-width: 3.5px; }
+
+  .prev { padding: 20px 24px; display: flex; flex-direction: column; background: #fff; min-height: 0; --k: var(--green); }
+  .prev .tag { position: absolute; top: -18px; left: 24px; padding: 2px 18px; font: 22px var(--f-title); background: #fffefa; --h: rgba(108,192,74,.35); }
+  .prev h2 { margin: 6px 0 0; font: 30px/1.05 var(--f-title); }
+  .prev .meta { font: 16px var(--f-title); color: var(--soft); margin: 4px 0 12px; }
+  .prev p { margin: 0 0 10px; }
+  .prev .h { font: 21px var(--f-title); color: var(--blue); }
+  .prev mark.cur { --m: rgba(238,90,142,.8); background: repeating-linear-gradient(-35deg, rgba(238,90,142,.75) 0 3px, rgba(238,90,142,.35) 3px 5px); }
+  .bar { display: flex; align-items: center; gap: 12px; margin-top: auto; font: 20px var(--f-title); }
+  .bar .b { padding: 3px 14px; }
+  .bar .nav { margin-left: auto; font-size: 26px; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><filter id="wobble"><feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="2" seed="7" result="t"/><feDisplacementMap in="SourceGraphic" in2="t" scale="4"/></filter></svg>
+
+<img class="doodle" style="left:30px;top:24px;width:110px;transform:rotate(-20deg)" src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Magnifying%20glass%20tilted%20left/Color/magnifying_glass_tilted_left_color.svg" alt="">
+<img class="doodle" style="right:40px;top:20px;width:120px" src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Gem%20stone/Color/gem_stone_color.svg" alt="">
+<img class="doodle" style="left:24px;top:420px;width:70px" src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Tulip/Color/tulip_color.svg" alt="">
+<img class="doodle" style="left:20px;bottom:30px;width:90px" src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Blossom/Color/blossom_color.svg" alt="">
+<img class="doodle" style="right:40px;bottom:24px;width:60px" src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Star/Color/star_color.svg" alt="">
+
+<div class="app">
+  <div class="head">
+    <div class="ribbon sketch hatch">mon carnet de fouille</div>
+    <div class="big"><span style="--c:var(--green)">P</span><span style="--c:var(--blue)">R</span><span style="--c:var(--pink)">O</span><span style="--c:var(--orange)">S</span><span style="--c:var(--purple)">P</span><span style="--c:var(--green)">E</span><span style="--c:var(--blue)">C</span><span style="--c:var(--pink)">T</span><span style="--c:var(--orange)">O</span><span style="--c:var(--purple)">R</span></div>
+    <div class="sub"><u>RETROUVE TOUT DANS TES FICHIERS</u></div>
+  </div>
+
+  <div>
+    <div class="search">
+      <div class="box"><div class="row">JE CHERCHE : <span class="line">contrat <span class="op">OU</span> contrato <span class="op">OU</span> <span style="font-family:'Baloo Bhaijaan 2'">عقد</span></span></div></div>
+      <button class="go sketch hatch">FOUILLER !</button>
+    </div>
+    <div class="chips"><span class="chip sketch hatch on">✓ tolère les fautes</span><span class="chip sketch">PDF</span><span class="chip sketch">WORD</span><span class="chip sketch">EXCEL</span><span class="chip sketch">E-MAILS</span><span class="chip sketch">CODE</span><span class="chip sketch">+ AFFINER</span></div>
+  </div>
+
+  <div class="body">
+    <div>
+      <div class="count"><b>30 TROUVAILLES</b> DANS 11 FICHIERS <span style="font-size:18px;color:var(--soft)">· 38 ms</span></div>
+      <div class="res sketch sel"><div><div class="name">CONTRAT-PRESTATION-V3.PDF</div><div class="path">D:\Clients\Dupont SARL\2024\</div><div class="snip">…le présent <mark>contrat</mark> de prestation prend effet à la date de signature…</div></div><div class="num sketch hatch">7</div></div>
+      <div class="res sketch"><div><div class="name">CONTRATO_SERVICIOS_2024.DOCX</div><div class="path">D:\Clients\García Hermanos\</div><div class="snip">…el presente <mark>contrato</mark> de prestación de servicios se regirá…</div></div><div class="num sketch hatch">5</div></div>
+      <div class="res sketch"><div><div class="name"><span dir="ltr" style="unicode-bidi:isolate;font-family:'Baloo Bhaijaan 2'">عقد_إيجار_2023.pdf</span></div><div class="path">D:\Archives\عقود\</div><div class="snip" dir="rtl">…يبدأ سريان هذا <mark>العقد</mark> اعتبارًا من تاريخ توقيعه…</div></div><div class="num sketch hatch">4</div></div>
+      <div class="res sketch"><div><div class="name">CONTRACTSERVICE.TS</div><div class="path">H:\Development\billing-api\src\contracts\</div><div class="snip" style="font:14px var(--f-mono)">export class <mark>Contract</mark>Service {</div></div><div class="num sketch hatch">6</div></div>
+      <div class="res sketch"><div><div class="name">RE: SIGNATURE DU CONTRAT</div><div class="path">E:\Mail\Archive 2019-2024.pst › Inbox</div><div class="snip">…ci-joint le <mark>contrat</mark> signé ainsi que l’annexe tarifaire.</div></div><div class="num sketch hatch">1</div></div>
+      <div class="res sketch"><div><div class="name">CONTRAT-TRAVAIL-CDI.DOCX</div><div class="path">D:\RH\modèles\</div><div class="snip"><mark>CONTRAT</mark> DE TRAVAIL À DURÉE INDÉTERMINÉE — Entre les soussignés…</div></div><div class="num sketch hatch">2</div></div>
+    </div>
+
+    <aside class="prev sketch">
+      <span class="tag sketch hatch">APERÇU</span>
+      <h2>CONTRAT-PRESTATION-V3.PDF</h2>
+      <div class="meta">PDF · 2,4 Mo · il y a 3 jours · français</div>
+      <p class="h">ARTICLE 2 — OBJET ET DURÉE</p>
+      <p>Le présent <mark class="cur">contrat</mark> de prestation prend effet à la date de signature par les deux parties et est conclu pour une durée de vingt-quatre (24) mois.</p>
+      <p>À l’issue de cette période, le <mark>contrat</mark> pourra être renouvelé par avenant écrit.</p>
+      <p class="h">ARTICLE 5 — PRIX</p>
+      <p>Les prix figurant au <mark>contrat</mark> sont exprimés hors taxes et révisables annuellement.</p>
+      <div class="bar"><span class="b sketch hatch" style="--h:rgba(59,155,224,.3)">OUVRIR</span><span class="b sketch">DOSSIER</span><span class="nav">↑ 1/7 ↓</span></div>
+    </aside>
+  </div>
+</div>
+</body>
+</html>
