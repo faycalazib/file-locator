@@ -338,3 +338,48 @@
 - **Cause:** the tokenizer padded the shorter texts of a batch to the longest one. With the quantized model (int8, scales computed on the whole input), the padding tokens change the result even though the attention mask hides them. Texts of the same length gave exactly the same vector (1.00000).
 - **Fix:** no padding (`with_padding(None)`); `SenseModel::embed` groups the texts by exact token length and runs each group as one batch (`core/src/sense/mod.rs`).
 - **Prevention:** `core/tests/sense.rs` checks that every text of a mixed batch gets the same vector as alone (> 0.9999).
+
+## BUG-036: computing the meaning of 100,000 files stopped on "Access is denied"
+
+- **Date:** 2026-09-28 · **Step:** Étape 8, lot 8.2 (meaning index), found by the 100,000-file measurement before delivery
+- **Symptom:** after 6 minutes (13,700 passages), `sense_update` failed: Tantivy could not create a new file of the meaning index (`Failed to open file for write … Access is denied`).
+- **Cause:** the same family as BUG-022 and BUG-026: the antivirus briefly locks a file that has just been created. The meaning index commits every 32 files: over 100,000 files, that is about 3,000 commits, each creating new files. The JSON stores already retried (`write_atomic`), the Tantivy commit of the meaning index did not.
+- **Fix:** `core/src/engine/meaning.rs` → a batch is computed first (its vectors kept in memory), then written and committed; on "access denied" the writer is dropped, and the batch is written again with a new writer, up to 5 times, 1 s apart. The vectors are never computed twice. In the app, a batch that still fails is only lost until the next wake-up (the computation resumes from the last commit).
+- **Prevention:** any index written often (live watching, meaning index) must survive a brief lock of a new file; the long measurements (`meaning_of_100_000_files`) are the ones that show it.
+
+## BUG-037: with `Aa`, counts wrong and files missed; searches slow on a site full of code
+
+- **Date:** 2026-09-28 · **Step:** manual tests of Étape 2 (`Aa`, `ab` chips), on the user's "GIT Repositories" site (20,875 files of code)
+- **Symptom:**
+  - `Contrat` with `Aa`: 1 file shown, but the type chips still counted TEXT 43, SOURCE CODE 31… (the counts of `contrat` in any case).
+  - Searches took 1 to 1.75 s in the app (`pnpm tauri dev`) with typo tolerance on (the default), `Aa` on or `ab` off; 48 ms with the tolerance off.
+- **Cause:**
+  - `Aa` was only applied by the highlighter: the index gave its first 200 candidates in any case (with word forms and typos), the highlighter dropped the others. The counts came from the index, before that check. A capitalized word ranked after the first 200 candidates was never found, and the total was wrong.
+  - Highlighting a file stemmed every word of its text and computed an edit distance for every word, even words of a very different length. Code repeats the same identifiers: the same work, thousands of times per file (217 ms for 200 files in release).
+  - `ab` off: `RegexQuery .*word.*` walks the whole dictionary (millions of words in code). The counts per criterion ran the query 3 more times: 4 walks per search.
+  - In the app, `pnpm tauri dev` runs a debug build of the Rust code: 10 to 20 times slower than the installed version. The same searches, in release, took 36 to 223 ms.
+- **Fix:**
+  - `core/src/search.rs`: `SearchRequest::verified` (regex, NEAR, LINES, detectors **or `Aa`**): every candidate is checked on its text, the counts come from the accepted files. With `Aa`, the index looks for the exact word only (no stems, no typos: `WordMode.forms`), and `NOT` is decided on the text (`NOT Brouillon` keeps "brouillon").
+  - `core/src/search.rs`: candidates are read and checked in parallel batches of 256 (`rayon`), in score order; the loop still stops once the list is full when nothing is counted.
+  - `core/src/search.rs`: `Contains::expand` lists the indexed words containing each word once per site and search (one walk of the dictionary), reused by the counts (`TermSetQuery`).
+  - `core/src/highlight.rs`: `Matcher::judge` + a per-text memory of each spelling; a word is stemmed only when its length is within one letter of a searched word (BUG-020 rule); with `Aa`, a text without the typed spelling is skipped without being split into words.
+  - Measured on a copy of the user's index (release): `contrat` with tolerance 217 → 25 ms; `ab` off 143 → 37 ms; `Contrat` + `Aa` 86 ms (wrong counts) → 0 ms; `Import` + `Aa` (15,703 candidates, all checked) 198 ms.
+- **Prevention:**
+  - `core/tests/facets.rs` → `case_and_partial_words_counted_like_the_list` (capital word after the first 200, counts = list, `NOT` with `Aa`, `ab` off).
+  - `core/tests/perf.rs` → `real_index_timings` (ignored): timings on a copy of a real data folder (`PROSPECTOR_BENCH_DATA`). The 100k-file corpus has few distinct words: it cannot show dictionary or highlighting costs. Search times seen in `pnpm tauri dev` are debug times: measure in release before concluding.
+
+## BUG-038: first push — Pages deploy failed and the push went to the wrong account
+
+- **Date:** 2026-09-28 · **Step:** publishing (first push to GitHub)
+- **Symptom:**
+  - The `deploy` job (`site.yml`) stopped at `actions/configure-pages@v5` with "Get Pages site failed … HttpError: Not Found".
+  - Then `git push` in the project folder: "No such remote 'origin'", and after adding it, "Repository not found".
+- **Cause:**
+  - Pages was not enabled on the repository, so `configure-pages` found no site. Its `enablement` option cannot help: the default `GITHUB_TOKEN` has no admin right.
+  - The project folder had no remote. Two GitHub accounts share the same Git Credential Manager, which picks one login for `github.com` by default.
+  - The remote was typed with the wrong name (`my-file-locator` instead of the real `file-locator`).
+- **Fix:**
+  - Settings → Pages → Source: *GitHub Actions*, then re-run the job.
+  - `git remote add origin https://faycalazib@github.com/faycalazib/file-locator.git`, plus `credential.username faycalazib` and `credential.useHttpPath true` in the repository's config.
+  - `site/config.js`: `PROSPECTOR_REPO = 'faycalazib/file-locator'`.
+- **Prevention:** docs/RELEASE.md, one-time setup: enable Pages before the first push; the account goes in the remote URL.

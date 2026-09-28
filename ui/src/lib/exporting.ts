@@ -168,7 +168,7 @@ function demoCopy(paths: string[], onProgress: (done: number, total: number) => 
       onProgress(done, files.length);
       if (done === files.length) {
         clearInterval(timer);
-        resolve({ copied: files.length - 1, skipped: [files[0]!], fromContainers: paths.length - files.length, target: 'D:\\Export\\contrat', cancelled: false });
+        resolve({ copied: files.length - 1, skipped: [files[0]!], fromContainers: paths.length - files.length, target: 'D:\\Export\\recipes', cancelled: false });
       }
     }, 120);
   });

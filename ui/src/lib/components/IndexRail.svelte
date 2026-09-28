@@ -7,6 +7,8 @@
   import { formatBytes, formatNumber, formatPercent, formatRelative, t } from '../i18n/index.svelte';
   import { inTauri } from '../api';
   import { groupColor, groups } from '../stores/groups.svelte';
+  import { formatDuration, sense } from '../stores/sense.svelte';
+  import { api, type SenseEstimateDto } from '../api';
   import { saved } from '../stores/saved.svelte';
   import { search } from '../stores/search.svelte';
   import { ui } from '../stores/ui.svelte';
@@ -33,6 +35,27 @@
     error: 'var(--danger-ink)',
     empty: 'var(--text-dim)',
   };
+
+  /** Lot 8.2: the question asked before understanding a site, with its estimate. */
+  let askSense = $state<{ id: string; estimate: SenseEstimateDto | null | undefined } | null>(null);
+
+  async function toggleSense(site: IndexSite) {
+    if (site.sense) {
+      const ok = inTauri ? await api.confirm(t('sense.forgetConfirm', { name: site.name }), t('sense.forget')).catch(() => false) : true;
+      if (ok) await sitesStore.setSense(site.id, false);
+      return;
+    }
+    askSense = { id: site.id, estimate: undefined };
+    const estimate = await sense.estimate(site.id);
+    if (askSense?.id === site.id) askSense = { id: site.id, estimate };
+  }
+
+  async function confirmSense() {
+    if (!askSense) return;
+    const id = askSense.id;
+    askSense = null;
+    await sitesStore.setSense(id, true);
+  }
 
   function runQuery(query: string) {
     search.query = query;
@@ -160,6 +183,17 @@
                     <span class="status">{t(`rail.status.${site.status}`)}</span>
                   </span>
                   {@render siteMeta(site)}
+                  <!-- Lot 8.2: the meaning index of the site. -->
+                  {#if site.sense}
+                    {#if site.senseProgress && site.senseProgress.total > 0}
+                      <span class="sense-line">
+                        {t('sense.computing', { percent: formatPercent(site.senseProgress.done / site.senseProgress.total) })}{#if site.senseRemaining} · {t('sense.left', { time: formatDuration(site.senseRemaining) })}{/if}
+                      </span>
+                      <span class="sense-bar" aria-hidden="true"><span style:inline-size="{Math.min(100, (100 * site.senseProgress.done) / site.senseProgress.total)}%"></span></span>
+                    {:else}
+                      <span class="sense-line done">{t('sense.upToDate', { count: formatNumber(site.sensePassages ?? 0) })}</span>
+                    {/if}
+                  {/if}
                 </span>
               {/if}
             </button>
@@ -174,11 +208,38 @@
                   <button type="button" aria-label={t('rail.reindex')} title={t('rail.reindex')} onclick={() => sitesStore.index(site.id)}>
                     <Icon name="refresh" size={13} />
                   </button>
+                  {#if sense.status?.installed}
+                    <button
+                      type="button"
+                      class="sense-toggle"
+                      class:on={site.sense}
+                      aria-pressed={site.sense ?? false}
+                      aria-label={site.sense ? t('sense.forget') : t('sense.understand')}
+                      title={site.sense ? t('sense.forget') : t('sense.understand')}
+                      onclick={() => toggleSense(site)}>≈</button
+                    >
+                  {/if}
                   <button type="button" aria-label={t('rail.remove')} title={t('rail.remove')} onclick={() => sitesStore.remove(site)}>
                     <Icon name="trash" size={13} />
                   </button>
                 {/if}
               </span>
+            {/if}
+            {#if askSense?.id === site.id}
+              {@const e = askSense.estimate}
+              <div class="sense-ask sketch" role="dialog" aria-label={t('sense.ask', { name: site.name })}>
+                <p class="q">{t('sense.ask', { name: site.name })}</p>
+                {#if e === undefined}
+                  <p class="n">{t('sense.estimating')}</p>
+                {:else if e}
+                  <p class="n">{t('rail.docs', { count: site.docCount })} → ≈ {t('sense.passages', { count: formatNumber(e.passages) })}</p>
+                  <p>{e.seconds !== null ? t('sense.askTime', { time: formatDuration(e.seconds) }) : t('sense.askNoTime')}</p>
+                {/if}
+                <div class="row">
+                  <button type="button" class="sketch" onclick={() => (askSense = null)}>{t('sense.cancel')}</button>
+                  <button type="button" class="sketch hatch go" onclick={confirmSense} disabled={e === undefined}>{t('sense.understandShort')}</button>
+                </div>
+              </div>
             {/if}
           </li>
         {/each}
@@ -350,6 +411,100 @@
 
   .shared.reader {
     background: var(--fill-warn);
+  }
+
+  .sense-line {
+    display: block;
+    margin-block-start: 3px;
+    color: var(--secondary-ink);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .sense-line.done {
+    color: var(--text-dim);
+    font-weight: 400;
+  }
+
+  .sense-bar {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    block-size: 6px;
+    margin-block-start: 3px;
+    border-radius: 3px;
+    background: var(--fill-secondary);
+  }
+
+  .sense-bar > span {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    background: var(--secondary);
+  }
+
+  .actions .sense-toggle {
+    font-weight: 700;
+  }
+
+  .actions .sense-toggle.on {
+    background: var(--fill-secondary);
+    color: var(--secondary-ink);
+  }
+
+  .sense-ask {
+    --k: var(--secondary);
+    position: relative;
+    z-index: 5;
+    display: grid;
+    gap: 6px;
+    margin: 6px 0 4px;
+    padding: 12px 14px;
+    background: var(--surface);
+    box-shadow: var(--shadow-pop);
+  }
+
+  .sense-ask > * {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+  }
+
+  .sense-ask p {
+    color: var(--text-dim);
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .sense-ask .q {
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .sense-ask .n {
+    color: var(--secondary-ink);
+    font-weight: 700;
+  }
+
+  .sense-ask .row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .sense-ask button {
+    padding: 5px 12px;
+    background: transparent;
+    border: 0;
+    color: var(--text);
+    font: inherit;
+    font-size: 14px;
+  }
+
+  .sense-ask .go {
+    --h: var(--fill-secondary);
+    font-weight: 700;
   }
 
   .lead {

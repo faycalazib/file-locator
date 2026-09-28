@@ -37,7 +37,7 @@ class TabsStore {
     if (!inTauri) this.#demo();
   }
 
-  /** Browser demo: `?tabs=facture,عقد` opens more tabs (screenshots only). */
+  /** Browser demo: `?tabs=soup,وصفة` opens more tabs (screenshots only). */
   #demo() {
     const queries = new URLSearchParams(location.search).get('tabs')?.split(',').filter(Boolean) ?? [];
     const extra = queries.map((q, i) =>

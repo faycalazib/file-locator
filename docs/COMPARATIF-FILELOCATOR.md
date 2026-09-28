@@ -112,9 +112,9 @@
 - **Interface moderne** : 2 thèmes, 3 mises en page, affichage net sur écran haute résolution (un défaut relevé chez FileLocator).
 - **Gratuit, en une seule version**, sans formule Lite ou Pro.
 
-## 3. Ce que Prospector ajoutera et qu'aucun concurrent n'a (Étapes 6 et 8)
+## 3. Recherche par le sens (Étape 8)
 
-- **Recherche par le sens et entre langues**, grâce à une IA locale optionnelle (8). « contrat » trouvera aussi *contract*, *contrato* et *عقد*.
+- **Recherche par le sens et entre langues**, par une IA locale optionnelle (module de 77 Mo, rien ne quitte le PC) : « bail d'habitation » trouve aussi *عقد إيجار* et *lease agreement* sans mot commun ; les résultats trouvés par le sens montrent leur passage le plus proche ; calculée en arrière-plan, site par site ; aucun équivalent chez FileLocator Pro.
 
 ## Sources
 

@@ -9,43 +9,45 @@
 ## Étape 2 — Formats, requêtes, scan direct
 
 ### Formats
-- [ ] Un site contenant `test_fixtures/` s'indexe sans erreur.
-- [ ] Chercher `facture` trouve le fichier Excel `factures-2024.xlsx`, et l'aperçu montre le nom de la feuille.
-- [ ] Chercher un mot d'une diapositive trouve le PowerPoint, et l'aperçu numérote les diapositives.
-- [ ] Un document dans un ZIP s'affiche sous la forme `archive.zip › dossier/fichier`.
-- [ ] Sur un document dans un ZIP ou un PST, « Ouvrir » ouvre l'archive ou la boîte mail.
-- [ ] Les e-mails `.msg` et `.pst` sont trouvés par leur contenu.
+- [x] Un site contenant `test_fixtures/` s'indexe sans erreur.
+- [x] Chercher `renouvellement` trouve le fichier Excel `factures-2024.xlsx` (le mot est dans sa 2ᵉ feuille), et l'aperçu montre le nom de chaque feuille en titre de son tableau.
+- [x] Chercher un mot d'une diapositive trouve le PowerPoint, et l'aperçu numérote les diapositives.
+- [x] Un document dans un ZIP s'affiche sous la forme `archive.zip › dossier/fichier`.
+- [x] Sur un document dans un ZIP, « Ouvrir » ouvre le fichier lui-même (copie extraite dans `…\opened\…`, lot 6.7) ; sur un message d'une boîte PST, il ouvre la boîte mail.
+- [x] Les e-mails `.msg` sont trouvés par leur contenu (`"Test Email"` → `test_email.msg`). Le `.pst` d'exemple est vide : à vérifier avec une vraie boîte (lot 5.4).
 
 ### Requêtes et options
-- [ ] `/INV-\d{4}/` trouve les numéros de facture.
-- [ ] La pastille `.*` fait de toute la saisie une expression régulière.
-- [ ] Une expression invalide (`/[abc/`) affiche un message d'erreur traduit.
-- [ ] Pastille `Aa` : `Contrat` ne trouve plus `contrat`.
-- [ ] Pastille `ab` désactivée : `contrat` trouve aussi `sous-contrats`.
-- [ ] `contrat OR contrato`, `contrat NOT brouillon` et `"phrase exacte"` donnent les bons résultats.
+- [x] `/INV-\d{4}/` trouve les numéros de facture.
+- [x] La pastille `.*` fait de toute la saisie une expression régulière.
+- [x] Une expression invalide (`/[abc/`) affiche un message d'erreur traduit.
+- [x] Pastille `Aa` : `Contrat` ne trouve plus `contrat`.
+  - [x] (BUG-037) Avec `Aa`, les compteurs des pastilles de type correspondent aux fichiers affichés (`Contrat` + `Aa` : plus de TEXTE 43 pour 1 fichier).
+- [x] Pastille `ab` désactivée : `contrat` trouve aussi les mots qui le contiennent (`contratos` dans `es/notas.md`). Pastille « Tolérance aux fautes » éteinte pour ce test. (`contrato` est surligné même avec `ab` : c'est une forme du mot, voulu.)
+  - [x] (BUG-037) Sur le site GIT, `contrat` avec « Tolérance aux fautes », avec `Aa`, ou `ab` éteinte, répond nettement plus vite qu'avant (1 000 à 1 750 ms en `pnpm tauri dev`). Les temps de `pnpm tauri dev` sont ceux d'une compilation de débogage.
+- [x] `échéance OR indemnité` → `windows-1252.txt` + `notes-contrat.txt` ; `contrat NOT signature` → sans `signature.eml` ni `notes-contrat.txt` ; `"contrat signé"` → `signature.eml` seul (dans test_fixtures).
 
 ### Scan direct
-- [ ] Pastille « Scan direct » : les résultats arrivent au fil de l'eau.
-- [ ] Le bouton Arrêter interrompt le scan.
-- [ ] L'aperçu d'un résultat de scan direct s'affiche.
+- [x] Pastille « Scan direct » : les résultats arrivent au fil de l'eau.
+- [x] Le bouton Arrêter interrompt le scan.
+- [x] L'aperçu d'un résultat de scan direct s'affiche.
 
 ### Aperçu
-- [ ] Un fichier de code (`.rs`, `.py`, `.js`…) est coloré, dans les deux thèmes.
+- [x] Un fichier de code (`.rs`, `.py`, `.js`…) est coloré, dans les deux thèmes.
 
 ## Étape 3 — Différenciateurs
 
 ### 3.1 Indexation incrémentale et suivi des dossiers en direct
-- [ ] Au premier lancement après la mise à jour, les index existants se reconstruisent une fois, tout seuls.
-- [ ] Une fois l'indexation terminée, le site affiche « Suivi en direct ».
-- [ ] Le bouton ↻ s'appelle « Mettre à jour ». Cliqué sans rien avoir changé, il termine presque instantanément.
-- [ ] Créer un `.txt` contenant un mot rare dans un site suivi : en 2 à 3 s, le mot est trouvé.
-- [ ] Modifier ce fichier (remplacer le mot) : l'ancien mot n'est plus trouvé, le nouveau l'est.
-- [ ] Supprimer le fichier : il disparaît des résultats.
-- [ ] Renommer un dossier : ses fichiers sont trouvés sous le nouveau chemin, plus sous l'ancien.
-- [ ] Avec une recherche affichée, modifier un fichier trouvé : la liste se met à jour sans perdre le fichier sélectionné.
-- [ ] Fermer Prospector, modifier un fichier, relancer : le changement est rattrapé au démarrage.
-- [ ] Débrancher un disque USB indexé puis relancer : le site passe en erreur, sans message répété, et ses documents restent trouvables.
-- [ ] Copier d'un coup un dossier de plus de 50 fichiers : la progression s'affiche dans le rail.
+- [x] Au premier lancement après la mise à jour, les index existants se reconstruisent une fois, tout seuls. (Déjà passé : les index actuels fonctionnent.)
+- [x] Une fois l'indexation terminée, le site affiche « Suivi en direct ».
+- [x] Le bouton ↻ s'appelle « Mettre à jour ». Cliqué sans rien avoir changé, il termine presque instantanément.
+- [x] Créer un `.txt` contenant un mot rare dans un site suivi : en 2 à 3 s, le mot est trouvé.
+- [x] Modifier ce fichier (remplacer le mot) : l'ancien mot n'est plus trouvé, le nouveau l'est.
+- [x] Supprimer le fichier : il disparaît des résultats.
+- [x] Renommer un dossier : ses fichiers sont trouvés sous le nouveau chemin, plus sous l'ancien.
+- [x] Avec une recherche affichée, modifier un fichier trouvé : la liste se met à jour sans perdre le fichier sélectionné.
+- [x] Fermer Prospector, modifier un fichier, relancer : le changement est rattrapé au démarrage.
+- [ ] Débrancher un disque USB indexé puis relancer : le site passe en erreur, sans message répété, et ses documents restent trouvables. ⏸ Reporté (à faire plus tard).
+- [ ] Copier d'un coup un dossier de plus de 50 fichiers : la progression s'affiche dans le rail. ⏸ Reporté (à faire plus tard).
 
 ### 3.2 Recherches enregistrées (★)
 - [ ] Avant toute recherche, le bouton ★ est grisé.
@@ -68,10 +70,10 @@
 
 ### 3.4 Aperçu riche (Excel et PowerPoint)
 - [ ] Au premier lancement, les index se reconstruisent une fois : l'extraction Excel a changé pour garder les colonnes alignées.
-- [ ] Chercher `renouvellement` : l'aperçu de `factures-2024.xlsx` montre un tableau par feuille (« Janvier », « Février »), l'en-tête en gras, le mot surligné dans sa cellule.
+- [x] Chercher `renouvellement` : l'aperçu de `factures-2024.xlsx` montre un tableau par feuille (« Janvier », « Février »), l'en-tête en gras, le mot surligné dans sa cellule.
 - [ ] Sur un vrai classeur avec des cellules vides, les colonnes restent alignées.
 - [ ] Les montants et les dates sont alignés à droite. Un tableau large défile horizontalement dans l'aperçu.
-- [ ] Chercher `tacita` : l'aperçu de `presentacion-oferta.pptx` montre une carte par diapositive, avec son numéro et son titre.
+- [x] Chercher `tacita` : l'aperçu de `presentacion-oferta.pptx` montre une carte par diapositive, avec son numéro et son titre.
 - [ ] Les flèches ↑ ↓ et F3 passent d'une occurrence à l'autre dans les tableaux et les diapositives.
 - [ ] Sur un grand classeur (plus de 400 lignes), chaque correspondance garde le nom de sa feuille au-dessus, et `⋯` marque les lignes non affichées.
 - [ ] En arabe, un tableau en français reste de gauche à droite.
@@ -417,3 +419,34 @@
 - [ ] Choisir un ZIP qui n'est pas le module (ou le module modifié) : message d'erreur, rien n'est installé.
 - [ ] **Supprimer le module** : confirmation, puis la section revient à « non installé » ; le dossier a disparu (au plus tard au lancement suivant).
 - [ ] En arabe et en thème Sonar : section lisible, exemples dans le bon ordre.
+
+### 8.2 Index du sens
+
+- [ ] Installer le module (8.1) : la fenêtre « Quels sites comprendre par le sens ? » s'ouvre ; chaque site affiche son estimation (« Mesure… » puis « ≈ 20 min · 64 800 passages ») ; les sites d'une heure ou moins sont pré-cochés ; « Plus tard » ferme sans rien lancer.
+- [ ] **Comprendre les sites cochés** : sous chaque site, « ≈ Sens · 12 % » avec une barre bleue, puis « reste ≈ … » après quelques secondes ; le PC reste utilisable normalement (priorité basse).
+- [ ] Gestionnaire des tâches pendant le calcul : Prospector en priorité basse ; environ 200 Mo de mémoire en plus en rythme normal.
+- [ ] À la fin : « ≈ Sens à jour · N passages ».
+- [ ] Survol d'un site → bouton **≈** : sur un site non compris, une bulle demande « Comprendre « … » par le sens ? » avec le nombre de passages et la durée estimée ; sur un site compris, confirmation puis suppression de son index du sens.
+- [ ] Fermer Prospector en plein calcul, le rouvrir : le calcul reprend là où il s'était arrêté (le pourcentage ne repart pas de zéro).
+- [ ] Modifier un fichier d'un site compris : après sa mise à jour, seul ce fichier est recalculé (quelques secondes).
+- [ ] Réglages → rythme **économe** : le calcul suivant utilise moins le processeur (plus long).
+- [ ] Le code source (`.ts`, `.py`…) n'est pas compris (le nombre de passages ne l'inclut pas).
+- [ ] Index partagé : seul le PC qui tient l'index calcule ; les autres voient « à jour » une fois le calcul fini.
+
+### 8.3 Recherche par le sens
+
+- [ ] Avec le module installé et au moins un site compris : la pastille **≈ Sens** apparaît à côté de « Tolérance aux fautes » ; grisée en scan direct.
+- [ ] Chercher une notion avec des mots absents des documents (ex. « bail d'habitation » alors qu'un document dit « location d'appartement », ou dans une autre langue) : avec ≈ Sens, le document apparaît avec « ≈ Par le sens » et son passage le plus proche ; sans ≈ Sens, il n'apparaît pas.
+- [ ] Un document qui contient les mots **et** le sens : il reste en tête, avec une petite marque ≈.
+- [ ] Clic sur un résultat « par le sens » : l'aperçu s'ouvre sur le passage, surligné.
+- [ ] Les filtres (type, langue, date, site, groupe, nom de fichier) s'appliquent aussi aux résultats trouvés par le sens.
+- [ ] Le compteur indique « … · dont N par le sens ».
+- [ ] Une recherche sans rapport avec les documents ne ramène pas de résultats « par le sens » farfelus (ou peu).
+- [ ] La pastille reste activée d'une recherche à l'autre, dans les onglets et dans une recherche enregistrée.
+- [ ] Ligne de commande : `prospector-cli search "bail d'habitation" --meaning --format json` : champ `meaning` sur les résultats.
+- [ ] En arabe et en thème Sonar : cartes lisibles, passage dans le bon sens.
+
+### 8.4 Mesure sur un vrai site
+
+- [ ] Sur un de tes vrais dossiers (quelques milliers de documents Word / PDF) : noter la durée affichée avant de cocher « Sens », puis la durée réelle du calcul ; me donner les deux chiffres (et le nombre de cœurs du PC).
+- [ ] Pendant le calcul : le PC reste-t-il fluide (navigation, bureautique) ?

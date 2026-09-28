@@ -18,6 +18,8 @@ export interface SearchOptions {
   wholeWord: boolean;
   regex: boolean;
   fuzzy: boolean;
+  /** Also by meaning (lot 8.3; absent in older searches). */
+  meaning?: boolean;
 }
 
 export interface Filters {
@@ -53,8 +55,8 @@ export interface TermList {
 
 /** Browser demo (screenshots). */
 export const DEMO_TERM_LIST: TermList = {
-  name: 'fournisseurs.txt',
-  terms: ['Dupont SARL', 'García Hermanos', 'Bâti-Sud', 'Menuiserie Lefèvre', '/FR\\d{11}/', 'Transports Martin', 'Atelier 21', 'Électricité Roux', 'BTP Garonne', "Ferronnerie d'art", 'Verrerie Nord', 'Toitures Duval', 'Maçonnerie Blanc', 'Plâtrerie Morel'],
+  name: 'spices.txt',
+  terms: ['saffron', 'cardamom', 'sumac', "za'atar", '/star[ -]anise/', 'cumin', 'turmeric', 'paprika', 'harissa', 'fennel seeds', 'cinnamon', 'nutmeg', 'ras el hanout', 'vanilla'],
   skipped: 2,
   all: false,
 };
@@ -223,7 +225,7 @@ function mockFolders(keep: ((name: string) => boolean) | null): SearchHit[] {
   if (!keep) return [];
   const seen = new Map<string, SearchHit>();
   for (const hit of mockHits) {
-    // Every folder along the path (D:\Clients, D:\Clients\Dupont SARL…).
+    // Every folder along the path (D:\Documents, D:\Documents\Cooking…).
     const parts = splitPath(hit.path).folder.split(/[\\/]/).filter(Boolean);
     for (let i = 1; i < parts.length; i++) {
       const folder = parts.slice(0, i + 1).join('\\');
@@ -272,6 +274,7 @@ export function buildRequest(s: RequestInput): SearchRequestDto {
   return {
     query: s.query,
     fuzzy: s.options.fuzzy,
+    meaning: s.options.meaning || undefined,
     caseSensitive: s.options.caseSensitive,
     wholeWord: s.options.wholeWord,
     regex: s.options.regex,
@@ -305,7 +308,8 @@ class SearchStore {
   recents = $state<string[]>(loadRecents());
   mode = $state<SearchMode>('indexed');
   // Whole word is on by default: "alger" must not find "algérie" (BUG-020).
-  options = $state<SearchOptions>({ caseSensitive: false, wholeWord: true, regex: false, fuzzy: true });
+  // Browser demo: `?meaning` (screenshots).
+  options = $state<SearchOptions>({ caseSensitive: false, wholeWord: true, regex: false, fuzzy: true, meaning: !inTauri && demoParam('meaning') !== null });
   filters = $state<Filters>({
     kinds: [],
     size: 'any',
@@ -317,7 +321,7 @@ class SearchStore {
     ...(inTauri ? {} : demoDiskFilters()),
     ...(!inTauri && demoParam('terms') !== null ? { termList: DEMO_TERM_LIST } : {}),
     langs: [],
-    excluded: ['D:\\Clients\\_corbeille', '**\\node_modules'],
+    excluded: ['D:\\Documents\\_old', '**\\node_modules'],
   });
   sort = $state<SortKey>('relevance');
   /** File-name criterion (lot 5.1), next to the text query. */
@@ -326,7 +330,7 @@ class SearchStore {
   folders = $state(!inTauri && demoParam('folders') !== null);
 
   /** Sites included in the query (multi-index search). */
-  scope = new SvelteSet<string>(inTauri ? [] : ['clients', 'mail', 'code', 'archives']);
+  scope = new SvelteSet<string>(inTauri ? [] : ['home', 'mail', 'code', 'archives']);
 
   // Raw: hits are only ever replaced, and tabs / history share them.
   hits = $state.raw<SearchHit[]>([]);
@@ -860,6 +864,17 @@ class SearchStore {
       // Demo copies: the same size stands for the same digest.
       .filter((h) => !this.copies || h.sizeBytes === this.copies.size)
       .map((h) => (textless && !this.folders ? { ...h, matchCount: 0, exactCount: 0, snippets: [] } : h))
+      // Lot 8.3 demo: with the ≈ Meaning chip, the Arabic dessert book is found by meaning only,
+      // the Spanish recipes by both.
+      .map((h) =>
+        !this.options.meaning
+          ? h
+          : h.id === 'h3'
+            ? { ...h, matchCount: 0, exactCount: 0, meaning: { score: 0.83, start: 0, end: 120, only: true }, snippets: [{ line: 3, text: 'يُخلط السميد مع جوز الهند والزبدة الذائبة والحليب، ثم يُخبز في فرن متوسط الحرارة حتى يحمرّ وجهه…' }] }
+            : h.id === 'h2'
+              ? { ...h, meaning: { score: 0.8, start: 0, end: 120, only: false } }
+              : h,
+      )
       .toSorted((a, b) => b.score - a.score);
     const live = this.mode === 'live';
     const step = live ? 170 : 55;
@@ -993,6 +1008,7 @@ export function fromHitDto(dto: HitDto): SearchHit {
     score: dto.score,
     snippets: dto.snippets,
     innerKind: dto.innerKind && (KINDS as readonly string[]).includes(dto.innerKind) ? (dto.innerKind as ResultKind) : undefined,
+    meaning: dto.meaning,
   };
 }
 

@@ -29,6 +29,12 @@ export interface SiteDto {
   missingRoots: string[];
   status: 'ready' | 'watching' | 'indexing' | 'error' | 'empty';
   error: ApiError | null;
+  /** Meaning index ticked (Étape 8). */
+  sense?: boolean;
+  /** Being computed: passages done / to do. */
+  senseProgress?: { done: number; total: number } | null;
+  /** Passages already understood. */
+  sensePassages?: number | null;
 }
 
 export interface SnippetDto {
@@ -53,6 +59,8 @@ export interface HitDto {
   snippets: SnippetDto[];
   /** Family of a file inside an archive or an e-mail (lot 6.7); absent otherwise. */
   innerKind?: string;
+  /** Found by meaning too (lot 8.3). */
+  meaning?: MeaningDto;
 }
 
 export interface SearchResponseDto {
@@ -74,9 +82,20 @@ export interface FacetsDto {
   sites: Record<string, number>;
 }
 
+/** How a result answers the meaning of the search (lot 8.3). */
+export interface MeaningDto {
+  score: number;
+  start: number;
+  end: number;
+  /** Found by meaning only: no word of the search in it. */
+  only: boolean;
+}
+
 export interface SearchRequestDto {
   query: string;
   fuzzy: boolean;
+  /** Also by meaning (lot 8.3). */
+  meaning?: boolean;
   /** `Aa` chip. */
   caseSensitive: boolean;
   /** `ab` chip. */
@@ -139,6 +158,23 @@ export interface ScanFinishedDto {
   scanId: string;
   summary: { filesScanned: number; hits: number; tookMs: number; cancelled: boolean } | null;
   error: ApiError | null;
+}
+
+/** What ticking "Meaning" on a site costs (lot 8.2). */
+export interface SenseEstimateDto {
+  passages: number;
+  /** At this PC's measured speed; null without the module. */
+  seconds: number | null;
+  /** Passages already computed. */
+  done: number;
+}
+
+/** Progress of a site's meaning index. */
+export interface SenseSiteDto {
+  siteId: string;
+  done: number;
+  total: number;
+  finished: boolean;
 }
 
 /** Meaning-search module (Étape 8). */
@@ -309,8 +345,9 @@ export const api = {
   indexSite: (id: string, excluded: string[]) => invoke<void>('index_site', { id, excluded }),
   cancelIndex: (id: string) => invoke<void>('cancel_index', { id }),
   search: (siteIds: string[], request: SearchRequestDto) => invoke<SearchResponseDto>('search', { siteIds, request }),
-  preview: (siteId: string, path: string, request: SearchRequestDto) =>
-    invoke<PreviewDto>('preview', { siteId, path, request }),
+  /** `passage`: the passage found by meaning, marked when no word is (lot 8.3). */
+  preview: (siteId: string, path: string, request: SearchRequestDto, passage?: [number, number] | null) =>
+    invoke<PreviewDto>('preview', { siteId, path, request, passage: passage ?? null }),
   liveScan: (scanId: string, siteIds: string[], excluded: string[], request: SearchRequestDto) =>
     invoke<void>('live_scan', { scan: { scanId, siteIds, excluded, request } }),
   cancelScan: (scanId: string) => invoke<void>('cancel_scan', { scanId }),
@@ -329,6 +366,12 @@ export const api = {
   removeSenseModule: () => invoke<SenseStatusDto>('remove_sense_module'),
   onSenseProgress: (cb: (p: { done: number; total: number }) => void): Promise<UnlistenFn> =>
     listen<{ done: number; total: number }>('sense://progress', (e) => cb(e.payload)),
+  /** Meaning index of the sites (lot 8.2). */
+  senseEstimate: (id: string) => invoke<SenseEstimateDto>('sense_estimate', { id }),
+  setSiteSense: (id: string, on: boolean) => invoke<SiteDto>('set_site_sense', { id, on }),
+  getSensePace: () => invoke<'normal' | 'economy'>('get_sense_pace'),
+  setSensePace: (pace: 'normal' | 'economy') => invoke<'normal' | 'economy'>('set_sense_pace', { pace }),
+  onSenseSite: (cb: (p: SenseSiteDto) => void): Promise<UnlistenFn> => listen<SenseSiteDto>('sense://site', (e) => cb(e.payload)),
   /** The terms of a list file (lot 7.4). */
   readTermList: (path: string) => invoke<{ terms: string[]; skipped: number }>('read_term_list', { path }),
   /** Shared index (lot 7.3): who keeps it up to date. */

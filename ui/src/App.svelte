@@ -14,6 +14,8 @@
   import { saved } from './lib/stores/saved.svelte';
   import { sitesStore } from './lib/stores/sites.svelte';
   import { groups } from './lib/stores/groups.svelte';
+  import { sense } from './lib/stores/sense.svelte';
+  import SenseSitesDialog from './lib/components/SenseSitesDialog.svelte';
   import { ui } from './lib/stores/ui.svelte';
   import ReportView from './lib/components/ReportView.svelte';
   import UpdateBanner from './lib/components/UpdateBanner.svelte';
@@ -34,6 +36,8 @@
       void sitesStore.init().then(() => initLaunches());
       void saved.init();
       void updates.init();
+      // Meaning module (Étape 8): installed or not (the rail's ≈ buttons).
+      void sense.load();
       // Global shortcut: the window comes up ready to type.
       void api.onSummon(focusSearch);
     } else search.run();
@@ -129,6 +133,7 @@
   <UpdateBanner />
   <TransferDialog />
   <DuplicatesDialog />
+  <SenseSitesDialog />
 
   <img class="doodle tulip" src={tulip} alt="" aria-hidden="true" />
   <img class="doodle blossom" src={blossom} alt="" aria-hidden="true" />

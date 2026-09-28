@@ -16,28 +16,25 @@ function next() {
   if (job) job();
 }
 
-/** A drawn receipt, for the browser demo (screenshots). */
+/** A drawn recipe card, for the browser demo (screenshots). */
 export const DEMO_IMAGE =
   'data:image/svg+xml;utf8,' +
   encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" viewBox="0 0 800 1000">
       <rect width="800" height="1000" fill="#f7f3ea"/>
-      <text x="60" y="120" font-family="Georgia" font-size="56" fill="#222">FACTURE n° 2024-117</text>
-      <text x="60" y="200" font-family="Georgia" font-size="30" fill="#333">Dupont SARL — 12 rue des Lilas, Lyon</text>
-      <text x="60" y="300" font-family="Georgia" font-size="32" fill="#222">Réf. contrat CP-2024-031</text>
-      <text x="60" y="360" font-family="Georgia" font-size="32" fill="#222">Maintenance annuelle — 4 800,00 €</text>
-      <line x1="60" y1="420" x2="740" y2="420" stroke="#999" stroke-width="2"/>
-      <text x="60" y="480" font-family="Georgia" font-size="28" fill="#444">Selon les termes du contrat de prestation,</text>
-      <text x="60" y="525" font-family="Georgia" font-size="28" fill="#444">paiement à 30 jours fin de mois.</text>
-      <text x="520" y="880" font-family="Georgia" font-size="30" fill="#222">Total : 4 800,00 €</text>
+      <text x="60" y="120" font-family="Georgia" font-size="56" fill="#222">Fluffy pancakes</text>
+      <text x="60" y="200" font-family="Georgia" font-size="32" fill="#333">Recipe card · makes 8</text>
+      <line x1="60" y1="250" x2="740" y2="250" stroke="#999" stroke-width="2"/>
+      <text x="60" y="320" font-family="Georgia" font-size="30" fill="#222">200 g flour · 2 eggs · 300 ml milk</text>
+      <text x="60" y="370" font-family="Georgia" font-size="30" fill="#222">1 tbsp sugar · a pinch of salt</text>
+      <text x="60" y="450" font-family="Georgia" font-size="28" fill="#444">Whisk, rest 10 minutes, then cook</text>
+      <text x="60" y="495" font-family="Georgia" font-size="28" fill="#444">about one minute on each side.</text>
+      <text x="500" y="880" font-family="Georgia" font-size="30" fill="#222">Serve warm!</text>
     </svg>`,
   );
 
-/** Boxes of "contrat" on the demo receipt (fractions). */
-export const DEMO_BOXES = [
-  { x: 0.15, y: 0.272, w: 0.127, h: 0.036, fuzzy: false },
-  { x: 0.396, y: 0.453, w: 0.104, h: 0.034, fuzzy: false },
-];
+/** Boxes of "recipe" on the demo card (fractions). */
+export const DEMO_BOXES = [{ x: 0.072, y: 0.172, w: 0.116, h: 0.036, fuzzy: false }];
 
 /** An image on disk, or inside an archive or an e-mail (lot 6.7). */
 export function isImageHit(hit: SearchHit): boolean {

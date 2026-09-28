@@ -5,8 +5,16 @@
 
 ## One-time setup
 
-1. **GitHub repository.** Create it, then:
-   - put its `owner/name` in `site/config.js` (`PROSPECTOR_REPO`);
+1. **GitHub repository.** It is `faycalazib/file-locator` (created 2026-09-28). Then:
+   - This machine has two GitHub accounts. To push with the right one, put the account in the remote URL and pin it for this repository only:
+
+     ```bash
+     git remote add origin https://faycalazib@github.com/faycalazib/file-locator.git
+     git config credential.username faycalazib
+     git config credential.useHttpPath true
+     ```
+
+   - put its `owner/name` in `site/config.js` (`PROSPECTOR_REPO`) — done: `faycalazib/file-locator`;
    - put the same `owner/name` in the updater address in `src-tauri/tauri.conf.json` (`plugins.updater.endpoints`).
 2. **Update key.** Tauri signs every update with its own key, which is separate from a Windows certificate. The app refuses any update that is not signed with this key.
 
@@ -20,7 +28,7 @@
    - The **public** key (`.key.pub`) goes in `tauri.conf.json` → `plugins.updater.pubkey`.
    - In GitHub → Settings → Secrets and variables → Actions, add `TAURI_SIGNING_PRIVATE_KEY` (the content of the `.key` file) and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`.
    - In `tauri.conf.json` → `bundle`, set `"createUpdaterArtifacts": true`.
-3. **GitHub Pages.** Settings → Pages → Source: *GitHub Actions*. The `Site` workflow publishes `site/`.
+3. **GitHub Pages.** Settings → Pages → Source: *GitHub Actions*. The `Site` workflow publishes `site/`. Do it **before the first push**: otherwise the `deploy` job stops at `actions/configure-pages` with "Get Pages site failed … Not Found". Enable Pages, then re-run the job.
 
 Until step 2 is done, the app works normally: updates are simply off, and their section is hidden in Settings.
 
@@ -65,6 +73,17 @@ The source is `src-tauri/icons/source.svg`: concept A, « Loupe crayonnée », c
 1. Render it to a 1024 px PNG with a transparent background. Headless Chrome works: open `scripts/icon.html` with `--default-background-color=00000000 --window-size=1024,1024 --screenshot=…`.
 2. Run `pnpm tauri icon target/tmp/icon-1024.png`.
 3. Copy `src-tauri/icons/128x128.png` to `site/img/icon.png`.
+
+## Site screenshots
+
+The download page shows the app in the language of the page: `site/img/app-en.png` (default), `app-fr.png`, `app-es.png`, `app-ar.png`. They are taken from the browser demo, whose data (`ui/src/lib/mock/data.ts`) is invented and harmless: cooking recipes, with no names, contracts, invoices, amounts or bank data. Keep it that way: the site is public.
+
+```bash
+pnpm build
+chrome --headless=new --disable-gpu --hide-scrollbars --allow-file-access-from-files --force-device-scale-factor=1 --window-size=1600,1000 --virtual-time-budget=8000 --screenshot=site/img/app-en.png "file:///<repo>/dist/index.html?lang=en"
+```
+
+Repeat with `fr`, `es` and `ar`.
 
 ## Build locally (without publishing)
 

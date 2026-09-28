@@ -1,6 +1,6 @@
 # Suivi du projet Prospector
 
-> Mis à jour le 28/09/2026 : Étape 7 entièrement codée — lots 7.1 (ligne de commande), 7.2 (groupes de sites), 7.3 (index partagé) et 7.4 (liste de termes), à tester ; lots 6.1 (alertes), 6.2 (détecteurs, audit), 6.3 (compteurs), 6.4 (exports, copie), 6.5 (doublons), 6.6 (images), 6.7 (extraction) et 6.8 (mode portable) livrés, à tester : l'Étape 6 est entièrement codée ; l'Étape 5 est entièrement codée (à tester) ; Étape 4 en cours ; plan des Étapes 5 à 8 validé pour dépasser FileLocator Pro (voir plus bas).
+> Mis à jour le 28/09/2026 : **Étapes 5 à 8 entièrement codées** (lots 8.1 à 8.4 : recherche par le sens, à tester) ; Étape 7 entièrement codée — lots 7.1 (ligne de commande), 7.2 (groupes de sites), 7.3 (index partagé) et 7.4 (liste de termes), à tester ; lots 6.1 (alertes), 6.2 (détecteurs, audit), 6.3 (compteurs), 6.4 (exports, copie), 6.5 (doublons), 6.6 (images), 6.7 (extraction) et 6.8 (mode portable) livrés, à tester : l'Étape 6 est entièrement codée ; l'Étape 5 est entièrement codée (à tester) ; Étape 4 en cours ; plan des Étapes 5 à 8 validé pour dépasser FileLocator Pro (voir plus bas).
 > Ce fichier est le tableau de bord du projet. Il est mis à jour à la fin de chaque étape et après chaque correction de bug.
 > La spécification de référence reste [`goal.md`](../goal.md). Les bugs sont détaillés dans [BUGS.md](BUGS.md). Les vérifications à faire dans l'application sont dans [TESTS-A-FAIRE.md](TESTS-A-FAIRE.md).
 
@@ -18,7 +18,7 @@
 | 5 | Combler les manques face à FileLocator Pro : nom de fichier, OCR, anciens formats, pièces jointes, NEAR, travail sur les résultats, intégration Windows, dates / attributs / empreintes | 🟢 **à tester** (8/8) | — |
 | 6 | Nouveautés uniques : alertes, détecteurs, compteurs, rapport par mot-clé, doublons, images, extraction, mode portable | 🟢 **à tester** (8/8) | — |
 | 7 | Automatisation et réseau : ligne de commande, groupes de sites, index sur le réseau, critères depuis un fichier | 🟢 **à tester** (4/4) | — |
-| 8 | IA locale optionnelle : recherche par le sens et entre langues | ⬜ | — |
+| 8 | IA locale optionnelle : recherche par le sens et entre langues | 🟢 **à tester** (4/4) | — |
 
 **Avancement global :**
 
@@ -84,7 +84,7 @@
 
 | Critère | État | Mesure |
 | --- | --- | --- |
-| Recherche < 200 ms sur 100 000 fichiers | ✅ | 19 à 40 ms |
+| Recherche < 200 ms sur 100 000 fichiers | ✅ | 19 à 40 ms ; sur un vrai site de code (20 875 fichiers, BUG-037) : 0 à 198 ms, compilation release |
 | Indexation < 5 min pour 50 Go mixtes | 🟡 | 100 000 fichiers texte froids sur **disque dur USB** en 204 s. 50 Go mixtes (PDF, Word…) pas encore mesurés. |
 | Lancement < 2 s | ⬜ | À mesurer sur la version installée (Étape 4) |
 | Aucune dépendance à installer | ✅ | Même pour Outlook : pas de `readpst` à livrer |
@@ -100,10 +100,14 @@
 | Fichiers d'exemple (`test_fixtures/`) | 27 fichiers : texte, code, PDF, Word, Excel, PowerPoint, ZIP imbriqué, 7z solide, RAR 5, RAR chiffré, bombe ZIP, .eml, .msg, .pst, fichiers corrompus |
 | Interface | `pnpm check` : 0 erreur, 0 avertissement · `pnpm i18n:check` : 4 langues cohérentes |
 | Rust | `cargo clippy -D warnings` : aucun avertissement |
-| Bugs documentés | 35 (BUG-001 à BUG-035). BUG-022 (antivirus qui bloque brièvement un fichier d'index) reste à surveiller ; BUG-026 ajoute des nouvelles tentatives automatiques. |
+| Bugs documentés | 36 (BUG-001 à BUG-036). BUG-022 (antivirus qui bloque brièvement un fichier d'index) reste à surveiller ; BUG-026 ajoute des nouvelles tentatives automatiques. |
 
 ## À surveiller
 
+- **Index du sens (lot 8.2)** :
+  - vitesse réelle de la chaîne complète : environ 32 passages/s sur 16 cœurs (rythme normal) ; sur un portable à 4 cœurs, compter 3 à 4 fois plus long ; l'estimation affichée intègre le surcoût mesuré (+25 %) ;
+  - le corpus de performance n'a qu'un passage par fichier : la durée pour de vrais documents (jusqu'à 12 passages chacun) est à relever sur un vrai site ;
+  - scores tassés (un texte sans rapport obtient ~0,77 contre ~0,80 pour les bons) et léger biais vers la langue de la question : à traiter au lot 8.3 (seuil relatif, fusion avec les mots).
 - **Module de sens (lot 8.1)** :
   - le téléchargement ne fonctionnera qu'une fois le ZIP joint à une version GitHub et `MODULE_URL` renseigné (voir RELEASE.md) ;
   - la version quantifiée du modèle demande un processeur avec AVX2 (PC d'après 2013 environ) : à signaler proprement si elle manque.
@@ -118,7 +122,7 @@
 - **Extraction depuis une grosse boîte PST (lot 6.7)** : « Extraire vers… » et « Ouvrir » relisent la boîte jusqu'au message voulu (les autres messages ne sont pas analysés, mais la boîte est parcourue) : à chronométrer sur une vraie boîte de plusieurs Go.
 - **Licences** : `THIRD-PARTY-NOTICES.txt` régénéré le 28/09/2026 (454 crates, application et ligne de commande) et copié dans `site/` ; à relancer (`python scripts/third-party.py`) à chaque nouvelle dépendance.
 - **Doublons presque identiques sur un très gros site** : la comparaison relit le texte stocké de tous les documents (mesuré seulement sur de petits sites) ; à chronométrer sur 100 000 documents.
-- **Temps d'indexation (27/09/2026, lot 6.3)** : le test de performance a indexé les 100 000 fichiers de `target/tmp/perf-corpus` en **590 s**, contre 204 s lors de la mesure de référence du 25/09. Les recherches restent à 27-37 ms (compteurs compris). La phase de lecture progresse de façon régulière (≈ 170 fichiers/s), ce qui évoque le disque ou l'antivirus plutôt que le code, mais ce n'est pas vérifié : à mesurer de nouveau (disque au repos, exclusion antivirus) avant de conclure.
+- **Temps d'indexation (27/09/2026, lot 6.3 ; éclairé le 28/09)** : le 28/09, les mêmes 100 000 fichiers ont été indexés en **511 s à froid** puis en **12 s** une fois en cache : la lenteur vient de la première lecture des fichiers (disque, antivirus), pas du code. Reste à remesurer disque au repos, avec une exclusion antivirus. Mesure d'origine : le test de performance a indexé les 100 000 fichiers de `target/tmp/perf-corpus` en **590 s**, contre 204 s lors de la mesure de référence du 25/09. Les recherches restent à 27-37 ms (compteurs compris). La phase de lecture progresse de façon régulière (≈ 170 fichiers/s), ce qui évoque le disque ou l'antivirus plutôt que le code, mais ce n'est pas vérifié : à mesurer de nouveau (disque au repos, exclusion antivirus) avant de conclure.
 - **Disques durs et disques USB (BUG-025)** : l'indexation y est limitée par le disque, à environ 500 fichiers par seconde pour de petits fichiers. Le code lit maintenant dans l'ordre des chemins, avec un seul thread de lecture.
 - **Antivirus (BUG-022)** : Windows Defender peut ralentir l'écriture des index et, rarement, bloquer un fichier. Une nouvelle tentative automatique ou une exclusion conseillée sera étudiée à l'Étape 4.
 - **Licence UnRAR (pour l'Étape 4)** : la lecture des RAR utilise la bibliothèque officielle UnRAR, gratuite pour extraire. L'installeur devra inclure son texte de licence (voir ARCHITECTURE.md, « Third-party licences »).
@@ -200,15 +204,19 @@ Choix faits le 27/09/2026 : pas de signature de code pour l'instant, hébergemen
 | Lot | Contenu | État |
 | --- | --- | --- |
 | 8.1 | **Module** : ZIP reproductible de 77 Mo (133 Mo installé) fabriqué par `scripts/sense-module.py` ; installation vérifiée (empreinte du ZIP, puis de chaque fichier), depuis un fichier ou par téléchargement (inactif tant que le dépôt n'existe pas), suppression ; section des Réglages (maquette validée) ; modèle chargé en 1,2 s ; « contrat de location » ↔ *lease agreement* 0,87, *contrato de arrendamiento* 0,88, *عقد إيجار* 0,88, contre 0,68 pour un texte sans rapport ; BUG-035 | 🟢 à tester |
-| 8.2 | **Index du sens** : passages d'environ 250 mots, vecteurs en 8 bits à côté de l'index de chaque site, calcul en arrière-plan reprenable et incrémental, progression dans le rail ; mesure sur 100 000 fichiers (estimation : 20 à 60 min, à confirmer) | ⬜ |
-| 8.3 | **Recherche** : pastille « ≈ Sens », fusion des classements mots + sens (RRF), étiquette « par le sens » avec le passage le plus proche ; `--meaning` en ligne de commande ; maquette avant intégration | ⬜ |
-| 8.4 | **Mesures et finitions** : vitesse, mémoire, disque ; version portable et index partagé ; guide en 4 langues ; licences (Apache 2.0, MIT) | ⬜ |
+| 8.2 | **Index du sens** : passages d'environ 120 mots coupés en fin de phrase (12 par document, code exclu), vecteurs en 8 bits dans un second index Tantivy par site, calcul en arrière-plan (2 moteurs en mode arrière-plan de Windows, ou rythme économe), reprenable et incrémental ; case ≈ par site avec estimation, progression dans le rail, fenêtre « Quels sites comprendre ? » après l'installation (maquette validée) ; **mesuré sur 100 000 fichiers : 52 min (32 passages/s), recherche parmi 100 000 vecteurs en 35 ms, 40 Mo sur disque** ; bail arabe trouvé en premier par une question anglaise ; BUG-036 | 🟢 à tester |
+| 8.3 | **Recherche par le sens** : pastille « ≈ Sens » (maquette validée), 400 passages les plus proches regroupés par document, seuil relatif (0,05 sous le meilleur), filtres de la recherche appliqués, fusion mots + sens (RRF) ; cartes « ≈ Par le sens » avec le passage, aperçu ouvert sur lui ; `--meaning` ; une question française trouve le bail arabe seul (0,83), la recette est écartée | 🟢 à tester |
+| 8.4 | **Finitions** : index partagé (un lecteur cherche par le sens), changement de lettre du mode portable (index du sens compris), guide « Recherche par le sens » en 4 langues avec les licences (IBM Apache 2.0, ONNX Runtime MIT) ; mesure sur un site aux vrais documents : dans tes tests | 🟢 à tester |
 
 ## Historique
 
 | Date | Événement |
 | --- | --- |
+| 28/09/2026 | Site public : dépôt `faycalazib/file-locator`, GitHub Pages en ligne (BUG-038). Données de la démo navigateur (`ui/src/lib/mock/data.ts`, vignette, liste de termes, doublons) remplacées par des recettes de cuisine inventées : plus aucun nom, contrat, facture ni donnée bancaire. Captures du site refaites dans les 4 langues (`site/img/app-{en,fr,es,ar}.png`), l'anglais par défaut |
 | 28/09/2026 | `.gitignore` complété : caches Vite, Python (`__pycache__`), clés de signature (`*.key`, `.env`…, cf. RELEASE.md), fichiers temporaires, OS, `.claude/settings.local.json` |
+| 28/09/2026 | Tests manuels de l'Étape 2 validés ; BUG-037 : `Aa` vérifie chaque candidat (compteurs = liste), `ab` éteinte liste une seule fois les mots qui contiennent le terme, surlignage allégé et vérification en parallèle (recherches de 217 ms à 25 ms sur un site de code, en release) ; mesure sur une copie d'un vrai index (`real_index_timings`) ; 197 tests au vert |
+| 28/09/2026 | Lots 8.3 et 8.4 : recherche par le sens (`Engine::search_meaning`, fusion RRF, `Hit.meaning`, aperçu sur le passage), pastille « ≈ Sens », cartes « par le sens », `--meaning`, test de l'index partagé, guide ; **l'Étape 8 est entièrement codée** ; 196 tests au vert |
+| 28/09/2026 | Lot 8.2 : index du sens (`core/src/sense/{chunk,store,pool}.rs`, `core/src/engine/meaning.rs`), calcul en arrière-plan (`src-tauri/src/sense.rs`), case ≈, progression, fenêtre après installation, rythme normal / économe ; mesure 100 000 fichiers (52 min, recherche 35 ms, 40 Mo) ; BUG-036 (commit refusé par l'antivirus) ; 192 tests au vert |
 | 28/09/2026 | Lot 8.1 : module de recherche par le sens (`core/src/sense/`, `ort` + `tokenizers`, `scripts/sense-module.py`), installation / téléchargement / suppression (`src-tauri/src/sense.rs`), section des Réglages ; tests sur le vrai modèle ; BUG-035 (vecteurs changés par le remplissage) ; 188 tests au vert |
 | 28/09/2026 | Lot 7.4 : listes de termes (`core/src/terms.rs`, `SearchRequest.term_list`), `TermList.svelte`, commande `read_term_list`, `--terms-file` ; index et scan direct identiques, rapport par terme ; 2 000 termes cherchés en 375 ms (petit site, compilation de débogage) ; maquettes `docs/mockups/terms-*.png` ; l'Étape 7 est entièrement codée ; 185 tests au vert |
 | 28/09/2026 | Lot 7.3 : index partagé (`core/src/share.rs` : bail, chemins réseau ; moteur en lecture seule, relecture du catalogue et des index ; dossier personnel), `src-tauri/src/share.rs` (bail tenu en arrière-plan, bascule de rôle, libération à la fermeture), interface et ligne de commande, guide ; 181 tests au vert |

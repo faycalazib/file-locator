@@ -1,6 +1,8 @@
 <script lang="ts">
   import Icon from './Icon.svelte';
   import TermList from './TermList.svelte';
+  import { sense } from '../stores/sense.svelte';
+  import { sitesStore } from '../stores/sites.svelte';
   import { formatNumber, t, type MessageKey } from '../i18n/index.svelte';
   import { search, type SearchMode, type SearchOptions } from '../stores/search.svelte';
   import { ui } from '../stores/ui.svelte';
@@ -174,6 +176,20 @@
     >
       {search.options.fuzzy ? '✓ ' : ''}{t('search.options.fuzzy')}
     </button>
+    <!-- Lot 8.3: by meaning too, when the module is there and a site is understood. -->
+    {#if (sense.status?.installed && sitesStore.list.some((s) => s.sense)) || search.options.meaning}
+      <button
+        type="button"
+        class="chip sketch meaning"
+        class:hatch={search.options.meaning}
+        aria-pressed={search.options.meaning ?? false}
+        disabled={search.mode === 'live'}
+        title={search.mode === 'live' ? t('meaning.liveHint') : t('meaning.hint')}
+        onclick={() => (search.options.meaning = !search.options.meaning)}
+      >
+        ≈ {t('meaning.chip')}
+      </button>
+    {/if}
     {#each OPTIONS as opt (opt.key)}
       <button
         type="button"
@@ -521,6 +537,16 @@
   .chip.underline {
     text-decoration: underline;
     text-underline-offset: 3px;
+  }
+
+  .meaning {
+    --k: var(--secondary);
+    --h: var(--fill-secondary);
+    color: var(--secondary-ink);
+  }
+
+  .meaning:disabled {
+    opacity: 0.5;
   }
 
   .refine {

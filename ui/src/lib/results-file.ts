@@ -55,6 +55,7 @@ export function toResultsFile(s: SearchSnapshot): string {
       score: h.score,
       snippets: h.snippets,
       innerKind: h.innerKind,
+      meaning: h.meaning,
     })),
   };
   return JSON.stringify(file, null, 1);

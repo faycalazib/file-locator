@@ -38,7 +38,9 @@ class PreviewStore {
     }
     this.loading = true;
     try {
-      const dto = await api.preview(hit.siteId, hit.path, request);
+      // Found by meaning only: the preview opens on its passage (lot 8.3).
+      const passage: [number, number] | null = hit.meaning?.only ? [hit.meaning.start, hit.meaning.end] : null;
+      const dto = await api.preview(hit.siteId, hit.path, request, passage);
       if (generation !== this.#generation) return;
       this.doc = { hitId: hit.id, layout: dto.layout, lines: dto.lines };
       this.truncated = dto.truncated;

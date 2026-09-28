@@ -33,7 +33,7 @@
     const file = (i: number, path?: string) => ({ siteId: mockHits[i]!.siteId, path: path ?? mockHits[i]!.path, size: mockHits[i]!.sizeBytes, modified: mockHits[i]!.modified.getTime() / 1000 });
     return {
       groups: [
-        { kind: 'exact', similarity: 1, wasted: 2 * mockHits[0]!.sizeBytes, files: [file(0), file(0, 'D:\\Clients\\Dupont SARL\\2024\\copie de contrat-prestation-v3.pdf'), file(0, 'E:\\Sauvegarde\\contrat-prestation-v3.pdf')] },
+        { kind: 'exact', similarity: 1, wasted: 2 * mockHits[0]!.sizeBytes, files: [file(0), file(0, 'D:\\Documents\\Cooking\\copy of weeknight-dinners.pdf'), file(0, 'E:\\Backup\\weeknight-dinners.pdf')] },
         { kind: 'similar', similarity: 0.87, wasted: 0, files: [file(1), file(2)] },
       ],
       filesHashed: 412,

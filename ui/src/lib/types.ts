@@ -35,6 +35,14 @@ export interface IndexSite {
   /** Files that could not be read at the last indexing. */
   skipped?: number;
   error?: { code: SiteErrorCode; path: string };
+  /** Meaning index ticked (Étape 8). */
+  sense?: boolean;
+  /** Being computed: passages done / to do. */
+  senseProgress?: { done: number; total: number } | null;
+  /** Passages already understood. */
+  sensePassages?: number | null;
+  /** Seconds left, from the pace seen so far. */
+  senseRemaining?: number | null;
 }
 
 export interface SavedSearch {
@@ -74,6 +82,8 @@ export interface SearchHit {
   snippets: Snippet[];
   /** Family of a file inside an archive or an e-mail (lot 6.7: it can be extracted). */
   innerKind?: ResultKind;
+  /** Found by meaning too (lot 8.3); `only`: by meaning only. */
+  meaning?: { score: number; start: number; end: number; only: boolean };
 }
 
 export interface PreviewLine {

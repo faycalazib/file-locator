@@ -22,7 +22,22 @@ function fromDto(dto: SiteDto): IndexSite {
     lastIndexed: dto.lastIndexed ? new Date(dto.lastIndexed * 1000) : null,
     skipped: Object.values(dto.skipped ?? {}).reduce((a, b) => a + b, 0),
     error: missing ? { code: 'rootUnavailable', path: missing } : undefined,
+    sense: dto.sense ?? false,
+    senseProgress: dto.senseProgress ?? null,
+    sensePassages: dto.sensePassages ?? null,
   };
+}
+
+/** Browser demo of the meaning index (`?sense=…`, screenshots). */
+function demoSites(): IndexSite[] {
+  if (inTauri || !new URLSearchParams(location.search).has('sense')) return mockSites;
+  return mockSites.map((s) =>
+    s.id === 'home'
+      ? { ...s, sense: true, senseProgress: { done: 78_300, total: 186_400 }, sensePassages: 78_300, senseRemaining: 4200 }
+      : s.id === 'archives'
+        ? { ...s, sense: true, senseProgress: null, sensePassages: 31_200 }
+        : s,
+  );
 }
 
 /** Last segment of a Windows or POSIX path: the default site name. */
@@ -36,7 +51,9 @@ const DEMO_SHARE: ShareStatusDto | null =
   !inTauri && new URLSearchParams(location.search).has('shared') ? { shared: true, holder: 'PC-BUREAU', pc: 'PORTABLE' } : null;
 
 class SitesStore {
-  list = $state<IndexSite[]>(inTauri ? [] : mockSites);
+  list = $state<IndexSite[]>(inTauri ? [] : demoSites());
+  /** When each meaning computation was first seen (time left). */
+  #senseStart = new Map<string, { at: number; done: number }>();
   loaded = $state(!inTauri);
   /** Shared index (lot 7.3); null outside Tauri. */
   share = $state<ShareStatusDto | null>(DEMO_SHARE);
@@ -53,6 +70,21 @@ class SitesStore {
       void search.refresh();
     });
     await api.onShareStatus((s) => (this.share = s));
+    // Meaning index (lot 8.2): progress, then the final count.
+    await api.onSenseSite((p) => {
+      if (p.finished || p.done === p.total) {
+        this.#senseStart.delete(p.siteId);
+        void this.refresh();
+        return;
+      }
+      // Time left from the pace seen since this computation started.
+      const now = Date.now();
+      const start = this.#senseStart.get(p.siteId) ?? { at: now, done: p.done };
+      this.#senseStart.set(p.siteId, start);
+      const rate = (p.done - start.done) / Math.max(1, (now - start.at) / 1000);
+      const senseRemaining = rate > 0 && now - start.at > 5000 ? (p.total - p.done) / rate : null;
+      this.#patch(p.siteId, { senseProgress: { done: p.done, total: p.total }, senseRemaining });
+    });
     // The other PC added, removed or updated sites (or the roles changed).
     await api.onSitesChanged(() => {
       void this.refresh().then(() => search.refresh());
@@ -116,6 +148,19 @@ class SitesStore {
     } catch (e) {
       notices.error(e);
       await this.refresh();
+    }
+  }
+
+  /** Ticks or unticks "Meaning" on a site (lot 8.2). */
+  async setSense(id: string, on: boolean) {
+    if (!inTauri) {
+      this.#patch(id, { sense: on, senseProgress: on ? { done: 0, total: 1 } : null, sensePassages: on ? 0 : null });
+      return;
+    }
+    try {
+      this.#replace(fromDto(await api.setSiteSense(id, on)));
+    } catch (e) {
+      notices.error(e);
     }
   }
 

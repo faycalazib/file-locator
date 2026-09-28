@@ -50,7 +50,7 @@
       </div>
     </section>
 
-    <img class="shot" id="shot" src="img/app-fr.png" alt="Prospector">
+    <img class="shot" id="shot" src="img/app-en.png" alt="Prospector">
 
     <section class="features">
       <article class="feature"><img src="img/pdf.svg" alt=""><h3 data-i18n="f1.title"></h3><p data-i18n="f1.text"></p></article>
@@ -67,9 +67,9 @@
     </div>
   </footer>
   <script>
-    // The Arabic interface in the screenshot when the page is in Arabic.
+    // The screenshot shows the interface in the language of the page.
     window.addEventListener('langchange', (e) => {
-      document.getElementById('shot').src = e.detail === 'ar' ? 'img/app-ar.png' : 'img/app-fr.png';
+      document.getElementById('shot').src = `img/app-${e.detail}.png`;
     });
   </script>
 </body>

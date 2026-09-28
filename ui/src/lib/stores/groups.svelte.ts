@@ -16,7 +16,7 @@ export const groupColor = (group: SiteGroupDto) => GROUP_COLORS[group.color % GR
 
 /** Browser demo (screenshots). */
 const DEMO: SiteGroupDto[] = [
-  { id: 'g1', name: 'Clients', siteIds: ['clients', 'mail'], color: 0 },
+  { id: 'g1', name: 'Home', siteIds: ['home', 'mail'], color: 0 },
   { id: 'g2', name: 'Code', siteIds: ['code'], color: 1 },
   { id: 'g3', name: 'Archives', siteIds: ['mail', 'archives'], color: 2 },
 ];

@@ -52,6 +52,7 @@
       api.getOcr().then((o) => (ocr = o)).catch((e) => notices.error(e));
     }
     if (ui.settingsOpen && inTauri && !sense.status) void sense.load();
+    if (ui.settingsOpen && inTauri) void sense.loadPace();
     if (ui.settingsOpen && inTauri && !shortcut) {
       api.getShortcut().then((s) => (shortcut = s)).catch((e) => notices.error(e));
     }
@@ -339,6 +340,9 @@
           {:else if status.installed}
             <p class="ok">✓ {t('sense.installed', { size: formatBytes(status.size) })}</p>
             <p class="hint block">{t('sense.next')}</p>
+            <!-- Lot 8.2: how much of the PC the computation may use. -->
+            <label class="option"><input type="radio" name="sense-pace" checked={sense.pace === 'normal'} onchange={() => sense.setPace('normal')} /><span>{t('sense.paceNormal')}</span></label>
+            <label class="option"><input type="radio" name="sense-pace" checked={sense.pace === 'economy'} onchange={() => sense.setPace('economy')} /><span>{t('sense.paceEconomy')}</span></label>
             <div class="row"><button type="button" class="move sketch danger" onclick={() => sense.remove()}>{t('sense.remove')}</button></div>
           {:else}
             <div class="row">

@@ -107,7 +107,13 @@
 
 {#snippet excerpt(hit: SearchHit, clip: boolean)}
   {@const s = hit.snippets[0]}
-  {#if s}
+  {#if hit.meaning?.only}
+    <!-- Lot 8.3: found by meaning only — its closest passage, no words to mark. -->
+    <p class="excerpt meaning" class:clip>
+      <span class="m-label">≈ {t('meaning.only')}<i>{t('meaning.why')}</i></span>
+      {#if s}<span class="txt m-passage" dir="auto">{s.text}</span>{/if}
+    </p>
+  {:else if s}
     <p class="excerpt" class:code={hit.kind === 'code'} class:clip>
       <span class="txt" dir={hit.kind === 'code' ? 'ltr' : 'auto'}><Marked text={s.text} /></span>
     </p>
@@ -116,8 +122,10 @@
 
 {#snippet count(hit: SearchHit, small: boolean)}
   {@const approx = hit.exactCount === 0 && hit.matchCount > 0}
+  {#if hit.meaning?.only}
+    <span class="m-num" class:small title={t('meaning.only')} aria-label={t('meaning.only')}>≈</span>
   <!-- Found by name only (no text asked, or a folder): nothing to count. -->
-  {#if hit.matchCount === 0 && hit.snippets.length === 0}
+  {:else if hit.matchCount === 0 && hit.snippets.length === 0}
     <span class="num-none" class:small aria-hidden="true"></span>
   {:else}
   <span
@@ -130,6 +138,7 @@
   >
     <span aria-hidden="true">{formatNumber(hit.matchCount)}</span>
   </span>
+  {#if hit.meaning}<span class="m-tag" title={t('meaning.also')} aria-label={t('meaning.also')}>≈</span>{/if}
   {/if}
 {/snippet}
 
@@ -207,6 +216,9 @@
         {/if}
         {#if search.durationMs !== null}
           <small class="mono">· {t('results.duration', { ms: search.durationMs })}</small>
+        {/if}
+        {#if search.visible.some((h) => h.meaning?.only)}
+          <small class="meaning-count">· {t('meaning.count', { count: search.visible.filter((h) => h.meaning?.only).length })}</small>
         {/if}
         {#if search.openedFrom}
           <small class="opened">· {t('results.file.openedFrom', { name: isolate(search.openedFrom) })}</small>
@@ -402,6 +414,68 @@
   }
 
   /* ── Readout ───────────────────────────────────────────── */
+  /* Lot 8.3: found by meaning. */
+  .m-label {
+    display: inline-block;
+    margin-block-end: 4px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: var(--fill-secondary);
+    color: var(--secondary-ink);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .m-label i {
+    margin-inline-start: 6px;
+    color: var(--text-dim);
+    font-style: normal;
+    font-weight: 400;
+  }
+
+  .m-passage {
+    display: block;
+    padding: 4px 8px;
+    border-inline-start: 3px solid var(--secondary);
+    background: color-mix(in srgb, var(--secondary) 8%, transparent);
+  }
+
+  .m-num {
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: 48px;
+    block-size: 48px;
+    border: 2px dashed var(--secondary);
+    border-radius: 50%;
+    color: var(--secondary-ink);
+    font-size: 24px;
+    font-weight: 700;
+  }
+
+  .m-num.small {
+    inline-size: 30px;
+    block-size: 30px;
+    font-size: 16px;
+  }
+
+  .m-tag {
+    display: inline-grid;
+    place-items: center;
+    inline-size: 22px;
+    block-size: 22px;
+    margin-inline-start: 6px;
+    border-radius: 50%;
+    background: var(--fill-secondary);
+    color: var(--secondary-ink);
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .meaning-count {
+    color: var(--secondary-ink);
+  }
+
   .readout {
     display: flex;
     flex-wrap: wrap;
