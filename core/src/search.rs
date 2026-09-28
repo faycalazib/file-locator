@@ -1,17 +1,17 @@
 //! Query building and execution on one site index.
 
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::ops::Bound;
 use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 use tantivy::collector::{Count, TopDocs};
 use tantivy::query::{
-    AllQuery, BooleanQuery, BoostQuery, FuzzyTermQuery, Occur, PhraseQuery, Query, RangeQuery, RegexQuery, TermQuery,
-    TermSetQuery,
+    AllQuery, BooleanQuery, BoostQuery, FuzzyTermQuery, Occur, PhraseQuery, Query, RangeQuery, TermQuery, TermSetQuery,
 };
 use tantivy::schema::{IndexRecordOption, Value};
-use tantivy::{TantivyDocument, Term};
+use rayon::prelude::*;
+use tantivy::{DocAddress, TantivyDocument, Term};
 
 use crate::detect::Detector;
 use crate::facets::{date_field_name, facet_counts, Facets};
@@ -74,6 +74,9 @@ pub struct SearchRequest {
     /// them, or all of them (`term_list_all`), besides the query.
     pub term_list: Vec<String>,
     pub term_list_all: bool,
+    /// Also by meaning (Étape 8, lot 8.3): the app computes the vector of
+    /// the question and calls `Engine::search_meaning`.
+    pub meaning: bool,
     pub limit: Option<usize>,
 }
 
@@ -103,6 +106,7 @@ impl Default for SearchRequest {
             facets: false,
             term_list: Vec::new(),
             term_list_all: false,
+            meaning: false,
             limit: None,
         }
     }
@@ -172,6 +176,12 @@ impl SearchRequest {
         self.in_folder.as_deref().map(str::trim).filter(|f| !f.is_empty())
     }
 
+    /// Candidates of the index are checked on their text: what the index
+    /// cannot decide (regex, NEAR, LINES, detectors) or the exact case (`Aa`).
+    pub fn verified(&self, parsed: &ParsedQuery) -> bool {
+        parsed.needs_verification() || self.case_sensitive
+    }
+
     /// The highlighter of this request (fails on an invalid regex).
     pub fn matcher(&self, parsed: &ParsedQuery) -> Result<Matcher> {
         Matcher::new(parsed, self.match_options()).map_err(|e| CoreError::InvalidQuery { message: e.to_string() })
@@ -233,6 +243,22 @@ pub struct Hit {
     /// extracted; an image gets its picture). None on disk and for messages.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub inner_kind: Option<String>,
+    /// Found by its meaning too (Étape 8, lot 8.3).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub meaning: Option<MeaningMatch>,
+}
+
+/// How a document answers the meaning of the search (lot 8.3).
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MeaningMatch {
+    /// Similarity of its closest passage (1 = same meaning).
+    pub score: f32,
+    /// That passage in the document's text (bytes).
+    pub start: usize,
+    pub end: usize,
+    /// Found by its meaning only (no word of the search in it).
+    pub only: bool,
 }
 
 impl Hit {
@@ -249,11 +275,71 @@ const DEFAULT_LIMIT: usize = 200;
 /// this many are examined.
 const VERIFIED_CANDIDATES: usize = 100_000;
 
+/// Candidates read and checked together, in parallel.
+const VERIFY_BATCH: usize = 256;
+
 /// Score multiplier of files that only match approximately.
 const APPROXIMATE_PENALTY: f32 = 0.2;
 
+/// `ab` off: the indexed words that contain each searched word. Walking the
+/// dictionary is the costly part (millions of words in code): it is done once
+/// per site and search, and reused by the counts per criterion.
+#[derive(Default)]
+pub(crate) struct Contains(HashMap<String, Vec<String>>);
+
+impl Contains {
+    pub(crate) fn expand(index: &SiteIndex, parsed: &ParsedQuery, req: &SearchRequest) -> Result<Self> {
+        fn words<'a>(clause: &'a Clause, out: &mut Vec<&'a str>) {
+            match clause {
+                Clause::Word(w) | Clause::Like(w) => out.push(w),
+                Clause::Near { terms, .. } => terms.iter().for_each(|t| words(t, out)),
+                _ => {}
+            }
+        }
+        if req.whole_word {
+            return Ok(Self::default());
+        }
+        let mut raw = Vec::new();
+        parsed.must.iter().flatten().chain(&parsed.must_not).for_each(|c| words(c, &mut raw));
+        let tokens: Vec<String> = raw
+            .into_iter()
+            .filter_map(|w| {
+                let folded = analyze(&mut generic_analyzer(), w);
+                (folded.len() == 1).then(|| folded.into_iter().next()).flatten()
+            })
+            .collect();
+        if tokens.is_empty() {
+            return Ok(Self::default());
+        }
+        let mut found: HashMap<String, HashSet<String>> = tokens.iter().map(|t| (t.clone(), HashSet::new())).collect();
+        for segment in index.reader.searcher().segment_readers() {
+            let inverted = segment.inverted_index(index.fields.body)?;
+            let mut stream = inverted.terms().stream()?;
+            while stream.advance() {
+                let Ok(term) = std::str::from_utf8(stream.key()) else { continue };
+                for token in tokens.iter().filter(|t| term.contains(String::as_str(t))) {
+                    if let Some(set) = found.get_mut(token) {
+                        set.insert(term.to_owned());
+                    }
+                }
+            }
+        }
+        Ok(Self(found.into_iter().map(|(k, v)| (k, v.into_iter().collect())).collect()))
+    }
+}
+
+/// How the words of a query are looked up in the index.
+#[derive(Clone, Copy)]
+pub(crate) struct WordMode<'a> {
+    fuzzy: bool,
+    /// Word forms (stems) and typos; not with `Aa` (exact spelling only).
+    forms: bool,
+    /// `ab` off: the indexed words containing each word.
+    contains: &'a Contains,
+}
+
 /// One word: accent-free `body`, file `name` (boosted), stemmed fields, typos.
-fn word_query(f: &Fields, word: &str, fuzzy: bool, whole_word: bool) -> Option<Box<dyn Query>> {
+fn word_query(f: &Fields, word: &str, mode: WordMode) -> Option<Box<dyn Query>> {
     let folded = analyze(&mut generic_analyzer(), word);
     if folded.len() > 1 {
         return phrase_query(f, &folded);
@@ -266,7 +352,7 @@ fn word_query(f: &Fields, word: &str, fuzzy: bool, whole_word: bool) -> Option<B
             2.0,
         )),
     ];
-    for lang in DocLang::STEMMED {
+    for lang in DocLang::STEMMED.into_iter().filter(|_| mode.forms) {
         let (Some(field), Some(stemmed)) = (f.stem(lang), analyze(&mut stem_analyzer(lang), word).into_iter().next()) else {
             continue;
         };
@@ -276,12 +362,11 @@ fn word_query(f: &Fields, word: &str, fuzzy: bool, whole_word: bool) -> Option<B
         )));
     }
     // `ab` off: the word may be inside a longer one ("contrat" → "sous-contrats").
-    if !whole_word {
-        if let Ok(q) = RegexQuery::from_pattern(&format!(".*{}.*", regex::escape(&token)), f.body) {
-            should.push(Box::new(BoostQuery::new(Box::new(q), 0.6)));
-        }
+    if let Some(longer) = mode.contains.0.get(&token).filter(|l| !l.is_empty()) {
+        let terms = longer.iter().map(|t| Term::from_field_text(f.body, t));
+        should.push(Box::new(BoostQuery::new(Box::new(TermSetQuery::new(terms)), 0.6)));
     }
-    if fuzzy {
+    if mode.fuzzy && mode.forms {
         let distance = fuzzy_distance(&token);
         if distance > 0 {
             should.push(Box::new(BoostQuery::new(
@@ -311,15 +396,15 @@ fn phrase_query(f: &Fields, folded: &[String]) -> Option<Box<dyn Query>> {
     }
 }
 
-fn clause_query(f: &Fields, clause: &Clause, fuzzy: bool, whole_word: bool) -> Option<Box<dyn Query>> {
+fn clause_query(f: &Fields, clause: &Clause, mode: WordMode) -> Option<Box<dyn Query>> {
     match clause {
-        Clause::Word(w) => word_query(f, w, fuzzy, whole_word),
+        Clause::Word(w) => word_query(f, w, mode),
         Clause::Phrase(p) => phrase_query(f, &analyze(&mut generic_analyzer(), p)),
-        Clause::Like(w) => word_query(f, w, true, whole_word),
+        Clause::Like(w) => word_query(f, w, WordMode { fuzzy: true, ..mode }),
         // The index narrows to files with every term; the distance is
         // checked on the text afterwards (`QueryLogic`).
         Clause::Near { terms, .. } => {
-            let parts: Vec<Box<dyn Query>> = terms.iter().filter_map(|t| clause_query(f, t, fuzzy, whole_word)).collect();
+            let parts: Vec<Box<dyn Query>> = terms.iter().filter_map(|t| clause_query(f, t, mode)).collect();
             (!parts.is_empty()).then(|| Box::new(BooleanQuery::intersection(parts)) as Box<dyn Query>)
         }
         // Regular expressions and detectors are applied to the stored text afterwards.
@@ -355,7 +440,9 @@ pub(crate) fn build_query(
     req: &SearchRequest,
     names: Option<&NamePattern>,
     prefixes: &[String],
+    contains: &Contains,
 ) -> Result<Box<dyn Query>> {
+    let mode = WordMode { fuzzy: req.fuzzy, forms: !req.case_sensitive, contains };
     let mut clauses: Vec<(Occur, Box<dyn Query>)> = Vec::new();
     if !prefixes.is_empty() {
         let ranges: Vec<Box<dyn Query>> = prefixes.iter().filter_map(|p| prefix_query(f, p)).collect();
@@ -375,7 +462,7 @@ pub(crate) fn build_query(
 
     for group in &parsed.must {
         let alternatives: Vec<Box<dyn Query>> =
-            group.iter().filter_map(|c| clause_query(f, c, req.fuzzy, req.whole_word)).collect();
+            group.iter().filter_map(|c| clause_query(f, c, mode)).collect();
         match alternatives.len() {
             0 => {}
             1 => clauses.extend(alternatives.into_iter().map(|q| (Occur::Must, q))),
@@ -384,10 +471,11 @@ pub(crate) fn build_query(
     }
     for clause in &parsed.must_not {
         // `NOT (a NEAR b)` excludes only files where they are close: checked on the text.
-        if matches!(clause, Clause::Near { .. }) {
+        // With `Aa`, `NOT Brouillon` must keep "brouillon": the text decides.
+        if matches!(clause, Clause::Near { .. }) || req.case_sensitive {
             continue;
         }
-        if let Some(q) = clause_query(f, clause, false, req.whole_word) {
+        if let Some(q) = clause_query(f, clause, WordMode { fuzzy: false, ..mode }) {
             clauses.push((Occur::MustNot, q));
         }
     }
@@ -456,9 +544,10 @@ pub fn search_site(
     let matcher = req.matcher(parsed)?;
     // Tantivy answers the words; regular expressions filter its candidates.
     let names = req.names()?;
-    let query = build_query(f, &parsed.without_regexes(), req, names.as_ref(), prefixes)?;
+    let contains = Contains::expand(index, parsed, req)?;
+    let query = build_query(f, &parsed.without_regexes(), req, names.as_ref(), prefixes, &contains)?;
     let limit = req.limit.unwrap_or(DEFAULT_LIMIT).max(1);
-    let verify = parsed.needs_verification();
+    let verify = req.verified(parsed);
     let logic = if verify { Some(QueryLogic::new(parsed, req)?) } else { None };
     // Last access, attributes, digest: the index gives the candidates, the
     // disk decides (last, only for what passed everything else).
@@ -472,7 +561,7 @@ pub fn search_site(
     // Counts per criterion: from the index when it answers alone; otherwise
     // from the documents checked on their text, with the current filters.
     let mut facets = match (req.facets, checked) {
-        (true, false) => Some(facet_counts(index, parsed, req, names.as_ref(), prefixes)?),
+        (true, false) => Some(facet_counts(index, parsed, req, names.as_ref(), prefixes, &contains)?),
         (true, true) => Some(Facets::default()),
         (false, _) => None,
     };
@@ -482,45 +571,32 @@ pub fn search_site(
     let counting = !req.detectors.is_empty() || (req.facets && checked);
     let mut totals = DetectionTotals::new();
     let mut accepted = 0;
-    for (score, address) in top {
-        let full = hits.len() >= limit;
-        if full && !counting {
-            break;
-        }
+
+    // One candidate, checked on its text (and the disk): its hit and date
+    // when it is accepted.
+    let examine = |score: f32, address: DocAddress| -> Result<Option<(Hit, u64)>> {
         let doc: TantivyDocument = searcher.doc(address)?;
         let lang_code = first_str(&doc, f.lang);
         let lang = DocLang::from_code(&lang_code).unwrap_or(DocLang::Und);
         let body = first_str(&doc, f.body);
         if logic.as_ref().is_some_and(|l| !l.accepts(&body, lang)) {
-            dropped += 1;
-            continue;
+            return Ok(None);
         }
         let matches = if matcher.is_empty() { Vec::new() } else { matcher.find(&body, lang) };
         if !matcher.is_empty() && matches.is_empty() && !name_has_word(&matcher, &first_str(&doc, f.name)) {
-            dropped += 1;
-            continue;
+            return Ok(None);
         }
         let path = first_str(&doc, f.path);
         if let Some(disk) = &disk {
             let (file, inner) = split_inner(&path);
             if !disk.accepts(Path::new(file), inner.is_some(), None) {
-                dropped += 1;
-                continue;
+                return Ok(None);
             }
-        }
-        accepted += 1;
-        if let Some(facets) = facets.as_mut().filter(|_| checked) {
-            facets.count_document(&first_str(&doc, f.kind), &lang_code, first_u64(&doc, date_field));
-        }
-        let detections = matcher.detections(&body);
-        add_detections(&mut totals, &detections);
-        if full {
-            continue;
         }
         let exact_count = matches.iter().filter(|m| !m.fuzzy).count();
         // A file found only through typo tolerance goes after the exact ones.
         let score = if exact_count == 0 && !matches.is_empty() { score * APPROXIMATE_PENALTY } else { score };
-        hits.push(Hit {
+        let hit = Hit {
             site_id: site_id.to_owned(),
             path,
             kind: first_str(&doc, f.kind),
@@ -528,14 +604,38 @@ pub fn search_site(
             size_bytes: first_u64(&doc, f.size),
             modified: first_u64(&doc, f.modified),
             created: first_u64(&doc, f.created),
-            detections,
+            detections: matcher.detections(&body),
             match_count: matches.len(),
             exact_count,
             score,
             snippets: snippets(&body, &matches, 2),
             inner_kind: None,
+            meaning: None,
         }
-        .with_inner_kind());
+        .with_inner_kind();
+        Ok(Some((hit, first_u64(&doc, date_field))))
+    };
+    // Candidates are read and checked in parallel batches (a checked search
+    // may read thousands of texts), then taken in score order.
+    for batch in top.chunks(VERIFY_BATCH) {
+        if hits.len() >= limit && !counting {
+            break;
+        }
+        let examined: Vec<Result<Option<(Hit, u64)>>> = batch.par_iter().map(|&(score, address)| examine(score, address)).collect();
+        for result in examined {
+            let Some((hit, date)) = result? else {
+                dropped += 1;
+                continue;
+            };
+            accepted += 1;
+            if let Some(facets) = facets.as_mut().filter(|_| checked) {
+                facets.count_document(&hit.kind, &hit.lang, date);
+            }
+            add_detections(&mut totals, &hit.detections);
+            if hits.len() < limit {
+                hits.push(hit);
+            }
+        }
     }
     // With a text or disk check, only the examined candidates are known.
     let total = if checked { accepted } else { total.saturating_sub(dropped) };

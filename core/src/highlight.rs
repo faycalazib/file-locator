@@ -261,9 +261,40 @@ impl Matcher {
         }
     }
 
+    /// A word of the text: `Some(false)` exact (or a form of a searched word),
+    /// `Some(true)` approximate (typo tolerance), `None` no match.
+    fn judge(
+        &self,
+        tok: &Tok,
+        raw: &str,
+        lang: DocLang,
+        stems: Option<&HashMap<String, Vec<usize>>>,
+        stem_lens: &[usize],
+    ) -> Option<bool> {
+        if self.word_hit(&tok.folded, raw) {
+            return Some(false);
+        }
+        if let Some(map) = stems {
+            let tok_len = core_len(&tok.folded);
+            let near = |q: &usize| tok_len.abs_diff(*q) <= MAX_INFLECTION_LEN_DIFF;
+            if stem_lens.iter().any(near) && stem(lang, raw).and_then(|s| map.get(&s)).is_some_and(|lens| lens.iter().any(near)) {
+                return Some(false);
+            }
+        }
+        self.fuzzy.iter().any(|(q, d)| levenshtein_within(&tok.folded, q, *d)).then_some(true)
+    }
+
     /// Non-overlapping matches, sorted by position.
     pub fn find(&self, text: &str, lang: DocLang) -> Vec<Match> {
         let scan = &text[..floor_char_boundary(text, MAX_SCAN_BYTES)];
+        // `Aa`: a word or phrase matches only where it is spelled as typed, so
+        // a text without that spelling is skipped without being split in words.
+        let exact_only = self.options.case_sensitive && self.regexes.is_empty() && self.near.is_empty() && self.detectors.is_empty();
+        if exact_only
+            && !self.raw_words.iter().chain(self.phrases.iter().map(|(_, raw)| raw)).any(|w| scan.contains(w.as_str()))
+        {
+            return Vec::new();
+        }
         let tokens = tokenize(scan);
         let stems = self.stems.get(&lang).filter(|s| !s.is_empty());
         let mut covered = vec![false; tokens.len()];
@@ -288,21 +319,19 @@ impl Matcher {
             }
         }
 
+        // Lengths a word form may have: a word too far from all of them is
+        // not stemmed (the costly part on long texts).
+        let stem_lens: Vec<usize> = stems.map(|map| map.values().flatten().copied().collect()).unwrap_or_default();
+        // Code repeats the same identifiers: each spelling is judged once per text.
+        let mut judged: HashMap<&str, Option<bool>> = HashMap::new();
         for (i, tok) in tokens.iter().enumerate() {
             if covered[i] {
                 continue;
             }
-            let exact = self.word_hit(&tok.folded, &scan[tok.range.clone()])
-                || stems.is_some_and(|map| {
-                    stem(lang, &scan[tok.range.clone()]).and_then(|s| map.get(&s)).is_some_and(|lens| {
-                        let tok_len = core_len(&tok.folded);
-                        lens.iter().any(|&q| tok_len.abs_diff(q) <= MAX_INFLECTION_LEN_DIFF)
-                    })
-                });
-            if exact {
-                ranges.push(Match { range: tok.range.clone(), fuzzy: false });
-            } else if self.fuzzy.iter().any(|(q, d)| levenshtein_within(&tok.folded, q, *d)) {
-                ranges.push(Match { range: tok.range.clone(), fuzzy: true });
+            let raw = &scan[tok.range.clone()];
+            let verdict = *judged.entry(raw).or_insert_with(|| self.judge(tok, raw, lang, stems, &stem_lens));
+            if let Some(fuzzy) = verdict {
+                ranges.push(Match { range: tok.range.clone(), fuzzy });
             }
         }
         for re in &self.regexes {

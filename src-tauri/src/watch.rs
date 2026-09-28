@@ -117,6 +117,8 @@ fn worker(app: &AppHandle, id: &str, rx: &Receiver<Changes>) {
                 Err(CoreError::IndexBusy { .. }) => std::thread::sleep(RETRY),
                 Err(CoreError::SiteNotFound { .. }) => return,
                 Ok(Some(record)) => {
+                    // The meaning index follows (Étape 8).
+                    crate::sense::wake(app);
                     let site = Some(view(&state, record));
                     let _ = app.emit("index://finished", IndexFinished { site_id: id.to_owned(), site, error: None });
                     if let Ok(news) = engine.check_alerts(id) {

@@ -6,6 +6,8 @@
 
 **Avant de commencer :** relance `pnpm tauri dev` après chaque livraison qui touche le back (Rust).
 
+**Tests pilotés par Claude :** avec `pnpm tauri dev` ouvert, Claude pilote la fenêtre par `scripts/drive.py` (port 9222, en développement seulement) et fait lui-même les tests qui se passent dans la fenêtre. Restent à la main : clic droit de l'Explorateur, raccourci global, notifications, zone de notification, installeur, clé USB, partage réseau, sélecteur de dossier de Windows.
+
 ## Étape 2 — Formats, requêtes, scan direct
 
 ### Formats
@@ -33,6 +35,9 @@
 
 ### Aperçu
 - [x] Un fichier de code (`.rs`, `.py`, `.js`…) est coloré, dans les deux thèmes.
+- [x] (BUG-038) Thème sombre : une liste déroulante ouverte (Taille, Date…) est lisible, texte clair sur fond sombre. Thème clair : toujours lisible.
+- [x] (BUG-038) Réglages ouverts puis défilés jusqu'en bas : le contour lumineux reste autour de tout le panneau et ne traverse aucun texte.
+- [x] Bas du rail : le bouton lune (thème clair) / soleil (thème sombre) bascule le thème en un clic, info-bulle « Passer au thème sombre / clair » ; la roue dentée ouvre les Réglages, qui n'ont plus de section Thème. Le choix est gardé après un redémarrage.
 
 ## Étape 3 — Différenciateurs
 
@@ -50,15 +55,17 @@
 - [ ] Copier d'un coup un dossier de plus de 50 fichiers : la progression s'affiche dans le rail. ⏸ Reporté (à faire plus tard).
 
 ### 3.2 Recherches enregistrées (★)
-- [ ] Avant toute recherche, le bouton ★ est grisé.
-- [ ] Après une recherche, ★ ouvre un petit formulaire, prérempli avec la requête. « Enregistrer » ajoute la recherche dans « Recherches enregistrées », dans le rail.
-- [ ] L'étoile devient pleine pour une recherche déjà enregistrée. Si tu changes une option (Aa, un filtre…), elle redevient vide.
-- [ ] Rouvrir ★ sur une recherche enregistrée : changer le nom puis « Enregistrer » la renomme, sans créer de doublon.
-- [ ] « Retirer », dans le formulaire ou via le × au survol dans le rail, la supprime.
-- [ ] Un clic sur une recherche enregistrée la relance avec son mode (indexée ou scan direct), ses options, ses filtres et ses sites.
+- [x] Avant toute recherche, le bouton ★ est grisé.
+- [x] (BUG-039) Mise en page « Registre » (filtres dans le rail) : « Recherches enregistrées » et « Récents » apparaissent sous les filtres.
+- [x] Après une recherche, ★ ouvre un petit formulaire, prérempli avec la requête. « Enregistrer » ajoute la recherche dans « Recherches enregistrées », dans le rail.
+- [x] L'étoile devient pleine pour une recherche déjà enregistrée. Si tu changes une option (Aa, un filtre…), elle redevient vide.
+- [x] Rouvrir ★ sur une recherche enregistrée : changer le nom puis « Enregistrer » la renomme, sans créer de doublon.
+- [x] « Retirer », dans le formulaire ou via le × au survol dans le rail, la supprime.
+- [x] Un clic sur une recherche enregistrée la relance avec son mode (indexée ou scan direct), ses options, ses filtres et ses sites.
 - [ ] Les recherches enregistrées sont toujours là après un redémarrage de Prospector.
 - [ ] Après avoir changé le dossier des index (Réglages), les recherches enregistrées suivent.
-- [ ] En arabe, le formulaire et la liste s'affichent de droite à gauche.
+- [x] En arabe, le formulaire et la liste s'affichent de droite à gauche.
+- [x] (BUG-040) En arabe, l'aperçu d'un fichier de code reste de gauche à droite : numéros de ligne à gauche, sans chevauchement.
 
 ### 3.3 Raccourci global
 - [ ] Prospector réduit ou derrière une autre fenêtre : `Ctrl + Maj + Espace` le ramène au premier plan, le curseur dans la zone de recherche (le texte déjà saisi est sélectionné).

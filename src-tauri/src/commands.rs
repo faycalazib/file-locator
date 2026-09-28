@@ -33,6 +33,10 @@ pub struct SiteView {
     /// `watching` (ready and watched) · `ready` · `indexing` · `error` · `empty` (never indexed)
     status: &'static str,
     error: Option<serde_json::Value>,
+    /// Meaning index being computed (Étape 8): passages done / to do.
+    sense_progress: Option<prospector_core::SenseProgress>,
+    /// Passages already understood (Étape 8), when the box is ticked.
+    sense_passages: Option<u64>,
 }
 
 pub(crate) fn view(state: &AppState, record: SiteRecord) -> SiteView {
@@ -48,7 +52,9 @@ pub(crate) fn view(state: &AppState, record: SiteRecord) -> SiteView {
     } else {
         ("ready", None)
     };
-    SiteView { record, status, error }
+    let sense_progress = state.sense_progress.lock().ok().and_then(|m| m.get(&record.id).copied());
+    let sense_passages = record.sense.then(|| engine.sense_passages(&record.id));
+    SiteView { record, status, error, sense_progress, sense_passages }
 }
 
 /// Errors that belong to the app shell, not the engine.
@@ -217,6 +223,8 @@ pub(crate) fn run_indexing(app: &AppHandle, id: &str, excluded: &[String], quiet
             if let Ok(news) = engine.check_alerts(id) {
                 background::announce(app, news);
             }
+            // The meaning index follows (Étape 8).
+            crate::sense::wake(app);
             IndexFinished { site_id: id.to_owned(), site: Some(view(&state, record)), error: None }
         }
         Err(e) => IndexFinished {
@@ -236,9 +244,18 @@ pub fn cancel_index(state: State<'_, AppState>, id: String) {
 }
 
 #[tauri::command]
-pub async fn search(state: State<'_, AppState>, site_ids: Vec<String>, request: SearchRequest) -> CmdResult<SearchResponse> {
+pub async fn search(app: AppHandle, state: State<'_, AppState>, site_ids: Vec<String>, request: SearchRequest) -> CmdResult<SearchResponse> {
     let engine = state.engine();
-    blocking(move || engine.search(&site_ids, &request)).await
+    blocking(move || {
+        // By meaning too (lot 8.3), when asked and possible; otherwise by words.
+        if request.meaning {
+            if let Some(question) = crate::sense::question_vector(&app, &request.query) {
+                return engine.search_meaning(&site_ids, &request, &question);
+            }
+        }
+        engine.search(&site_ids, &request)
+    })
+    .await
 }
 
 /// Preview with the same options as the search (Aa, ab, .*, typos).
@@ -248,9 +265,10 @@ pub async fn preview(
     site_id: String,
     path: String,
     request: SearchRequest,
+    passage: Option<(usize, usize)>,
 ) -> CmdResult<PreviewDoc> {
     let engine = state.engine();
-    blocking(move || engine.preview(&site_id, &path, &request)).await
+    blocking(move || engine.preview_passage(&site_id, &path, &request, passage)).await
 }
 
 #[derive(Clone, Serialize)]

@@ -3,6 +3,7 @@
   import FilterPanel from './FilterPanel.svelte';
   import LangSwitcher from './LangSwitcher.svelte';
   import SettingsMenu from './SettingsMenu.svelte';
+  import ThemeToggle from './ThemeToggle.svelte';
   import SiteGroups from './SiteGroups.svelte';
   import { formatBytes, formatNumber, formatPercent, formatRelative, t } from '../i18n/index.svelte';
   import { inTauri } from '../api';
@@ -246,9 +247,7 @@
       </ul>
     </section>
 
-    {#if withFilters}
-      <FilterPanel placement="rail" />
-    {:else if !compact}
+    {#snippet recentSection()}
       {#if search.recents.length > 0}
         <section class="panel sketch" style:--k="var(--orange)">
           <header><h2>{t('rail.recent')}</h2></header>
@@ -264,7 +263,9 @@
           </ul>
         </section>
       {/if}
+    {/snippet}
 
+    {#snippet savedSection()}
       {#if saved.list.length > 0}
         <section class="panel sketch" style:--k="var(--purple)">
           <header><h2>{t('rail.saved')}</h2></header>
@@ -303,12 +304,26 @@
           </ul>
         </section>
       {/if}
+    {/snippet}
+
+    <!-- Filters in the rail ("Registre"): saved and recent searches come
+         after them, so they stay reachable (BUG-039). -->
+    {#if withFilters}
+      <FilterPanel placement="rail" />
+      {@render savedSection()}
+      {@render recentSection()}
+    {:else if !compact}
+      {@render recentSection()}
+      {@render savedSection()}
     {/if}
   </div>
 
   <footer class="foot">
     <LangSwitcher up compact={compact} />
-    <SettingsMenu up />
+    <div class="tools">
+      <ThemeToggle />
+      <SettingsMenu up />
+    </div>
   </footer>
 </aside>
 
@@ -716,6 +731,16 @@
   }
 
   .compact .foot {
+    flex-direction: column;
+  }
+
+  .tools {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+  }
+
+  .compact .tools {
     flex-direction: column;
   }
 

@@ -38,6 +38,9 @@ use crate::report::{terms as report_terms, DocRef, KeywordReport, KeywordRow, Te
 use crate::scope::{inside, restrict_targets, site_scope, SiteScope};
 use crate::search::{search_site, stored_body, DetectionTotals, Hit, SearchRequest};
 
+mod meaning;
+pub use meaning::{Embed, SenseHit, SensePlan, SenseProgress};
+
 /// Index writer: memory per indexing thread (Tantivy needs ≥ 15 MB) and
 /// maximum number of threads.
 const WRITER_HEAP_PER_THREAD: usize = 64 * 1024 * 1024;
@@ -63,6 +66,9 @@ pub struct SiteRecord {
     /// Folders excluded at the last indexing (reused by the folder watcher).
     #[serde(default)]
     pub excluded: Vec<String>,
+    /// Meaning index turned on (Étape 8).
+    #[serde(default)]
+    pub sense: bool,
 }
 
 #[derive(Clone, Copy, Debug, Serialize)]
@@ -134,6 +140,8 @@ pub struct Engine {
     /// Files changed / removed by the updates of each site, until the alerts
     /// look at them (lot 6.1).
     changes: Mutex<HashMap<String, SiteChanges>>,
+    /// Meaning indexes opened (Étape 8).
+    sense_open: Mutex<HashMap<String, Arc<crate::sense::store::SenseIndex>>>,
 }
 
 /// A word of the search found on an image (lot 6.6): its box as fractions
@@ -233,6 +241,7 @@ impl Engine {
             saved: SavedSearches::open(personal_dir)?,
             groups: SiteGroups::open(personal_dir)?,
             changes: Mutex::new(HashMap::new()),
+            sense_open: Mutex::new(HashMap::new()),
         })
     }
 
@@ -247,6 +256,7 @@ impl Engine {
         *lock(&self.reader_of) = pc;
         // Indexes opened for writing are opened again read-only, and back.
         lock(&self.open).clear();
+        lock(&self.sense_open).clear();
         if reading {
             self.refresh_shared();
         }
@@ -274,6 +284,7 @@ impl Engine {
         for index in lock(&self.open).values() {
             let _ = index.reader.reload();
         }
+        self.reload_sense();
         let catalog = self.data_dir.join("sites.json");
         let modified = std::fs::metadata(&catalog).and_then(|m| m.modified()).ok();
         let mut seen = lock(&self.catalog_seen);
@@ -435,6 +446,7 @@ impl Engine {
             last_indexed: None,
             skipped: BTreeMap::new(),
             missing_roots: Vec::new(),
+            sense: false,
             excluded: Vec::new(),
         };
         sites.push(record.clone());
@@ -457,6 +469,7 @@ impl Engine {
         self.save(&sites)?;
         drop(sites);
         self.groups.forget_site(id)?;
+        self.forget_sense(id)?;
         lock(&self.open).remove(id);
         let dir = self.index_dir(id);
         if dir.exists() {
@@ -797,7 +810,7 @@ impl Engine {
             }
         }
         // Sites not searched: what they would bring (when the index answers alone).
-        let checked = parsed.needs_verification() || req.disk_check()?.is_some();
+        let checked = req.verified(&parsed) || req.disk_check()?.is_some();
         if let Some(all) = facets.as_mut().filter(|_| !checked) {
             for site in self.sites().into_iter().filter(|s| s.last_indexed.is_some() && !site_ids.contains(&s.id)) {
                 let prefixes = match site_scope(&site.roots, req.folder()) {
@@ -1016,6 +1029,12 @@ impl Engine {
     /// The text of one file with the request's matches marked: from the index,
     /// or read from disk (files found by a live scan, sites not indexed yet).
     pub fn preview(&self, site_id: &str, path: &str, req: &SearchRequest) -> Result<PreviewDoc> {
+        self.preview_passage(site_id, path, req, None)
+    }
+
+    /// Same, with the passage found by meaning marked (lot 8.3): the preview
+    /// opens on it when no word of the search is in the document.
+    pub fn preview_passage(&self, site_id: &str, path: &str, req: &SearchRequest, passage: Option<(usize, usize)>) -> Result<PreviewDoc> {
         // Never open (= create) an index for an unknown site id.
         let stored = match self.site(site_id).and_then(|_| self.site_index(site_id)) {
             Ok(index) => stored_body(&index, path)?,
@@ -1026,7 +1045,10 @@ impl Engine {
             None => read_from_disk(path)?,
         };
         let matcher = req.matcher(&req.parsed())?;
-        let matches = if matcher.is_empty() { Vec::new() } else { matcher.find(&body, lang) };
+        let mut matches = if matcher.is_empty() { Vec::new() } else { matcher.find(&body, lang) };
+        if let Some(range) = passage.filter(|_| matches.is_empty()).and_then(|(a, b)| meaning::passage_range(&body, a, b)) {
+            matches.push(crate::highlight::Match { range, fuzzy: false });
+        }
         // Sheets become tables and slides cards in the preview (rich preview).
         let layout = match kind.as_str() {
             "code" => "code",

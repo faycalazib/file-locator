@@ -95,6 +95,8 @@
 {#if mode}
   <div class="backdrop" role="presentation" onclick={close}></div>
   <div class="dialog sketch" role="dialog" aria-modal="true" aria-labelledby="transfer-title">
+    <!-- The frame stays put; only its content scrolls (the outline is drawn on the frame). -->
+    <div class="body">
     <header>
       <h2 id="transfer-title">{t(mode === 'export' ? 'export.dialogTitle' : 'export.copyTitle')}</h2>
       <button type="button" class="icon-btn" aria-label={t('settings.close')} onclick={close} disabled={copyId !== null}>
@@ -186,6 +188,7 @@
         </button>
       {/if}
     </footer>
+    </div>
   </div>
 {/if}
 
@@ -205,13 +208,20 @@
     z-index: 41;
     display: flex;
     flex-direction: column;
-    gap: var(--sp-3);
     inline-size: min(560px, calc(100vw - 32px));
     max-block-size: 80vh;
-    overflow: auto;
-    padding: var(--sp-5) var(--sp-6);
     background: var(--surface);
     translate: -50% 0;
+  }
+
+  .body {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+    min-block-size: 0;
+    overflow: auto;
+    padding: var(--sp-5) var(--sp-6);
   }
 
   :global([dir='rtl']) .dialog {

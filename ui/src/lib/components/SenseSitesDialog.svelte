@@ -61,6 +61,8 @@
 {#if sense.askSites}
   <div class="shade" role="presentation" onclick={() => (sense.askSites = false)}></div>
   <div class="dialog sketch" role="dialog" aria-modal="true" aria-labelledby="sense-sites-title">
+    <!-- The frame stays put; only its content scrolls (the outline is drawn on the frame). -->
+    <div class="body">
     <h2 id="sense-sites-title">{t('sense.sitesTitle')}</h2>
     <p>{t('sense.sitesIntro')}</p>
     <ul>
@@ -83,6 +85,7 @@
       <button type="button" class="sketch" onclick={() => (sense.askSites = false)}>{t('sense.later')}</button>
       <button type="button" class="sketch hatch go" onclick={start} disabled={starting || !anyChosen}>{t('sense.start')}</button>
     </div>
+    </div>
   </div>
 {/if}
 
@@ -101,21 +104,29 @@
     inset-block-start: 12vh;
     inset-inline-start: 50%;
     translate: -50% 0;
-    display: grid;
-    gap: 12px;
+    display: flex;
+    flex-direction: column;
     inline-size: min(560px, 92vw);
     max-block-size: 76vh;
-    overflow: auto;
-    padding: 20px 24px;
     background: var(--surface);
     box-shadow: var(--shadow-pop);
+  }
+
+  .body {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: 12px;
+    min-block-size: 0;
+    overflow: auto;
+    padding: 20px 24px;
   }
 
   :global([dir='rtl']) .dialog {
     translate: 50% 0;
   }
 
-  .dialog > * {
+  .body > * {
     position: relative;
     z-index: 1;
     margin: 0;

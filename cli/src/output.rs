@@ -41,6 +41,16 @@ pub struct HitOut {
     #[serde(skip_serializing_if = "std::collections::BTreeMap::is_empty")]
     pub detections: std::collections::BTreeMap<String, usize>,
     pub snippets: Vec<SnippetOut>,
+    /// Found by meaning (`--meaning`): its closest passage's similarity, and
+    /// whether no word of the search is in it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub meaning: Option<MeaningOut>,
+}
+
+#[derive(Serialize)]
+pub struct MeaningOut {
+    pub score: f32,
+    pub only: bool,
 }
 
 #[derive(Serialize)]
@@ -68,6 +78,7 @@ pub fn hit_out(hit: &Hit, site_name: &str) -> HitOut {
         exact: hit.exact_count,
         score: hit.score,
         detections: hit.detections.clone(),
+        meaning: hit.meaning.as_ref().map(|m| MeaningOut { score: m.score, only: m.only }),
         snippets: hit.snippets.iter().map(|s| SnippetOut { line: s.line, text: marks(&s.text, "", "") }).collect(),
     }
 }
@@ -130,7 +141,7 @@ pub struct Printer<W: Write> {
     header: bool,
 }
 
-const CSV_HEADER: &str = "path,site,kind,innerKind,lang,size,modified,created,matches,exact,score,snippet";
+const CSV_HEADER: &str = "path,site,kind,innerKind,lang,size,modified,created,matches,exact,score,meaning,snippet";
 
 fn csv_field(value: &str) -> String {
     if value.contains([',', '"', '\n', '\r']) { format!("\"{}\"", value.replace('"', "\"\"")) } else { value.to_owned() }
@@ -144,7 +155,12 @@ impl<W: Write> Printer<W> {
     pub fn hit(&mut self, hit: &Hit, site_name: &str) -> std::io::Result<()> {
         match self.format {
             Format::Text => {
-                let detail = if hit.match_count > 0 { format!("{} · {} matches", hit.kind, hit.match_count) } else { hit.kind.clone() };
+                let detail = match (&hit.meaning, hit.match_count) {
+                    (Some(m), _) if m.only => format!("{} · by meaning", hit.kind),
+                    (Some(_), n) => format!("{} · {n} matches · also by meaning", hit.kind),
+                    (None, 0) => hit.kind.clone(),
+                    (None, n) => format!("{} · {n} matches", hit.kind),
+                };
                 writeln!(self.out, "{}  ({detail})", hit.path)?;
                 for s in &hit.snippets {
                     writeln!(self.out, "  {:>5}: {}", s.line, marks(&s.text, "[", "]").trim())?;
@@ -173,6 +189,7 @@ impl<W: Write> Printer<W> {
                     o.matches.to_string(),
                     o.exact.to_string(),
                     format!("{:.3}", o.score),
+                    o.meaning.as_ref().map(|m| format!("{:.3}{}", m.score, if m.only { " only" } else { "" })).unwrap_or_default(),
                     snippet,
                 ];
                 writeln!(self.out, "{}", fields.iter().map(|f| csv_field(f)).collect::<Vec<_>>().join(","))?;

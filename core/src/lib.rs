@@ -35,7 +35,7 @@ pub mod unpack;
 pub mod userpath;
 pub mod watch;
 
-pub use engine::{relocate_data, AlertNews, Engine, ImageBox, IndexPhase, IndexProgress, PreviewDoc, SearchResponse, SiteRecord};
+pub use engine::{relocate_data, AlertNews, Embed, Engine, ImageBox, IndexPhase, IndexProgress, PreviewDoc, SearchResponse, SenseHit, SensePlan, SenseProgress, SiteRecord};
 pub use error::{CoreError, Result};
 pub use groups::SiteGroup;
 pub use saved::{Alert, SavedSearch};

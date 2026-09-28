@@ -14,7 +14,7 @@ use crate::error::Result;
 use crate::index::SiteIndex;
 use crate::names::NamePattern;
 use crate::query::ParsedQuery;
-use crate::search::{build_query, DateField, SearchRequest};
+use crate::search::{build_query, Contains, DateField, SearchRequest};
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -151,18 +151,19 @@ impl SegmentCollector for SegmentCounts {
 
 /// Kinds, languages and years of one site, for a query the index answers
 /// alone. Each is counted with the other filters, without its own.
-pub fn facet_counts(
+pub(crate) fn facet_counts(
     index: &SiteIndex,
     parsed: &ParsedQuery,
     req: &SearchRequest,
     names: Option<&NamePattern>,
     prefixes: &[String],
+    contains: &Contains,
 ) -> Result<Facets> {
     let f = &index.fields;
     let searcher = index.reader.searcher();
     let base = parsed.without_regexes();
     let run = |request: &SearchRequest, facet: Facet| -> Result<BTreeMap<String, usize>> {
-        let query = build_query(f, &base, request, names, prefixes)?;
+        let query = build_query(f, &base, request, names, prefixes, contains)?;
         Ok(searcher.search(&query, &FacetCollector(facet))?)
     };
     Ok(Facets {
@@ -176,7 +177,8 @@ pub fn facet_counts(
 /// Documents of a site that is not searched (for its count in the rail).
 pub fn count_site(index: &SiteIndex, parsed: &ParsedQuery, req: &SearchRequest, prefixes: &[String]) -> Result<usize> {
     let names = req.names()?;
-    let query = build_query(&index.fields, &parsed.without_regexes(), req, names.as_ref(), prefixes)?;
+    let contains = Contains::expand(index, parsed, req)?;
+    let query = build_query(&index.fields, &parsed.without_regexes(), req, names.as_ref(), prefixes, &contains)?;
     Ok(index.reader.searcher().search(&query, &Count)?)
 }
 

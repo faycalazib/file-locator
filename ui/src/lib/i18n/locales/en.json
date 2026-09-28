@@ -397,7 +397,8 @@
   "settings": {
     "title": "Settings",
     "language": "Interface language",
-    "theme": "Theme",
+    "toDark": "Switch to the dark theme",
+    "toLight": "Switch to the light theme",
     "close": "Close",
     "layout": "Layout",
     "layouts": {
@@ -413,10 +414,6 @@
         "name": "Strata",
         "hint": "Grouped by folder, wide preview"
       }
-    },
-    "themes": {
-      "crayons": "Colored pencils (light)",
-      "sonar": "Sonar (dark)"
     },
     "dataDir": "Index folder",
     "dataDirHint": "Indexes can take a lot of space: keep them on the disk you prefer. Moving them keeps your dig sites.",

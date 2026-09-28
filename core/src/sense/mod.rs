@@ -9,7 +9,10 @@
 //!   (`ort`, `load-dynamic`): without the module, nothing is loaded.
 //! - Tokenizer: the model's `tokenizer.json` (`tokenizers`).
 
+pub mod chunk;
 pub mod module;
+pub mod pool;
+pub mod store;
 
 use std::path::Path;
 use std::sync::{Mutex, OnceLock};
@@ -63,13 +66,28 @@ impl SenseModel {
 
     /// Same, with a given model file and number of threads (measures).
     pub fn load_with(dir: &Path, model_file: &str, threads: usize) -> Result<Self> {
+        Self::build(dir, model_file, threads, false)
+    }
+
+    /// For the background computation (lot 8.2): the runtime's threads are
+    /// created in the background mode of Windows (lower CPU, disk and memory
+    /// priority), so the PC stays responsive.
+    pub fn load_background(dir: &Path, threads: usize) -> Result<Self> {
+        Self::build(dir, "model.onnx", threads, true)
+    }
+
+    fn build(dir: &Path, model_file: &str, threads: usize, background: bool) -> Result<Self> {
         load_runtime(dir)?;
-        let session = Session::builder()
+        let mut builder = Session::builder()
             .map_err(|e| fail("session", e))?
             .with_optimization_level(GraphOptimizationLevel::Level3)
             .map_err(|e| fail("session", e))?
             .with_intra_threads(threads)
-            .map_err(|e| fail("session", e))?
+            .map_err(|e| fail("session", e))?;
+        if background {
+            builder = builder.with_thread_manager(pool::BackgroundThreads).map_err(|e| fail("session", e))?;
+        }
+        let session = builder
             .commit_from_file(dir.join(model_file))
             .map_err(|e| fail("model", e))?;
         let inputs = session.inputs().iter().map(|i| i.name().to_owned()).collect();
@@ -149,6 +167,26 @@ impl SenseModel {
     }
 }
 
+/// The words of a search, as the model should read them (lot 8.3): without
+/// its operators (`AND`, `OR`, `NOT`, `NEAR`, `LIKE`, `LINES:`), excluded
+/// words (`-mot`), regular expressions and quotes.
+pub fn question_text(query: &str) -> String {
+    let mut out: Vec<String> = Vec::new();
+    for word in query.split_whitespace() {
+        let upper = word.to_uppercase();
+        let operator = matches!(upper.as_str(), "AND" | "OR" | "NOT" | "NEAR" | "LIKE") || upper.starts_with("NEAR:") || upper.starts_with("LINES:");
+        let regex = word.len() > 1 && word.starts_with('/') && word.ends_with('/');
+        if operator || regex || word.starts_with('-') || word == "|" {
+            continue;
+        }
+        let clean: String = word.chars().filter(|c| !matches!(c, '"' | '«' | '»' | '“' | '”')).collect();
+        if !clean.is_empty() {
+            out.push(clean);
+        }
+    }
+    out.join(" ")
+}
+
 fn normalize(v: &mut [f32; DIM]) {
     let norm = v.iter().map(|x| x * x).sum::<f32>().sqrt();
     if norm > 0.0 {
@@ -161,4 +199,13 @@ fn normalize(v: &mut [f32; DIM]) {
 /// Cosine similarity of two normalized vectors (1 = same meaning).
 pub fn similarity(a: &[f32; DIM], b: &[f32; DIM]) -> f32 {
     a.iter().zip(b).map(|(x, y)| x * y).sum()
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn the_question_without_operators() {
+        assert_eq!(super::question_text(r#""bail d'habitation" AND loyer NOT -brouillon /INV-\d+/ NEAR:5 charges"#), "bail d'habitation loyer charges");
+        assert_eq!(super::question_text("contrat OR contrato OR عقد"), "contrat contrato عقد");
+    }
 }

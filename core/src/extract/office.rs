@@ -5,7 +5,7 @@
 
 use std::io::{Cursor, Read};
 
-use calamine::{open_workbook_auto_from_rs, Data, Reader};
+use calamine::{open_workbook_auto_from_rs, Data, ExcelDateTime, Reader};
 use quick_xml::events::Event;
 
 use super::SkipReason;
@@ -49,10 +49,37 @@ pub fn excel(bytes: &[u8]) -> Result<String, SkipReason> {
 fn row_line(row: &[Data]) -> Option<String> {
     let cells: Vec<String> = row
         .iter()
-        .map(|c| if matches!(c, Data::Empty) { String::new() } else { c.to_string().replace(['\t', '\n', '\r'], " ") })
+        .map(|c| match c {
+            Data::Empty => String::new(),
+            Data::DateTime(d) => excel_date(d),
+            c => c.to_string().replace(['\t', '\n', '\r'], " "),
+        })
         .collect();
     let used = cells.iter().rposition(|c| !c.trim().is_empty())? + 1;
     Some(cells[..used].join("\t"))
+}
+
+/// A date cell as text (BUG-041). Excel stores dates as numbers with a date
+/// format: shown as ISO 8601, the same in every language and unambiguous
+/// ("2024-01-02", "2024-01-02 14:30", a time alone "14:30", a duration
+/// "36:00:00"), and searchable (`2024-01-02`, `2024`).
+fn excel_date(d: &ExcelDateTime) -> String {
+    let value = d.as_f64();
+    if d.is_duration() {
+        let seconds = (value * 86_400.0).round() as i64;
+        let sign = if seconds < 0 { "-" } else { "" };
+        let s = seconds.abs();
+        return format!("{sign}{}:{:02}:{:02}", s / 3600, s / 60 % 60, s % 60);
+    }
+    let (year, month, day, hour, minute, second, _) = d.to_ymd_hms_milli();
+    let time = if second > 0 { format!("{hour:02}:{minute:02}:{second:02}") } else { format!("{hour:02}:{minute:02}") };
+    if (0.0..1.0).contains(&value) {
+        time
+    } else if hour == 0 && minute == 0 && second == 0 {
+        format!("{year:04}-{month:02}-{day:02}")
+    } else {
+        format!("{year:04}-{month:02}-{day:02} {time}")
+    }
 }
 
 pub fn powerpoint(bytes: &[u8]) -> Result<String, SkipReason> {
@@ -134,5 +161,17 @@ mod tests {
         assert_eq!(row_line(&row).as_deref(), Some("A\t\t3.5"));
         assert_eq!(row_line(&[Data::Empty, Data::String("x\ty".into())]).as_deref(), Some("\tx y"));
         assert_eq!(row_line(&[Data::Empty, Data::Empty]), None);
+    }
+
+    #[test]
+    fn dates_read_as_dates() {
+        use calamine::ExcelDateTimeType::{DateTime, TimeDelta};
+        let date = |v: f64| Data::DateTime(ExcelDateTime::new(v, DateTime, false));
+        let row = [date(45293.0), date(45293.75), date(0.5), Data::Float(137.5)];
+        assert_eq!(row_line(&row).as_deref(), Some("2024-01-02\t2024-01-02 18:00\t12:00\t137.5"));
+        assert_eq!(excel_date(&ExcelDateTime::new(45293.0 + 1.0 / 86_400.0 * 5.0, DateTime, false)), "2024-01-02 00:00:05");
+        assert_eq!(excel_date(&ExcelDateTime::new(1.5, TimeDelta, false)), "36:00:00");
+        // Workbooks from old Macs count from 1904.
+        assert_eq!(excel_date(&ExcelDateTime::new(43831.0, DateTime, true)), "2024-01-02");
     }
 }

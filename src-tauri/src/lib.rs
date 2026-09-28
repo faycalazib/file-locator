@@ -66,6 +66,17 @@ pub fn run() {
                 if let Some(root) = &portable {
                     window = window.data_directory(portable::webview_dir(root));
                 }
+                // Development only: the window can be driven from this PC
+                // (Chrome DevTools Protocol on 127.0.0.1:9222) to run the
+                // manual tests by script. Not compiled in release builds.
+                #[cfg(debug_assertions)]
+                {
+                    let base = config
+                        .additional_browser_args
+                        .clone()
+                        .unwrap_or_else(|| "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection".into());
+                    window = window.additional_browser_args(&format!("{base} --remote-debugging-port=9222"));
+                }
                 window.build()?;
             }
             let engine = Engine::open_with(&data_dir, &personal_dir)?;
@@ -106,6 +117,11 @@ pub fn run() {
             // folders and catches up the changes made while closed.
             app.manage(share::ShareState::default());
             share::start(app.handle());
+            // Meaning index (Étape 8): computed in the background.
+            let (sense_runtime, sense_wake) = sense::SenseRuntime::new();
+            app.manage(sense_runtime);
+            sense::start(app.handle(), sense_wake);
+            sense::wake(app.handle());
             Ok(())
         })
         // Closing the window keeps Prospector near the clock when asked.
@@ -176,6 +192,10 @@ pub fn run() {
             sense::download_sense_module,
             sense::cancel_sense_download,
             sense::remove_sense_module,
+            sense::sense_estimate,
+            sense::set_site_sense,
+            sense::get_sense_pace,
+            sense::set_sense_pace,
         ])
         .build(context)
         .expect("error while building Prospector")

@@ -214,7 +214,8 @@
     {#snippet text(segs: Seg[])}{#each segs as seg, i (i)}{#if seg.hit}<mark data-occ={seg.occ} class:active={seg.occ === current} class:fuzzy={seg.fuzzy} title={seg.fuzzy ? t('results.approximate') : undefined}>{seg.text}</mark>{:else}{seg.text}{/if}{/each}{/snippet}
 
     <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-    <div class="doc {doc.layout}" bind:this={bodyEl} tabindex="0" role="region" aria-label={p.name}>
+    <!-- Code reads left to right in every language: numbers on the left, no overlap in Arabic (BUG-040). -->
+    <div class="doc {doc.layout}" dir={doc.layout === 'code' ? 'ltr' : undefined} bind:this={bodyEl} tabindex="0" role="region" aria-label={p.name}>
       {#if isImage}
         <figure class="picture">
           {#if picture}

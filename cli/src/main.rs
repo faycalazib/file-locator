@@ -51,6 +51,9 @@ enum Command {
         /// At most this many files.
         #[arg(long, default_value_t = 200)]
         limit: usize,
+        /// Also by meaning (the optional local AI module, and sites understood in the app).
+        #[arg(long)]
+        meaning: bool,
         #[command(flatten)]
         criteria: Criteria,
         #[arg(long, value_enum, default_value_t = Format::Text)]
@@ -343,13 +346,28 @@ fn run(cli: Cli) -> Result<ExitCode, Failure> {
             output::sites(format, &sites, &engine.site_groups(), stdout)?;
             Ok(found(sites.len()))
         }
-        Command::Search { query, sites, groups, limit, criteria, format } => {
+        Command::Search { query, sites, groups, limit, meaning, criteria, format } => {
             let engine = open()?;
             let sites = pick_sites(&engine, &sites, &groups)?;
             let mut request = criteria.request(query)?;
             request.limit = Some(limit);
             let ids: Vec<String> = sites.iter().map(|s| s.id.clone()).collect();
-            let response = engine.search(&ids, &request)?;
+            let response = if meaning {
+                // The question's vector, with this user's module (lot 8.3).
+                let module = prospector_core::sense::module::module_dir(&personal_dir);
+                if prospector_core::sense::module::installed(&module).is_none() {
+                    return Err(Failure::data("the meaning module is not installed (Settings of the app)"));
+                }
+                let text = prospector_core::sense::question_text(&request.query);
+                if text.is_empty() {
+                    return Err(Failure::usage("--meaning needs words to understand"));
+                }
+                let model = prospector_core::sense::SenseModel::load(&module)?;
+                let question = model.embed(&[text.as_str()])?.into_iter().next().ok_or_else(|| Failure::data("meaning: no vector"))?;
+                engine.search_meaning(&ids, &request, &question)?
+            } else {
+                engine.search(&ids, &request)?
+            };
             let name_of = |id: &str| sites.iter().find(|s| s.id == id).map_or(id, |s| s.name.as_str()).to_owned();
             let mut printer = Printer::new(format, stdout);
             for hit in &response.hits {

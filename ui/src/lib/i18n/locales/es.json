@@ -413,7 +413,8 @@
   "settings": {
     "title": "Ajustes",
     "language": "Idioma de la interfaz",
-    "theme": "Tema",
+    "toDark": "Cambiar al tema oscuro",
+    "toLight": "Cambiar al tema claro",
     "close": "Cerrar",
     "layout": "Diseño",
     "layouts": {
@@ -429,10 +430,6 @@
         "name": "Estratos",
         "hint": "Agrupado por carpeta, vista previa amplia"
       }
-    },
-    "themes": {
-      "crayons": "Lápices de colores (claro)",
-      "sonar": "Sonar (oscuro)"
     },
     "dataDir": "Carpeta de índices",
     "dataDirHint": "Los índices pueden ocupar mucho espacio: guárdalos en el disco que prefieras. Moverlos conserva tus yacimientos.",

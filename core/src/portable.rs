@@ -116,6 +116,12 @@ pub fn move_drive(data_dir: &Path, personal_dir: &Path, from: &str, to: &str) ->
             done.documents += crate::index::remap_paths(&dir, &|p| remap_path(p, from, to))?;
         }
         remap_file(&indexes.join(format!("{id}.manifest.json")), from, to)?;
+        // The meaning index (Étape 8) and what it has computed.
+        let sense = indexes.join(format!("{id}.sense"));
+        if sense.is_dir() {
+            crate::sense::store::SenseIndex::open(&sense, false)?.remap_paths(&|p| remap_path(p, from, to))?;
+        }
+        remap_file(&indexes.join(format!("{id}.sense.json")), from, to)?;
     }
     remap_file(&personal_dir.join("saved-searches.json"), from, to)?;
     remap_file(&catalog, from, to)?;

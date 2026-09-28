@@ -12,7 +12,8 @@
   - Instant filter of the list, and "Search within these results".
   - Save results to a `.prospector` file and open them again (Ctrl+S / Ctrl+O).
 - **Images**: thumbnails in the results; in the preview, the picture with the words found boxed right on it, and the text read below.
-- **Meaning search module** (first part): install the optional local AI module (77 MB, runs on your processor, nothing leaves the PC) from Settings; meaning search itself comes next.
+- **Meaning search**: the “≈ Meaning” chip adds the documents that say the same thing in other words or another language, with their closest passage (the preview opens on it); `--meaning` on the command line.
+- **Meaning search module**: install the optional local AI module (77 MB, runs on your processor, nothing leaves the PC) from Settings, then choose the sites to understand: each one is computed in the background at low priority, with its estimate shown first and its progress in the side panel. Meaning search itself comes next.
 - **Term lists**: search for a list of terms read from a text or CSV file (at least one, or all of them), with a count per term in the export and the PDF report; `--terms-file` on the command line.
 - **Shared index**: put the index folder on a network share; one PC keeps it up to date, the others search it and see its updates at once, and another PC takes over if it is switched off. Saved searches, alerts and groups stay on each PC.
 - **Site groups**: name a set of sites (“Clients”, “Code”) and switch to it in one click or with Ctrl+1…9 (Ctrl+0: every site); the command line takes `--group` too.

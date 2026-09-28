@@ -383,3 +383,33 @@
   - `git remote add origin https://faycalazib@github.com/faycalazib/file-locator.git`, plus `credential.username faycalazib` and `credential.useHttpPath true` in the repository's config.
   - `site/config.js`: `PROSPECTOR_REPO = 'faycalazib/file-locator'`.
 - **Prevention:** docs/RELEASE.md, one-time setup: enable Pages before the first push; the account goes in the remote URL.
+
+## BUG-038: dark theme — open lists unreadable, and the Settings outline scrolled away
+
+- **Date:** 2026-09-28 · **Step:** manual tests of Étape 3, "Sonar" (dark) theme
+- **Symptom:**
+  - An open drop-down list (Size, Date…) showed pale text on a white background: unreadable.
+  - Settings panel scrolled: its neon outline stopped in the middle of the panel and crossed a line of text ("Command line in the PATH"); the lower sections had no outline.
+- **Cause:**
+  - The open list of a `<select>` is drawn by Windows. `index.html` declared `color-scheme: light` only, and the options had no colors: they kept the light list background under the dark theme's light text.
+  - The outline of the Sonar theme is `.sketch::before` (`position: absolute; inset: 0`). On an element that scrolls itself (`overflow-y: auto`), that layer is part of the scrolled content: it moves with it. Same flaw in the "Understand the meaning" and "Copy / Export" dialogs when their content is taller than the window.
+- **Fix:**
+  - `ui/src/styles/base.css`: `option` takes the theme's `--surface` and `--text`; `ui/index.html`: `color-scheme` "light dark".
+  - `SettingsMenu.svelte`, `SenseSitesDialog.svelte`, `TransferDialog.svelte`: the frame (`.sketch`, outline) no longer scrolls; an inner `.scroll` / `.body` does (flex column, `min-block-size: 0`).
+- **Prevention:** an element with the `sketch` class must never scroll itself: put an inner element that scrolls.
+
+## BUG-039: "Registre" layout — saved and recent searches shown nowhere
+
+- **Date:** 2026-09-28 · **Step:** manual tests of Étape 3, lot 3.2 (first test driven by script, `scripts/drive.py`)
+- **Symptom:** ★ saved the search (message "Search « contrat » saved", full star, entry written in `saved-searches.json`), but no "Saved searches" section appeared in the rail. Recent searches were missing too. Saved searches could not be run, renamed, removed or given an alert in that layout.
+- **Cause:** `IndexRail.svelte` showed either the filters (`withFilters`, "Registre" layout: filters in the rail) or the recent and saved sections (`{#if withFilters} … {:else if !compact} …`), never both.
+- **Fix:** `IndexRail.svelte`: the two sections are snippets (`recentSection`, `savedSection`). With the filters in the rail, they follow them: filters, saved searches, recent. The other layouts are unchanged.
+- **Prevention:** a feature reached from the rail must be checked in the three layouts (Journal, Registre, Strates).
+
+## BUG-040: Arabic interface — line numbers of a code preview overlapped the code
+
+- **Date:** 2026-09-28 · **Step:** manual tests of Étape 3 (driven by script), interface in Arabic
+- **Symptom:** in the preview of a code file, the line numbers went to the right and were drawn over the end of the lines (`'IT Setup'42`).
+- **Cause:** only the text of each line was `dir="ltr"`. The line itself (number + text, a flex row) followed the page direction, right to left: the number went to the right, and the long code lines, wider than the preview, ran under it.
+- **Fix:** `PreviewPanel.svelte`: the whole preview is `dir="ltr"` for code (numbers on the left, horizontal scroll from the left). Prose keeps the page direction, each line `dir="auto"`.
+- **Prevention:** code, paths and regexes always read left to right, whatever the interface language: set the direction on the block, not only on the text inside.

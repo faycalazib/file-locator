@@ -196,6 +196,7 @@ pub fn live_scan(
                         score: exact_count as f32 + 0.1 * matches.len() as f32,
                         snippets: snippets(&doc.text, &matches, 2),
                         inner_kind: None,
+                        meaning: None,
                     }
                     .with_inner_kind());
                 }
@@ -276,6 +277,7 @@ fn name_hit(site_id: &str, path: String, kind: &str, size: u64, modified: u64, c
         score: 1.0,
         snippets: Vec::new(),
         inner_kind: None,
+        meaning: None,
     }
     .with_inner_kind()
 }

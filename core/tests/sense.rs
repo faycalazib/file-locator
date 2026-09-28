@@ -142,3 +142,26 @@ fn throughput_experiments() {
         }
     }
 }
+
+/// Language bias (on demand): the same meaning in another language against
+/// another meaning in the query's language.
+#[test]
+#[ignore]
+fn language_bias() {
+    let Some(dir) = module() else { return };
+    let model = SenseModel::load(&dir).unwrap();
+    let q = "contrat de prestation de services entre deux sociétés";
+    let docs = [
+        "contrato_servicios.docx\nEl presente contrato de prestación de servicios se regirá por la legislación española. La rescisión del contrato deberá notificarse con treinta días de antelación.",
+        "contrat-prestation.docx\nLe présent contrat de prestation prend effet à la date de signature par les deux parties. Toute résiliation anticipée du contrat entraîne le versement d'une indemnité.",
+        "reunion-2.txt\nCompte rendu de la réunion d'équipe numéro 2 : point sur le planning et les congés.",
+        "service-agreement.pdf\nThis service agreement is entered into between the provider and the client.",
+    ];
+    let v = model.embed(&[q, docs[0], docs[1], docs[2], docs[3]]).unwrap();
+    for (i, d) in docs.iter().enumerate() {
+        eprintln!("{:.3}  {}", similarity(&v[0], &v[i + 1]), d.lines().next().unwrap());
+    }
+    let body = |d: &'static str| &d[d.find('\n').unwrap() + 1..];
+    let bare = model.embed(&[q, body(docs[0]), body(docs[2])]).unwrap();
+    eprintln!("without file names: es {:.3}, reunion {:.3}", similarity(&bare[0], &bare[1]), similarity(&bare[0], &bare[2]));
+}

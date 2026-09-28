@@ -24,6 +24,8 @@ pub struct AppState {
     pub portable: Option<PathBuf>,
     /// Page of the latest version (portable mode: downloaded by hand).
     pub releases_page: Option<String>,
+    /// Meaning index being computed (Étape 8): passages done / to do, per site.
+    pub sense_progress: Mutex<HashMap<String, prospector_core::SenseProgress>>,
 }
 
 impl AppState {
@@ -38,6 +40,7 @@ impl AppState {
             updates_enabled,
             portable: None,
             releases_page: None,
+            sense_progress: Mutex::new(HashMap::new()),
         }
     }
 

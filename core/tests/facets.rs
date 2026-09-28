@@ -84,3 +84,44 @@ fn counts_per_criterion_without_their_own_filter() {
     // Not asked: not computed.
     assert!(engine.search(only_a, &SearchRequest { facets: false, ..req("contrat") }).unwrap().facets.is_none());
 }
+
+/// `Aa` checks every candidate on its text, and the counts follow (BUG-037):
+/// a capitalized word ranked after the first 200 is found, and the counts
+/// are those of the files shown. `ab` off: the counts follow too.
+#[test]
+fn case_and_partial_words_counted_like_the_list() {
+    let files = tempfile::tempdir_in(env!("CARGO_TARGET_TMPDIR")).unwrap();
+    let data = tempfile::tempdir_in(env!("CARGO_TARGET_TMPDIR")).unwrap();
+    for i in 0..250 {
+        write(&files.path().join(format!("court-{i:03}.txt")), "contrat contrat contrat", Y2025);
+    }
+    // Long text, one occurrence: ranked last by the index.
+    let filler = "texte sans rapport ".repeat(400);
+    write(&files.path().join("majuscule.txt"), &format!("{filler} Contrat {filler}"), Y2023);
+    write(&files.path().join("brouillon.txt"), "Un contrat encore au stade de brouillon.", Y2025);
+    write(&files.path().join("sous.txt"), "Les souscontrats sont listés en annexe.", Y2025);
+
+    let engine = Engine::open(data.path()).unwrap();
+    let site = engine.add_site("A", vec![files.path().to_string_lossy().into_owned()]).unwrap();
+    engine.index_site(&site.id, &[], &AtomicBool::new(false), &|_| {}).unwrap();
+    let ids = std::slice::from_ref(&site.id);
+    let req = |query: &str| SearchRequest { query: query.into(), facets: true, limit: Some(500), ..Default::default() };
+
+    let case = engine.search(ids, &SearchRequest { case_sensitive: true, limit: Some(200), ..req("Contrat") }).unwrap();
+    assert_eq!(case.hits.iter().map(|h| h.path.ends_with("majuscule.txt")).collect::<Vec<_>>(), [true]);
+    assert_eq!(case.total_files, 1);
+    let facets = case.facets.unwrap();
+    assert_eq!(facets.kinds.values().sum::<usize>(), 1, "counted like the list");
+    assert_eq!(count(&facets.years, "2023"), 1);
+
+    // `NOT Brouillon` with `Aa`: "brouillon" in lower case does not exclude.
+    let not = engine.search(ids, &SearchRequest { case_sensitive: true, ..req("contrat NOT Brouillon") }).unwrap();
+    assert!(not.hits.iter().any(|h| h.path.ends_with("brouillon.txt")));
+
+    let partial = engine.search(ids, &SearchRequest { whole_word: false, fuzzy: false, ..req("contrat") }).unwrap();
+    assert!(partial.hits.iter().any(|h| h.path.ends_with("sous.txt")));
+    assert_eq!(partial.total_files, 253);
+    assert_eq!(partial.facets.unwrap().kinds.values().sum::<usize>(), 253);
+    let whole = engine.search(ids, &SearchRequest { fuzzy: false, ..req("contrat") }).unwrap();
+    assert!(!whole.hits.iter().any(|h| h.path.ends_with("sous.txt")));
+}

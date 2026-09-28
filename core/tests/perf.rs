@@ -99,3 +99,48 @@ fn search_under_200ms_on_100k_files() {
     }
     assert!(worst < 200, "slowest search took {worst} ms (target < 200 ms)");
 }
+
+/// Timings on a copy of a real data folder (PROSPECTOR_BENCH_DATA), where
+/// code gives millions of distinct words: typo tolerance and "contains"
+/// (`ab` off) walk that dictionary.
+#[test]
+#[ignore = "diagnostic: needs PROSPECTOR_BENCH_DATA"]
+fn real_index_timings() {
+    let Ok(data) = std::env::var("PROSPECTOR_BENCH_DATA") else { return };
+    let engine = Engine::open(std::path::Path::new(&data)).unwrap();
+    let ids: Vec<String> = engine.sites().into_iter().map(|s| s.id).collect();
+    let cases: [(&str, bool, bool, bool); 8] = [
+        // `Aa` on a frequent word: every candidate is checked on its text.
+        ("Import", true, true, true),
+        ("Contrat", true, false, true),
+        // query, fuzzy, whole word, case-sensitive
+        ("contrat", false, true, false),
+        ("contrat", true, true, false),
+        ("contrat", false, false, false),
+        ("Contrat", true, true, true),
+        ("import", true, true, false),
+        ("paiemant", true, true, false),
+    ];
+    for (query, fuzzy, whole_word, case_sensitive) in cases {
+        for (facets, limit) in [(false, 200), (true, 200), (true, 20)] {
+            let req = SearchRequest {
+                query: query.into(),
+                fuzzy,
+                whole_word,
+                case_sensitive,
+                limit: Some(limit),
+                facets,
+                ..Default::default()
+            };
+            engine.search(&ids, &req).unwrap();
+            let t = Instant::now();
+            let response = engine.search(&ids, &req).unwrap();
+            let kinds: usize = response.facets.as_ref().map_or(0, |f| f.kinds.values().sum());
+            println!(
+                "{query:<10} fuzzy={fuzzy:<5} word={whole_word:<5} Aa={case_sensitive:<5} facets={facets:<5} top={limit:<3} → {:>5} files (kinds {kinds:>5}) in {:>5} ms",
+                response.total_files,
+                t.elapsed().as_millis()
+            );
+        }
+    }
+}

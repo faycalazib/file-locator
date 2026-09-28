@@ -20,7 +20,7 @@ my-file-locator/
 │       ├── styles/          tokens.css (structure), themes/crayons.css (theme), fonts.css, base.css
 │       └── lib/
 │           ├── components/  SearchBar (masthead), IndexRail, FilterPanel, ResultsList, PreviewPanel,
-│           │                LangSwitcher, SettingsMenu, Marked, Icon, ThemeDefs (SVG filters)
+│           │                LangSwitcher, ThemeToggle, SettingsMenu, Marked, Icon, ThemeDefs (SVG filters)
 │           ├── doodles.ts   Doodle icon per file type + decorations
 │           ├── i18n/        Runtime (index.svelte.ts) + locales/{en,fr,es,ar}.json
 │           ├── stores/      search.svelte.ts (query, filters, results, snapshots), tabs.svelte.ts (tabs + history),
@@ -64,7 +64,7 @@ The static mockups in `docs/mockups/` have their own helper, `shoot.sh`.
 - **Themes** (see [THEMES.md](THEMES.md)).
   - `tokens.css` holds only structure: type scale, spacing, motion.
   - `themes/<name>.css` defines colors, fonts and treatments under `:root[data-theme="<name>"]`. Available themes: `crayons` (light, default) and `sonar` (dark).
-  - The theme is chosen in Settings → Theme (`ui.setTheme`) and applied before mount (`ui.initTheme`). It also aligns the Tauri window chrome.
+  - The theme is switched by the sun / moon button at the bottom of the rail (`ThemeToggle`, `ui.setTheme`: light ↔ dark), next to the Settings cog, and applied before mount (`ui.initTheme`). It also aligns the Tauri window chrome.
   - Components only use semantic variables (`--text`, `--accent`, `--mark-bg`…) and the `.sketch` / `.hatch` classes.
 - **"Colored pencils" treatments.**
   - `.sketch::before`: an ink outline shaken by the SVG filter `#wobble` (`ThemeDefs.svelte`). Only the stroke is filtered; text stays sharp.
@@ -231,6 +231,8 @@ That corpus has few distinct words. A real site of code (20,875 files, millions 
 On 2026-09-28 (BUG-037): 0 to 198 ms; the slowest is `Import` with `Aa` (15,703 candidates checked). Times seen in `pnpm tauri dev` are debug times, 10 to 20 times slower.
 
 Test temporary files go to `target/tmp` (`CARGO_TARGET_TMPDIR`), never to the system TEMP folder.
+
+**Driving the development app.** In debug builds only (`#[cfg(debug_assertions)]` in `src-tauri/src/lib.rs`), the window opens the Chrome DevTools Protocol on `127.0.0.1:9222`. `scripts/drive.py` connects to it with Playwright (`connect_over_cdp`): search, click, read and screenshot the real app with its real indexes (screenshots in `target/tmp/drive/`). Release builds, installed or portable, never open that port.
 
 ## Packaging and distribution (Étape 4)
 

@@ -37,6 +37,13 @@ button {
   cursor: pointer;
 }
 
+/* The open list of a <select> is drawn by Windows: without its own colors
+   it keeps a white background under the dark theme's light text. */
+option {
+  background-color: var(--surface);
+  color: var(--text);
+}
+
 button:disabled {
   cursor: not-allowed;
 }

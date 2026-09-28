@@ -85,6 +85,14 @@ fn a_terms_file() {
     assert_eq!(cli(&["search", "", "--terms-file", empty.to_str().unwrap()]).status.code(), Some(2));
 }
 
+/// Lot 8.3: meaning search needs the module (this data folder has none).
+#[test]
+fn meaning_without_the_module() {
+    let out = cli(&["search", "bail", "--meaning"]);
+    assert_eq!(out.status.code(), Some(3));
+    assert!(String::from_utf8_lossy(&out.stderr).contains("meaning module is not installed"));
+}
+
 #[test]
 fn exit_codes() {
     assert_eq!(cli(&["search", "xyzzyquux"]).status.code(), Some(1), "nothing found");

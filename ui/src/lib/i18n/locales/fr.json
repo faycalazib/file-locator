@@ -413,7 +413,8 @@
   "settings": {
     "title": "Réglages",
     "language": "Langue de l’interface",
-    "theme": "Thème",
+    "toDark": "Passer au thème sombre",
+    "toLight": "Passer au thème clair",
     "close": "Fermer",
     "layout": "Mise en page",
     "layouts": {
@@ -429,10 +430,6 @@
         "name": "Strates",
         "hint": "Groupé par dossier, aperçu large"
       }
-    },
-    "themes": {
-      "crayons": "Crayons de couleur (clair)",
-      "sonar": "Sonar (sombre)"
     },
     "dataDir": "Dossier des index",
     "dataDirHint": "Les index peuvent prendre de la place : gardez-les sur le disque de votre choix. Les déplacer conserve vos sites de fouille.",

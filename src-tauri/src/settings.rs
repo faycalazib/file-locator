@@ -34,6 +34,9 @@ pub struct Settings {
     /// Portable mode (lot 6.8): the drive letter of the last run (`"E:"`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub portable_drive: Option<String>,
+    /// Meaning index (Étape 8): `normal` or `economy`; none = normal.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sense_pace: Option<String>,
 }
 
 impl Settings {

@@ -2,7 +2,7 @@
   import Icon from './Icon.svelte';
   import { dismissable } from '../actions';
   import { formatBytes, i18n, LOCALES, t, type MessageKey } from '../i18n/index.svelte';
-  import { ui, type Theme } from '../stores/ui.svelte';
+  import { ui } from '../stores/ui.svelte';
   import { api, inTauri, type AppInfoDto, type BackgroundDto, type OcrDto, type ShortcutDto } from '../api';
   import { formatShortcut, SHORTCUT_CHOICES } from '../shortcut';
   import { updates } from '../stores/updates.svelte';
@@ -135,7 +135,6 @@
 
   const layoutName = (v: Variant) => `settings.layouts.${v}.name` as MessageKey;
   const layoutHint = (v: Variant) => `settings.layouts.${v}.hint` as MessageKey;
-  const themeName = (th: Theme) => `settings.themes.${th}` as MessageKey;
 </script>
 
 <div class="settings" use:dismissable={() => (ui.settingsOpen = false)}>
@@ -148,11 +147,13 @@
     title={t('search.settings')}
     onclick={() => (ui.settingsOpen = !ui.settingsOpen)}
   >
-    <Icon name="gear" />
+    <Icon name="cog" />
   </button>
 
   {#if ui.settingsOpen}
     <div class="panel sketch" class:up role="dialog" aria-label={t('settings.title')}>
+      <!-- The frame stays put; only its content scrolls (the outline is drawn on the frame). -->
+      <div class="scroll">
       <header>
         <h2>{t('settings.title')}</h2>
         <button type="button" class="icon-btn" aria-label={t('settings.close')} onclick={() => (ui.settingsOpen = false)}>
@@ -371,15 +372,7 @@
         </fieldset>
       {/if}
 
-      <fieldset>
-        <legend>{t('settings.theme')}</legend>
-        {#each ui.themes as th (th.id)}
-          <label class="option">
-            <input type="radio" name="theme" value={th.id} checked={ui.theme === th.id} onchange={() => ui.setTheme(th.id)} />
-            <span>{t(themeName(th.id))}</span>
-          </label>
-        {/each}
-      </fieldset>
+      </div>
     </div>
   {/if}
 </div>
@@ -398,6 +391,7 @@
     padding: 0;
     background: var(--surface);
     border: 0;
+    border-radius: 50%;
   }
 
   .icon-btn:hover,
@@ -410,8 +404,9 @@
     inset-block-start: calc(100% + var(--sp-2));
     inset-inline-start: 0;
     z-index: 20;
+    display: flex;
+    flex-direction: column;
     inline-size: 320px;
-    padding: var(--sp-3) var(--sp-5) var(--sp-4);
     background: var(--surface);
     box-shadow: var(--shadow-pop);
   }
@@ -420,10 +415,17 @@
     inset-block: auto calc(100% + var(--sp-2));
   }
 
-  /* Many sections: the panel scrolls rather than leaving the window. */
+  /* Many sections: the content scrolls rather than leaving the window.
+     Not the panel itself: its outline (.sketch::before) would scroll away. */
   .panel {
     max-block-size: calc(100vh - 96px);
+  }
+
+  .scroll {
+    position: relative;
+    min-block-size: 0;
     overflow-y: auto;
+    padding: var(--sp-3) var(--sp-5) var(--sp-4);
   }
 
   kbd {

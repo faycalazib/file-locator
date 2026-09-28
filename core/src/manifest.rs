@@ -22,7 +22,8 @@ use crate::fsutil::write_atomic;
 /// 5: images and scanned PDF pages read by OCR.
 /// 6: .doc, .ppt, RTF, ODT/ODP, EPUB, TAR/gzip/bzip2/JAR, protected PDFs.
 /// 7: e-mail attachments, mbox, ost.
-const VERSION: u32 = 7;
+/// 8: Excel dates read as dates (BUG-041); only spreadsheets are read again.
+const VERSION: u32 = 8;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct FileStamp {
@@ -64,8 +65,23 @@ impl Manifest {
     /// `None` when missing, unreadable or written by another version: the
     /// caller then rebuilds the whole index.
     pub fn load(path: &Path) -> Option<Self> {
-        let manifest: Self = serde_json::from_slice(&std::fs::read(path).ok()?).ok()?;
+        let mut manifest: Self = serde_json::from_slice(&std::fs::read(path).ok()?).ok()?;
+        // 7 → 8 changed only spreadsheets: they are read again, not the whole site.
+        if manifest.version == 7 {
+            manifest.reread(FileKind::Excel);
+            manifest.version = VERSION;
+        }
         (manifest.version == VERSION).then_some(manifest)
+    }
+
+    /// Files of this kind no longer match their stamp: the next update reads
+    /// them again (and replaces their documents).
+    fn reread(&mut self, kind: FileKind) {
+        for (path, stamp) in &mut self.files {
+            if FileKind::from_path(Path::new(path)) == Some(kind) {
+                stamp.modified = 0;
+            }
+        }
     }
 
     pub fn save(&self, path: &Path) -> Result<()> {
@@ -130,5 +146,23 @@ mod tests {
         assert_eq!(m.skipped().get("unreadable"), Some(&1));
         assert!(is_within(r"D:\a\b", r"D:\"));
         assert!(!is_within(r"D:\ab", r"D:\a"));
+    }
+
+    #[test]
+    fn version_7_rereads_only_spreadsheets() {
+        let dir = crate::test_tmp();
+        let path = dir.path().join("site.manifest.json");
+        let mut old = Manifest { version: 7, files: BTreeMap::new() };
+        old.files.insert(r"D:\a\ventes.xlsx".into(), stamp(1, None));
+        old.files.insert(r"D:\a\notes.txt".into(), stamp(1, None));
+        old.save(&path).unwrap();
+
+        let m = Manifest::load(&path).expect("kept, not rebuilt");
+        assert_eq!(m.version, VERSION);
+        assert_eq!(m.files[r"D:\a\ventes.xlsx"].modified, 0, "read again");
+        assert_eq!(m.files[r"D:\a\notes.txt"].modified, 1, "untouched");
+        // Older versions: rebuilt.
+        Manifest { version: 6, files: BTreeMap::new() }.save(&path).unwrap();
+        assert!(Manifest::load(&path).is_none());
     }
 }
