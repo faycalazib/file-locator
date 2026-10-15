@@ -2,7 +2,7 @@
   "app": {
     "name": "Prospector",
     "tagline": "Búsqueda de texto completo local",
-    "ribbon": "mi cuaderno de excavación"
+    "ribbon": "Mi cuaderno de excavación"
   },
   "rail": {
     "sites": "Yacimientos",
@@ -423,9 +423,44 @@
   "settings": {
     "title": "Ajustes",
     "language": "Idioma de la interfaz",
-    "toDark": "Cambiar al tema oscuro",
-    "toLight": "Cambiar al tema claro",
     "close": "Cerrar",
+    "theme": "Tema",
+    "themesLight": "Claros",
+    "themesDark": "Oscuros",
+    "themeNames": {
+      "crayons": "Lápices de colores",
+      "sonar": "Sonar",
+      "clay": "Plastilina",
+      "carnet": "Cuaderno",
+      "scrapbook": "Álbum de recortes",
+      "soft": "App suave",
+      "brush": "Pincel",
+      "electric": "Eléctrico",
+      "gold": "Mina de oro",
+      "leafora": "Follaje",
+      "potea": "Brote",
+      "neural": "Interfaz neural",
+      "nebula": "Nebulosa",
+      "lagoon": "Laguna",
+      "cosmo": "Cosmo",
+      "greenhouse": "Invernadero",
+      "noor": "Noor",
+      "orchard": "Huerto",
+      "candy": "Caramelo",
+      "cocoon": "Capullo",
+      "marine": "Marino",
+      "daylight": "Luz del día",
+      "cloud": "Nube",
+      "lavender": "Lavanda",
+      "frost": "Escarcha",
+      "starry": "Noche estrellada",
+      "aurora": "Aurora",
+      "sport": "Impulso",
+      "fleet": "Panel",
+      "command": "Centro de mando",
+      "telemetry": "Telemetría",
+      "onyx": "Ónix"
+    },
     "layout": "Diseño",
     "layouts": {
       "journal": {

@@ -365,7 +365,7 @@
     padding: 0 var(--sp-4);
     background-color: var(--bg);
     font: var(--fs-h2) / var(--lh-h2) var(--font-brand);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
   }
 
   header {
@@ -393,7 +393,7 @@
   .meta {
     margin: var(--sp-1) 0 0;
     font: 16px var(--font-display);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
     color: var(--text-dim);
   }
 
@@ -491,7 +491,7 @@
   .section-title {
     margin: 0 0 var(--sp-2);
     font: 16px/24px var(--font-display);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
     color: var(--secondary-ink);
   }
 
@@ -597,7 +597,7 @@
     background-color: transparent;
     border: 0;
     font: 17px/24px var(--font-display);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
     white-space: nowrap;
   }
 

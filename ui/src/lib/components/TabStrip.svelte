@@ -117,7 +117,7 @@
     background: transparent;
     border: 0;
     font: 15px/22px var(--font-display);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
     color: inherit;
     cursor: pointer;
   }

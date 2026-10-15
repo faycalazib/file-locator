@@ -1,0 +1,142 @@
+/*
+ * Theme "Soft app" (light) — mockup docs/mockups/e-soft-app.html.
+ * A modern, calm application: white cards with a soft shadow and no
+ * outline, a cool grey page, a teal accent, pastel touches.
+ *
+ * Fonts: Baloo 2 for the brand and panel headers, Nunito Sans for everything
+ * else (digits included), JetBrains Mono for paths. Checked on
+ * "Il1 O0 C 5S 8B 3 V/Y 2024-11".
+ * Contrast measured on --surface #ffffff: --text 15.3:1, --text-dim 6.2:1.
+ */
+:root[data-theme='soft'] {
+  /* Cool page & ink */
+  --bg: #f6f7fb;
+  --surface: #ffffff;
+  --text: #1f2440;
+  --text-dim: #5a6080; /* 6.2:1 */
+  --text-faint: #a3a8bd; /* decoration only */
+  --line: #e3e6f0;
+
+  /* Calm colors */
+  --green: #22a06b;
+  --blue: #3b82f6;
+  --pink: #f0628f;
+  --orange: #ff8a4c;
+  --purple: #7c5cff;
+  --yellow: #ffc93c;
+
+  --accent: #16978c; /* teal */
+  --accent-ink: #0f6f67; /* 6.1:1 */
+  --secondary: var(--purple);
+  --secondary-ink: #5a3fd6; /* 6.7:1 */
+  --ok: var(--green);
+  --ok-ink: #177a50; /* 5.5:1 */
+  --warn: #f5a524;
+  --warn-ink: #8a5a00; /* 5.9:1 */
+  --danger: #e5484d;
+  --danger-ink: #b3262b; /* 6.3:1 */
+
+  --query-ink: var(--text);
+
+  /* Matches: a butter tag; the active one teal with white text. */
+  --mark-text: var(--text);
+  --mark-bg: #ffe58a;
+  --mark-active-text: #ffffff;
+  --mark-active-bg: #0f7a71; /* white text 5.2:1 */
+
+  /* Soft fills (--h) */
+  --fill-accent: rgb(22 151 140 / 0.14);
+  --fill-accent-strong: rgb(22 151 140 / 0.28);
+  --fill-secondary: rgb(124 92 255 / 0.14);
+  --fill-ok: rgb(34 160 107 / 0.16);
+  --fill-warn: rgb(255 201 60 / 0.5);
+  --fill-yellow: rgb(255 229 138 / 0.7);
+
+  /* Effects */
+  --shadow-pop: 0 22px 44px -20px rgb(40 50 90 / 0.4);
+  --tilt: 0deg;
+  --doodle-opacity: 1; /* the 3D magnifier and gem, like the mockup's owl and gem */
+  --sweep-bg: linear-gradient(90deg, transparent, rgb(22 151 140 / 0.12) 70%, rgb(22 151 140 / 0.4) 98%, transparent);
+  --ping-bg: linear-gradient(90deg, rgb(255 229 138 / 0.6), transparent 70%);
+
+  /* PROSPECTOR title: solid letters, a soft shadow. */
+  --title-stroke: 0px;
+  --title-mix: #fff;
+  --title-mix-pct: 100%;
+  --title-shadow: drop-shadow(0 8px 12px rgb(40 50 90 / 0.18));
+
+  /* Sentence case, as in the mockup. */
+  --display-case: none;
+
+  /* Code preview syntax colors */
+  --syn-kw: #5a3fd6;
+  --syn-str: #177a50;
+  --syn-com: #6b7090; /* 5.0:1 */
+  --syn-num: #8a5a00;
+
+  /* Fonts: Baloo 2 for the brand only; labels and buttons in Nunito Sans. */
+  --font-brand: 'Baloo 2', 'Baloo Bhaijaan 2', sans-serif;
+  --font-display: 'Nunito Sans', 'Baloo Bhaijaan 2', sans-serif;
+  --font-body: 'Nunito Sans', 'Baloo Bhaijaan 2', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Baloo Bhaijaan 2', monospace;
+
+  --fs-body: 16px;
+  --lh-body: 24px;
+
+  /* No visible outline: a hairline, round corners, a soft shadow. */
+  --stroke: 1.5px;
+  --r-sketch: 18px;
+  --wobble: opacity(1);
+  --focus-ring: 3px solid rgb(22 151 140 / 0.55);
+
+  color-scheme: light;
+}
+
+/* Arabic: Baloo Bhaijaan 2 leads; Latin words fall back to Nunito Sans. */
+:root[data-theme='soft']:lang(ar) {
+  --font-brand: 'Baloo Bhaijaan 2', 'Baloo 2', sans-serif;
+  --font-display: 'Baloo Bhaijaan 2', 'Nunito Sans', sans-serif;
+  --font-body: 'Baloo Bhaijaan 2', 'Nunito Sans', sans-serif;
+}
+
+/* ── Treatments (scoped to this theme) ─────────────────────────────── */
+
+/* The background follows the round corners (components paint it square). */
+[data-theme='soft'] .sketch {
+  border-radius: var(--r-sketch);
+}
+
+[data-theme='soft'] .sketch.round {
+  border-radius: 50%;
+}
+
+/* A hairline and a soft shadow. A component's color (--k) only tints it:
+   the mockup has almost no outlines. */
+[data-theme='soft'] .sketch::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border: var(--sw, var(--stroke)) solid color-mix(in srgb, var(--k, var(--line)) 40%, var(--line));
+  border-radius: inherit;
+  box-shadow: 0 10px 28px -18px rgb(40 50 90 / 0.35);
+  pointer-events: none;
+}
+
+[data-theme='soft'] .sketch.dashed::before {
+  border-style: dashed;
+}
+
+/* Flat soft fill. */
+[data-theme='soft'] .hatch {
+  background-image: linear-gradient(var(--h, var(--fill-yellow)), var(--h, var(--fill-yellow)));
+}
+
+/* Two pale color circles behind the page. */
+[data-theme='soft'] body {
+  background:
+    radial-gradient(circle at 4% 96%, rgb(223 240 253 / 0.9), transparent 22%),
+    radial-gradient(circle at 74% -6%, rgb(255 233 220 / 0.9), transparent 18%),
+    var(--bg);
+  background-attachment: fixed;
+}

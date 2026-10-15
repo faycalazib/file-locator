@@ -170,7 +170,7 @@
     border: 0;
     border-radius: 999px;
     font: 15px/24px var(--font-display);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
     white-space: nowrap;
   }
 
@@ -246,7 +246,7 @@
   h3 {
     margin: 0;
     font: var(--fs-h2, 20px) / 1.1 var(--font-brand);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
   }
 
   .modes {

@@ -137,7 +137,7 @@
 
   h2 {
     font: var(--fs-h2, 22px) / 1.2 var(--font-brand);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
   }
 
   p {

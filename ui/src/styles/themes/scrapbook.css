@@ -1,0 +1,145 @@
+/*
+ * Theme "Scrapbook" (light) — mockup docs/mockups/d-scrapbook.html.
+ * A bright collage: pastel color clouds, thick colored frames, sticker
+ * shadows (hard, offset), big condensed capitals.
+ *
+ * Fonts: Anton for the brand, titles, buttons and labels (capitals),
+ * Patrick Hand for the text, Courier Prime for paths. Permanent Marker, from
+ * the mockup, was dropped: at chip size its "1" reads as "I" ("Excel I").
+ * Checked on "Il1 O0 C 5S 8B 3 V/Y 2024-11".
+ * Contrast measured on --surface #ffffff: --text 18.4:1, --text-dim 6.6:1.
+ */
+:root[data-theme='scrapbook'] {
+  /* White paper & black marker */
+  --bg: #fff8fb;
+  --surface: #ffffff;
+  --text: #151319;
+  --text-dim: #5d5763; /* 6.6:1 */
+  --text-faint: #9a94a0; /* decoration only */
+  --line: #151319;
+
+  /* Loud markers */
+  --green: #36c46a;
+  --blue: #2f8cff;
+  --pink: #ff2e7e;
+  --orange: #ff8a1f;
+  --purple: #8a4dff;
+  --yellow: #ffd60a;
+
+  --accent: var(--pink);
+  --accent-ink: #c4135a; /* 5.6:1 */
+  --secondary: var(--purple);
+  --secondary-ink: #6a2ee0; /* 6.6:1 */
+  --ok: var(--green);
+  --ok-ink: #1f7a3e; /* 5.4:1 */
+  --warn: var(--orange);
+  --warn-ink: #9a4a00; /* 6.1:1 */
+  --danger: #e5243b;
+  --danger-ink: #b3122a; /* 6.6:1 */
+
+  --query-ink: #6a2ee0;
+
+  /* Matches: a yellow marker underline; the active one a pink sticker. */
+  --mark-text: var(--text);
+  --mark-bg: linear-gradient(transparent 42%, #ffe03a 42%, #ffe03a 92%, transparent 92%);
+  --mark-active-text: #ffffff;
+  --mark-active-bg: #d80f5c; /* white text 5.0:1 */
+
+  /* Marker fills (--h) */
+  --fill-accent: rgb(255 46 126 / 0.22);
+  --fill-accent-strong: rgb(255 46 126 / 0.45);
+  --fill-secondary: rgb(138 77 255 / 0.2);
+  --fill-ok: rgb(54 196 106 / 0.26);
+  --fill-warn: rgb(255 214 10 / 0.9);
+  --fill-yellow: rgb(255 214 10 / 0.6);
+
+  /* Effects: sticker shadows, cards stuck at an angle. */
+  --shadow-pop: 6px 6px 0 #151319;
+  --tilt: 0.6deg;
+  --doodle-opacity: 1;
+  --sweep-bg: linear-gradient(90deg, transparent, rgb(255 46 126 / 0.18) 70%, rgb(255 46 126 / 0.6) 98%, transparent);
+  --ping-bg: linear-gradient(90deg, rgb(255 214 10 / 0.6), transparent 70%);
+
+  /* PROSPECTOR title: solid capitals with a hard black sticker shadow. */
+  --title-stroke: 0px;
+  --title-mix: #fff;
+  --title-mix-pct: 100%;
+  --title-shadow: drop-shadow(4px 4px 0 #151319);
+
+  /* Code preview syntax colors */
+  --syn-kw: #6a2ee0;
+  --syn-str: #1f7a3e;
+  --syn-com: #6d6773; /* 5.6:1 */
+  --syn-num: #9a4a00;
+
+  /* Fonts */
+  --font-brand: 'Anton', 'Baloo Bhaijaan 2', sans-serif;
+  --font-display: 'Anton', 'Baloo Bhaijaan 2', sans-serif;
+  --font-body: 'Patrick Hand', 'Baloo Bhaijaan 2', cursive;
+  --font-mono: 'Courier Prime', 'Baloo Bhaijaan 2', monospace;
+
+  /* Anton is condensed: a taller title, labels a little wider spaced. */
+  --fs-display: 72px;
+  --lh-display: 76px;
+  --fs-body: 18px;
+  --lh-body: 24px;
+
+  /* Thick marker frames, corners cut unevenly. --wobble stays a valid filter. */
+  --stroke: 3px;
+  --r-sketch: 16px 6px 16px 6px;
+  --wobble: opacity(1);
+  --focus-ring: 3px dashed var(--text);
+
+  color-scheme: light;
+}
+
+/* Arabic: Baloo Bhaijaan 2 leads; Latin words fall back to Patrick Hand. */
+:root[data-theme='scrapbook']:lang(ar) {
+  --font-brand: 'Baloo Bhaijaan 2', 'Anton', sans-serif;
+  --font-display: 'Baloo Bhaijaan 2', 'Anton', sans-serif;
+  --font-body: 'Baloo Bhaijaan 2', 'Patrick Hand', sans-serif;
+  --fs-display: 60px;
+  --lh-display: 64px;
+}
+
+/* ── Treatments (scoped to this theme) ─────────────────────────────── */
+
+/* Thick straight marker frame. --k = color, --sw = stroke width. */
+[data-theme='scrapbook'] .sketch::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border: var(--sw, var(--stroke)) solid var(--k, var(--line));
+  border-radius: var(--r-sketch);
+  pointer-events: none;
+}
+
+[data-theme='scrapbook'] .sketch.dashed::before {
+  border-style: dashed;
+}
+
+[data-theme='scrapbook'] .sketch.round::before {
+  border-radius: 50%;
+}
+
+/* Capitals in Anton read better with a little tracking. */
+[data-theme='scrapbook'] .sketch {
+  letter-spacing: 0.02em;
+}
+
+/* Flat marker fill. */
+[data-theme='scrapbook'] .hatch {
+  background-image: linear-gradient(var(--h, var(--fill-yellow)), var(--h, var(--fill-yellow)));
+}
+
+/* Pastel color clouds in the four corners. */
+[data-theme='scrapbook'] body {
+  background:
+    radial-gradient(circle at 6% 10%, rgb(255 160 200 / 0.5), transparent 26%),
+    radial-gradient(circle at 94% 8%, rgb(190 160 255 / 0.5), transparent 28%),
+    radial-gradient(circle at 88% 92%, rgb(255 230 120 / 0.55), transparent 28%),
+    radial-gradient(circle at 8% 90%, rgb(140 210 255 / 0.45), transparent 28%),
+    var(--bg);
+  background-attachment: fixed;
+}

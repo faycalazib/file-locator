@@ -182,7 +182,7 @@
   .g-title {
     font-size: var(--fs-caption);
     letter-spacing: 0.08em;
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
     color: var(--text-dim);
     font-weight: 700;
   }

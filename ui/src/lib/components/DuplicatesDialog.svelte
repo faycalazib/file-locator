@@ -269,7 +269,7 @@
   h2 {
     margin: 0;
     font: var(--fs-h2) / var(--lh-h2) var(--font-display);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
   }
 
   .option {
@@ -391,7 +391,7 @@
     background: transparent;
     border: 0;
     font: 16px/22px var(--font-display);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
   }
 
   .btn.danger {

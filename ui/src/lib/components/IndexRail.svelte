@@ -3,7 +3,7 @@
   import FilterPanel from './FilterPanel.svelte';
   import LangSwitcher from './LangSwitcher.svelte';
   import SettingsMenu from './SettingsMenu.svelte';
-  import ThemeToggle from './ThemeToggle.svelte';
+  import ThemeMenu from './ThemeMenu.svelte';
   import SiteGroups from './SiteGroups.svelte';
   import { formatBytes, formatNumber, formatPercent, formatRelative, t } from '../i18n/index.svelte';
   import { inTauri } from '../api';
@@ -357,7 +357,7 @@
   <footer class="foot">
     <LangSwitcher up compact={compact} />
     <div class="tools">
-      <ThemeToggle />
+      <ThemeMenu />
       <SettingsMenu up />
     </div>
   </footer>
@@ -400,7 +400,7 @@
   h2 {
     margin: 0;
     font: var(--fs-h2) / var(--lh-h2) var(--font-brand);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
   }
 
   .add {
@@ -616,7 +616,7 @@
   .status {
     flex: none;
     font: var(--fs-caption) / var(--lh-caption) var(--font-display);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
     color: var(--si);
   }
 
@@ -844,7 +844,7 @@
 
   .empty-title {
     font: var(--fs-body) / var(--lh-body) var(--font-display);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
     color: var(--text);
   }
 
@@ -855,7 +855,7 @@
     background-color: transparent;
     border: 0;
     font: 16px/24px var(--font-display);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
   }
 
   .add.solo {

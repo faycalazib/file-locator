@@ -310,7 +310,7 @@
     margin: 0;
     padding: 0 var(--sp-4);
     font: var(--fs-h2) / var(--lh-h2) var(--font-brand);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
   }
 
   .header-actions {
@@ -334,7 +334,7 @@
 
   .label {
     font: 17px/22px var(--font-display);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
   }
 
   .chips {
@@ -350,7 +350,7 @@
     border: 0;
     border-radius: 999px;
     font: 15px/22px var(--font-display);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
   }
 
   .chip::before {
@@ -442,7 +442,7 @@
     border: 0;
     color: var(--secondary-ink);
     font: 16px var(--font-display);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
     text-decoration: underline wavy 1.5px;
     text-underline-offset: 4px;
   }
@@ -515,7 +515,7 @@
     background: transparent;
     border: 0;
     font: 15px/22px var(--font-display);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
   }
 
   .detector-groups {

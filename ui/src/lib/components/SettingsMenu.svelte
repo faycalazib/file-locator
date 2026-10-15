@@ -465,7 +465,7 @@
   h2 {
     margin: 0;
     font: var(--fs-title) / var(--lh-title) var(--font-brand);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
   }
 
   fieldset {
@@ -479,7 +479,7 @@
   legend {
     padding: var(--sp-2) 0 0;
     font: 17px/22px var(--font-display);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
     color: var(--accent-ink);
   }
 
@@ -529,7 +529,7 @@
   .sub {
     margin: var(--sp-2) 0 var(--sp-1);
     font: 15px/22px var(--font-display);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
     color: var(--text-dim);
   }
 
@@ -593,7 +593,7 @@
     background: transparent;
     border: 0;
     font: 15px/22px var(--font-display);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
   }
 
   .hint {

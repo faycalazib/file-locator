@@ -1,0 +1,146 @@
+/*
+ * Theme "Gold mine" (dark) — the app's own story: digging for nuggets.
+ * A mine gallery at night: dark earth, warm lantern light, gold for what is
+ * found, precious stones for the other colors (emerald, sapphire, ruby,
+ * amethyst, copper).
+ *
+ * Fonts: Cinzel (engraved capitals) for the brand and panel headers only,
+ * Outfit for everything else (digits included), JetBrains Mono for paths.
+ * Rye (western poster) was dropped for the brand: too heavy. Checked on
+ * "Il1 O0 C 5S 8B 3 V/Y 2024-11".
+ * Contrast measured on --surface #1a140e: --text 15.0:1, --text-dim 8.2:1.
+ */
+:root[data-theme='gold'] {
+  /* Earth & lantern light */
+  --bg: #0e0b08;
+  --surface: #1a140e;
+  --text: #f3e9d6;
+  --text-dim: #c4b59c; /* 8.2:1 */
+  --text-faint: #6f6253; /* decoration only */
+  --line: #3a2e22;
+
+  /* Gold and gems */
+  --green: #4fd18b; /* emerald */
+  --blue: #6ea8ff; /* sapphire */
+  --pink: #ff6b8a; /* ruby */
+  --orange: #e08a4b; /* copper */
+  --purple: #b48cff; /* amethyst */
+  --yellow: #f2c14e; /* gold */
+
+  --accent: var(--yellow);
+  --accent-ink: #f6d27a; /* 11.7:1 */
+  --secondary: var(--orange);
+  --secondary-ink: #f0a874; /* 8.6:1 */
+  --ok: var(--green);
+  --ok-ink: #79dea6; /* 10.4:1 */
+  --warn: var(--orange);
+  --warn-ink: #f0a874;
+  --danger: #e5604d;
+  --danger-ink: #f08a7a; /* 7.3:1 */
+
+  --query-ink: #f6d27a;
+
+  /* Matches: gold nuggets; the active one copper. Dark text on both. */
+  --mark-text: #2a1a00;
+  --mark-bg: linear-gradient(180deg, #ffd970, #e2ab2c);
+  --mark-active-text: #1f1000;
+  --mark-active-bg: linear-gradient(180deg, #ffb27a, #e07a3a);
+
+  /* Lantern fills (--h) */
+  --fill-accent: rgb(242 193 78 / 0.2);
+  --fill-accent-strong: rgb(242 193 78 / 0.4);
+  --fill-secondary: rgb(224 138 75 / 0.2);
+  --fill-ok: rgb(79 209 139 / 0.18);
+  --fill-warn: rgb(242 193 78 / 0.35);
+  --fill-yellow: rgb(242 193 78 / 0.22);
+
+  /* Effects: deep shadows, lantern glow, the gem shines. */
+  --shadow-pop: 0 0 0 1px rgb(242 193 78 / 0.08), 0 26px 48px -18px rgb(0 0 0 / 0.9);
+  --tilt: 0deg;
+  --doodle-opacity: 1;
+  --sweep-bg: linear-gradient(90deg, transparent, rgb(242 193 78 / 0.1) 70%, rgb(242 193 78 / 0.5) 98%, transparent);
+  --ping-bg: linear-gradient(90deg, rgb(242 193 78 / 0.35), transparent 70%);
+
+  /* PROSPECTOR title: solid gold letters, engraved shadow and glow. */
+  --title-color: #f2c14e;
+  --title-stroke: 0px;
+  --title-mix: #fff;
+  --title-mix-pct: 100%;
+  --title-shadow: drop-shadow(0 3px 0 #3a2400) drop-shadow(0 0 16px rgb(242 193 78 / 0.45));
+
+  --display-case: none;
+
+  /* Code preview syntax colors */
+  --syn-kw: #b48cff;
+  --syn-str: #79dea6;
+  --syn-com: #948672; /* 5.1:1 */
+  --syn-num: #f6d27a;
+
+  /* Fonts */
+  --font-brand: 'Cinzel', 'Baloo Bhaijaan 2', serif;
+  --font-display: 'Outfit', 'Baloo Bhaijaan 2', sans-serif;
+  --font-body: 'Outfit', 'Baloo Bhaijaan 2', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Baloo Bhaijaan 2', monospace;
+
+  --fs-body: 17px;
+  --lh-body: 25px;
+  --rail-w: 300px; /* Cinzel is wide: the rail headers stay on one line */
+
+  --stroke: 1.5px;
+  --r-sketch: 14px;
+  --wobble: opacity(1);
+  --focus-ring: 2px solid var(--yellow);
+
+  color-scheme: dark;
+}
+
+/* Arabic: Baloo Bhaijaan 2 leads; Latin words fall back to Outfit. */
+:root[data-theme='gold']:lang(ar) {
+  --font-brand: 'Baloo Bhaijaan 2', 'Cinzel', serif;
+  --font-display: 'Baloo Bhaijaan 2', 'Outfit', sans-serif;
+  --font-body: 'Baloo Bhaijaan 2', 'Outfit', sans-serif;
+}
+
+/* ── Treatments (scoped to this theme) ─────────────────────────────── */
+
+[data-theme='gold'] .sketch {
+  border-radius: var(--r-sketch);
+}
+
+[data-theme='gold'] .sketch.round {
+  border-radius: 50%;
+}
+
+/* A rock edge tinted by the component's color (--k), lit from above by the
+   lantern (a thin gold rim). */
+[data-theme='gold'] .sketch::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border: var(--sw, var(--stroke)) solid color-mix(in srgb, var(--k, var(--line)) 50%, var(--line));
+  border-radius: inherit;
+  box-shadow:
+    inset 0 1px 0 rgb(242 193 78 / 0.14),
+    0 18px 30px -22px rgb(0 0 0 / 0.9);
+  pointer-events: none;
+}
+
+[data-theme='gold'] .sketch.dashed::before {
+  border-style: dashed;
+}
+
+/* Lantern-lit fill. */
+[data-theme='gold'] .hatch {
+  background-image: linear-gradient(var(--h, var(--fill-yellow)), var(--h, var(--fill-yellow)));
+}
+
+/* The gallery: two lanterns above, a faint grain of rock. */
+[data-theme='gold'] body {
+  background:
+    radial-gradient(circle at 14% -4%, rgb(242 160 60 / 0.24), transparent 30%),
+    radial-gradient(circle at 86% -6%, rgb(242 193 78 / 0.16), transparent 28%),
+    radial-gradient(circle at 1px 1px, rgb(255 230 180 / 0.035) 1px, transparent 1.6px) 0 0 / 6px 6px,
+    var(--bg);
+  background-attachment: fixed;
+}

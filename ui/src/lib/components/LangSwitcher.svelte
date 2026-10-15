@@ -69,7 +69,7 @@
     border: 0;
     border-radius: 999px;
     font: 17px var(--font-display);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
   }
 
   .trigger::before {

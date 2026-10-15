@@ -511,7 +511,7 @@
     margin: 0;
     min-inline-size: 0;
     font: var(--fs-title) / var(--lh-title) var(--font-display);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
   }
 
   .summary b {
@@ -665,7 +665,7 @@
     border: 0;
     border-radius: 999px;
     font: 15px/28px var(--font-display);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
     color: var(--secondary-ink);
     white-space: nowrap;
   }
@@ -736,7 +736,7 @@
     --h: var(--fill-ok);
     background-color: transparent;
     font-family: var(--font-display);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
   }
 
   .menu {
@@ -821,7 +821,7 @@
     border: 0;
     border-radius: 999px;
     font: 15px/28px var(--font-display);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
     color: var(--secondary-ink);
   }
 
@@ -831,7 +831,7 @@
 
   .state-title {
     font: var(--fs-title) / var(--lh-title) var(--font-display);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
     color: var(--text);
   }
 
@@ -996,7 +996,7 @@
   .ledger-head {
     padding-inline: var(--sp-4);
     font: 15px/22px var(--font-display);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
     color: var(--text-dim);
   }
 
@@ -1070,7 +1070,7 @@
   .stratum-count {
     flex: none;
     font: 15px var(--font-display);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
     color: var(--text-dim);
   }
 
@@ -1136,7 +1136,7 @@
     background: var(--accent);
     color: var(--bg);
     font: 700 11px/16px var(--font-mono);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
     vertical-align: middle;
   }
 

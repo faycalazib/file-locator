@@ -726,3 +726,13 @@
   1. On a site being computed, ≈ opens a bubble "Computing the meaning of …" with the progress and time left, "It goes on in the background…", **Continue** (default) and **Stop and forget** (red). Forgetting a site asks "Delete the N passages already computed for …? Everything will have to be computed again…" (`sense.runningTitle`, `runningHint`, `keep`, `stopForget`, `forgetConfirm` with `{count}`, 4 languages).
   2. "Understand" can be clicked at once; the estimate only informs and shows when ready.
 - **Prevention:** a button never does two opposite things without saying which; a destructive confirmation says what is lost; an estimate never blocks the action it describes.
+
+## BUG-077: a file name typed in the search box was not found ("2004.m20")
+
+- **Date:** 2026-10-15 · **Step:** manual tests of Étape 3, lot 3.6 (by the user: their own ZIP archives)
+- **Symptom:** `2004.m20` in the search box: nothing, although a ZIP of the site holds `2004.m20.i406.n016.jpg` (found with "+ File name" `2004.m20*`). A single word (`facture`) does find files by their name.
+- **Cause:** the tokenizer splits `2004.m20` in two words, so it is a phrase; `phrase_query` looked in `body` only, while `word_query` (a single word) looks in `body` and `name` (×2).
+- **Fix:** `phrase_query` is a union of the phrase in `body` and in `name` (boost 2), like a single word. `name` already has positions: no reindexing. The highlighter's name check (`name_has_word`) already accepted phrases. Test `a_phrase_finds_a_file_by_its_name` (core/tests/pipeline.rs: a plain file, an entry of a ZIP, and a phrase of the text still found).
+  Live scan (`scan.rs`): the query is now checked on the document's own name and its text (`"{name}
+{text}"`), as the index looks in `body` and `name` for every word or phrase, `NOT` included; with `LINES`, on the text only (the index checks LINES on the text too). The parity test `attachments_of_an_eml_including_an_attached_zip` now expects the attachment as well (it answers to its own name).
+- **Prevention:** a phrase and a word follow the same rules (fields, boosts); only the order of the words differs. The index and the live scan read names the same way.

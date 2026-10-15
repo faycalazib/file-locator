@@ -1,0 +1,142 @@
+/*
+ * Theme "Electric" (dark) — after a reference sent by the user on
+ * 2026-10-15 (an electric-car charging app): near-black page, anthracite
+ * cards spaced rather than outlined, electric blue with a glow, vivid
+ * colors for the icons and counts, a clean sans-serif.
+ *
+ * Font: Inter everywhere (digits included), JetBrains Mono for paths.
+ * Checked on "Il1 O0 C 5S 8B 3 V/Y 2024-11".
+ * Contrast measured on --surface #16171c: --text 15.4:1, --text-dim 7.6:1.
+ */
+:root[data-theme='electric'] {
+  /* Night & anthracite */
+  --bg: #050507;
+  --surface: #16171c;
+  --text: #ececf1;
+  --text-dim: #a8a8b8; /* 7.6:1 */
+  --text-faint: #5e5e6b; /* decoration only */
+  --line: #2a2b33;
+
+  /* Vivid icon colors */
+  --green: #2fd27a;
+  --blue: #3b6cff;
+  --pink: #ff6b9a;
+  --orange: #ff9a4d;
+  --purple: #8b7bff;
+  --yellow: #f5c242;
+
+  --accent: var(--blue);
+  --accent-ink: #8aa6ff; /* 7.0:1 */
+  --secondary: #35d0e6; /* cyan */
+  --secondary-ink: #6fe0f0; /* 10.6:1 */
+  --ok: var(--green);
+  --ok-ink: #5fe39a; /* 10.4:1 */
+  --warn: var(--yellow);
+  --warn-ink: #ffd76b; /* 12.0:1 */
+  --danger: #ff5a6e;
+  --danger-ink: #ff8796; /* 7.4:1 */
+
+  --query-ink: #c9d5ff;
+
+  /* Matches: a blue tint; the active one solid blue. */
+  --mark-text: #ffffff;
+  --mark-bg: rgb(59 108 255 / 0.32);
+  --mark-active-text: #ffffff;
+  --mark-active-bg: #3b6cff; /* white text 4.7:1 */
+
+  /* Translucent fills (--h) */
+  --fill-accent: rgb(59 108 255 / 0.22);
+  --fill-accent-strong: rgb(59 108 255 / 0.45);
+  --fill-secondary: rgb(53 208 230 / 0.18);
+  --fill-ok: rgb(47 210 122 / 0.18);
+  --fill-warn: rgb(245 194 66 / 0.3);
+  --fill-yellow: rgb(245 194 66 / 0.2);
+
+  /* Effects: deep shadows, blue glow. */
+  --shadow-pop: 0 0 0 1px rgb(255 255 255 / 0.05), 0 26px 50px -20px rgb(0 0 0 / 0.85);
+  --tilt: 0deg;
+  --doodle-opacity: 0;
+  --sweep-bg: linear-gradient(90deg, transparent, rgb(59 108 255 / 0.12) 70%, rgb(59 108 255 / 0.6) 98%, transparent);
+  --ping-bg: linear-gradient(90deg, rgb(59 108 255 / 0.35), transparent 70%);
+
+  /* PROSPECTOR title: solid white letters with an electric-blue glow. */
+  --title-color: #ffffff;
+  --title-stroke: 0px;
+  --title-mix: #ffffff;
+  --title-mix-pct: 100%;
+  --title-shadow: drop-shadow(0 0 18px rgb(59 108 255 / 0.75));
+
+  /* Sentence case, as in the reference. */
+  --display-case: none;
+
+  /* Code preview syntax colors */
+  --syn-kw: #8aa6ff;
+  --syn-str: #5fe39a;
+  --syn-com: #8a8a9a; /* 5.2:1 */
+  --syn-num: #ffd76b;
+
+  /* Fonts */
+  --font-brand: 'Inter', 'Baloo Bhaijaan 2', sans-serif;
+  --font-display: 'Inter', 'Baloo Bhaijaan 2', sans-serif;
+  --font-body: 'Inter', 'Baloo Bhaijaan 2', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Baloo Bhaijaan 2', monospace;
+
+  --fs-body: 16px;
+  --lh-body: 24px;
+
+  /* Spaced cards: a hairline, round corners. */
+  --stroke: 1px;
+  --r-sketch: 18px;
+  --wobble: opacity(1);
+  --focus-ring: 2px solid var(--blue);
+
+  color-scheme: dark;
+}
+
+/* Arabic: Baloo Bhaijaan 2 leads; Latin words fall back to Inter. */
+:root[data-theme='electric']:lang(ar) {
+  --font-brand: 'Baloo Bhaijaan 2', 'Inter', sans-serif;
+  --font-display: 'Baloo Bhaijaan 2', 'Inter', sans-serif;
+  --font-body: 'Baloo Bhaijaan 2', 'Inter', sans-serif;
+}
+
+/* ── Treatments (scoped to this theme) ─────────────────────────────── */
+
+[data-theme='electric'] .sketch {
+  border-radius: var(--r-sketch);
+}
+
+[data-theme='electric'] .sketch.round {
+  border-radius: 50%;
+}
+
+/* A hairline tinted by the component's color (--k), and a glow of that
+   color when it has one. */
+[data-theme='electric'] .sketch::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border: var(--sw, var(--stroke)) solid color-mix(in srgb, var(--k, var(--line)) 45%, var(--line));
+  border-radius: inherit;
+  box-shadow: 0 0 24px -10px var(--k, transparent);
+  pointer-events: none;
+}
+
+[data-theme='electric'] .sketch.dashed::before {
+  border-style: dashed;
+}
+
+/* Translucent fill. */
+[data-theme='electric'] .hatch {
+  background-image: linear-gradient(var(--h, var(--fill-yellow)), var(--h, var(--fill-yellow)));
+}
+
+/* A deep blue glow from above, as under the car of the reference. */
+[data-theme='electric'] body {
+  background:
+    radial-gradient(ellipse at 50% -12%, rgb(59 108 255 / 0.3), transparent 46%),
+    radial-gradient(circle at 88% 110%, rgb(59 108 255 / 0.14), transparent 38%),
+    var(--bg);
+  background-attachment: fixed;
+}

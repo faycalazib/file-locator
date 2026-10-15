@@ -100,16 +100,36 @@
 | Fichiers d'exemple (`test_fixtures/`) | 27 fichiers : texte, code, PDF, Word, Excel, PowerPoint, ZIP imbriqué, 7z solide, RAR 5, RAR chiffré, bombe ZIP, .eml, .msg, .pst, fichiers corrompus |
 | Interface | `pnpm check` : 0 erreur, 0 avertissement · `pnpm i18n:check` : 4 langues cohérentes |
 | Rust | `cargo clippy -D warnings` : aucun avertissement |
-| Bugs documentés | 76 (BUG-001 à BUG-076 ; BUG-037 à BUG-066 trouvés pendant les tests manuels pilotés du 13/10/2026, BUG-067 à BUG-076 pendant les tests de l'utilisateur). BUG-022 (antivirus qui bloque brièvement un fichier d'index) reste à surveiller ; BUG-026 ajoute des nouvelles tentatives automatiques. |
+| Bugs documentés | 77 (BUG-001 à BUG-077 ; BUG-037 à BUG-066 trouvés pendant les tests manuels pilotés du 13/10/2026, BUG-067 à BUG-077 pendant les tests de l'utilisateur). BUG-022 (antivirus qui bloque brièvement un fichier d'index) reste à surveiller ; BUG-026 ajoute des nouvelles tentatives automatiques. |
+
+## Prochaine session : vers la livraison de la v0.1.0 (plan noté le 16/10/2026)
+
+État au 16/10/2026 : le code est prêt (tests, clippy, `pnpm check` verts ; installeur du 15/10 à jour des corrections BUG-067 à BUG-077), mais **pas livrable** :
+
+1. **Thèmes à valider puis committer** : 32 thèmes (9 écrits à la main, 23 générés par `scripts/themegen.py`), menu en deux colonnes Clairs / Sombres. Rien n'est committé depuis le commit de BUG-077 (message de commit proposé dans la conversation du 15-16/10).
+2. **46 tests manuels ouverts** (`TESTS-A-FAIRE.md`) : index partagé 11 (2ᵉ PC), mode portable 11 (clé USB), thèmes dans l'appli 4, mises à jour 3 (clé + dépôt), fichiers de l'utilisateur 7 (Outlook / Thunderbird, .rar / .7z, vieux formats), divers 10 (désinstallation, lancement au démarrage, OCR décoché / recoché, durée du calcul du sens).
+3. **Publication pas préparée** :
+   - clé de mise à jour absente (`E:\keys\prospector` vide) et mise à jour automatique non configurée dans `src-tauri/tauri.conf.json` : **à faire avant la v0.1.0** (`docs/RELEASE.md` étape 2 ; la commande demande un mot de passe, l'utilisateur la lance lui-même) ;
+   - aucune version publiée sur GitHub (les liens du site mènent à une page vide) ;
+   - `MODULE_URL = None` (`core/src/sense/module.rs`) : le module du sens ne s'installe que depuis un fichier ; le joindre à la publication et renseigner l'adresse et le SHA-256 ;
+   - pas de signature de code (choix de l'Étape 4, le site explique l'avertissement de Windows).
+
+**Ordre proposé :**
+1. L'utilisateur valide et committe les thèmes.
+2. Tests faisables tout de suite : les 4 tests des thèmes dans l'appli, puis la désinstallation (clic droit et PATH retirés).
+3. Décider des gros blocs : garder le mode portable dans la v0.1.0 (test avec une clé USB) ; annoncer l'index partagé comme « expérimental » tant que le test à deux PC n'est pas fait ; archives et Outlook couverts par les tests automatiques.
+4. Créer la clé de mise à jour, puis configurer la mise à jour automatique.
+5. Publier la v0.1.0 sur GitHub avec le module du sens.
 
 ## À faire après les tests manuels (demandé par l'utilisateur le 15/10/2026)
 
-- **Intégrer les autres styles d'interface.** Seuls 2 des 8 styles maquettés sont dans l'appli : `crayons` (g) et `sonar` (c), dans `ui/src/styles/themes/`. À ajouter : `a-clay-spotlight`, `b-carnet`, `d-scrapbook`, `e-soft-app`, `f-brush-banners`, `h-clay-arabe` (maquettes `docs/mockups/*.html` et `.png`). Le sélecteur de thème (aujourd'hui un bouton clair / sombre) devra proposer la liste ; chaque style doit marcher en arabe (droite à gauche) et dans le rapport PDF (page blanche).
+- **Intégrer les autres styles d'interface** (en cours depuis le 15/10/2026 : thème `clay` « Pâte à modeler » fait et validé ; thème `carnet` « Carnet » fait et validé ; thème `scrapbook` « Scrapbook » fait et validé ; thème `soft` « Appli douce » fait et validé ; thème `brush` « Pinceau » fait, à valider : les 6 maquettes sont intégrées (7 thèmes en tout) ; puis deux thèmes sombres : `electric` « Électrique » (d'après une image de référence de l'utilisateur) et `gold` « Mine d'or », validés ; puis 23 thèmes générés depuis 25 images de référence de l'utilisateur (dont `telemetry` et `onyx` le 16/10) (`scripts/themegen.py`, contrastes vérifiés, captures FR / AR des 3 mises en page), à valider : 32 thèmes en tout, menu rangé en deux colonnes Clairs / Sombres ; menu des thèmes à vignettes à la place du bouton clair / sombre ; variable `--display-case` pour les thèmes sans majuscules). Au départ, seuls 2 des 8 styles maquettés étaient dans l'appli : `crayons` (g) et `sonar` (c), dans `ui/src/styles/themes/`. À ajouter : `a-clay-spotlight`, `b-carnet`, `d-scrapbook`, `e-soft-app`, `f-brush-banners`, `h-clay-arabe` (maquettes `docs/mockups/*.html` et `.png`). Le sélecteur de thème (aujourd'hui un bouton clair / sombre) devra proposer la liste ; chaque style doit marcher en arabe (droite à gauche) et dans le rapport PDF (page blanche).
 
 ## À surveiller
 
 - **Arrêter une grosse archive (13/10/2026)** : « Arrêter l'indexation » attend la fin du fichier en cours ; pour un ZIP de 2 Go de livres scannés, ça peut durer. À faire si besoin : vérifier l'arrêt entre deux documents d'une archive (BUG-068).
 - **Mémoire pendant le calcul du sens (15/10/2026)** : rythme normal 1,5 à 1,7 Go pour `prospector.exe` (plusieurs exemplaires du modèle, 8,3 cœurs sur 16), rythme économe 866 Mo (un exemplaire, 1,9 cœur). La prévision « environ 200 Mo de plus » était fausse : compter environ 700 Mo de plus en normal qu'en économe. À mesurer sans calcul en cours pour avoir la base ; si c'est trop pour des PC à 8 Go, limiter le nombre d'exemplaires du modèle en rythme normal.
+- **Test instable (15/10/2026)** : `detect::detectors_find_validated_data_only` a échoué une fois à l'indexation de son dossier de test (disque externe très chargé), puis est passé 3 fois sur 3. Même famille que BUG-022 / BUG-036.
 - **Test instable (14/10/2026)** : `index::tests::an_older_index_is_rewritten_from_its_stored_text` a échoué une fois pendant que l'appli indexait Religion (PC très chargé), puis est passé deux fois. Même famille que le suivant.
 - **Test instable (13/10/2026)** : `sense::store::tests::nearest_passages_deletion_and_remap` a échoué une fois sur trois lancements de la suite complète (« An index writer was killed… io::Error »), puis est passé deux fois. Même famille que BUG-022 / BUG-036 (antivirus qui bloque un fichier juste créé) ; s'il revient, lui donner la même reprise que `sense_update`.
 - **Plancher du sens (13/10/2026)** : `MEANING_FLOOR = 0.78` (mesuré sur test_fixtures : recherches en rapport 0,81 à 0,87, sans rapport 0,75 à 0,77). À confirmer sur un vrai site au lot 8.4, et à ajuster si de bons documents disparaissent.

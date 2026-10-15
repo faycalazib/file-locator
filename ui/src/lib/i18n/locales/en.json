@@ -2,7 +2,7 @@
   "app": {
     "name": "Prospector",
     "tagline": "Local full-text search",
-    "ribbon": "my dig notebook"
+    "ribbon": "My dig notebook"
   },
   "rail": {
     "sites": "Dig sites",
@@ -407,9 +407,44 @@
   "settings": {
     "title": "Settings",
     "language": "Interface language",
-    "toDark": "Switch to the dark theme",
-    "toLight": "Switch to the light theme",
     "close": "Close",
+    "theme": "Theme",
+    "themesLight": "Light",
+    "themesDark": "Dark",
+    "themeNames": {
+      "crayons": "Colored pencils",
+      "sonar": "Sonar",
+      "clay": "Modeling clay",
+      "carnet": "Notebook",
+      "scrapbook": "Scrapbook",
+      "soft": "Soft app",
+      "brush": "Brush",
+      "electric": "Electric",
+      "gold": "Gold mine",
+      "leafora": "Foliage",
+      "potea": "Sprout",
+      "neural": "Neural HUD",
+      "nebula": "Nebula",
+      "lagoon": "Lagoon",
+      "cosmo": "Cosmo",
+      "greenhouse": "Greenhouse",
+      "noor": "Noor",
+      "orchard": "Orchard",
+      "candy": "Candy",
+      "cocoon": "Cocoon",
+      "marine": "Navy",
+      "daylight": "Daylight",
+      "cloud": "Cloud",
+      "lavender": "Lavender",
+      "frost": "Frost",
+      "starry": "Starry night",
+      "aurora": "Aurora",
+      "sport": "Stride",
+      "fleet": "Dashboard",
+      "command": "Command center",
+      "telemetry": "Telemetry",
+      "onyx": "Onyx"
+    },
     "layout": "Layout",
     "layouts": {
       "journal": {

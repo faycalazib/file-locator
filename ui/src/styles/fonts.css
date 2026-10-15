@@ -10,6 +10,43 @@
  *   - Courier Prime    → paths, code, regex (typewriter)
  *   - Baloo Bhaijaan 2 → Arabic (rounded, readable, shared by every theme)
  *
+ * "Modeling clay" theme (light):
+ *   - Fredoka          → brand and titles (rounded, plump)
+ *   - Nunito           → body text, digits included
+ *   - DM Mono          → paths, code, regex
+ *
+ * "Notebook" theme (light):
+ *   - Caveat           → brand and titles (marker handwriting, "1" with a flag)
+ *   - Mali             → body text, digits included. Kalam, from the mockup,
+ *                        was dropped: its "I", "l" and "1" are the same stroke
+ *   - Courier Prime    → paths, code, regex (shared with "Colored pencils")
+ *
+ * "Scrapbook" theme (light):
+ *   - Anton            → brand, titles, buttons and labels (condensed capitals)
+ *   - Patrick Hand     → body text (shared with "Colored pencils")
+ *   - Courier Prime    → paths. Permanent Marker, from the mockup, was
+ *                        dropped: at chip size its "1" reads as "I"
+ *
+ * "Soft app" theme (light):
+ *   - Baloo 2          → brand and panel headers
+ *   - Nunito Sans      → everything else, digits included
+ *   - JetBrains Mono   → paths (shared with "Sonar")
+ *
+ * "Brush" theme (light):
+ *   - Caveat Brush     → brand and panel headers (narrow at chip size)
+ *   - Itim             → everything else, digits included
+ *   - Courier Prime    → paths
+ *
+ * "Electric" theme (dark):
+ *   - Inter            → everything, digits included
+ *   - JetBrains Mono   → paths
+ *
+ * "Gold mine" theme (dark):
+ *   - Cinzel           → brand and panel headers (engraved capitals). Rye was
+ *                        dropped: too heavy
+ *   - Outfit           → everything else, digits included
+ *   - JetBrains Mono   → paths
+ *
  * "Sonar" theme (dark):
  *   - Tiny5            → brand only (title, panel headers). Pixelify Sans was dropped:
  *                        its "C" looked like an "O" ("PROSPEOTOR")
@@ -41,3 +78,134 @@
 
 @import '@fontsource/jetbrains-mono/latin-400.css';
 @import '@fontsource/jetbrains-mono/latin-ext-400.css';
+
+@import '@fontsource/fredoka/latin-600.css';
+@import '@fontsource/fredoka/latin-700.css';
+@import '@fontsource/fredoka/latin-ext-600.css';
+
+@import '@fontsource/nunito/latin-600.css';
+@import '@fontsource/nunito/latin-700.css';
+@import '@fontsource/nunito/latin-800.css';
+@import '@fontsource/nunito/latin-ext-600.css';
+@import '@fontsource/nunito/latin-ext-700.css';
+
+@import '@fontsource/dm-mono/latin-400.css';
+@import '@fontsource/dm-mono/latin-ext-400.css';
+
+@import '@fontsource/caveat/latin-700.css';
+@import '@fontsource/caveat/latin-ext-700.css';
+
+@import '@fontsource/mali/latin-400.css';
+@import '@fontsource/mali/latin-700.css';
+@import '@fontsource/mali/latin-ext-400.css';
+@import '@fontsource/mali/latin-ext-700.css';
+
+@import '@fontsource/anton/latin-400.css';
+@import '@fontsource/anton/latin-ext-400.css';
+
+@import '@fontsource/baloo-2/latin-700.css';
+@import '@fontsource/baloo-2/latin-800.css';
+@import '@fontsource/baloo-2/latin-ext-800.css';
+
+@import '@fontsource/nunito-sans/latin-600.css';
+@import '@fontsource/nunito-sans/latin-700.css';
+@import '@fontsource/nunito-sans/latin-800.css';
+@import '@fontsource/nunito-sans/latin-ext-600.css';
+@import '@fontsource/nunito-sans/latin-ext-700.css';
+
+@import '@fontsource/caveat-brush/latin-400.css';
+@import '@fontsource/caveat-brush/latin-ext-400.css';
+
+@import '@fontsource/itim/latin-400.css';
+@import '@fontsource/itim/latin-ext-400.css';
+
+@import '@fontsource/inter/latin-400.css';
+@import '@fontsource/inter/latin-600.css';
+@import '@fontsource/inter/latin-700.css';
+@import '@fontsource/inter/latin-ext-400.css';
+@import '@fontsource/inter/latin-ext-600.css';
+@import '@fontsource/inter/latin-ext-700.css';
+
+@import '@fontsource/cinzel/latin-700.css';
+@import '@fontsource/cinzel/latin-ext-700.css';
+
+@import '@fontsource/outfit/latin-400.css';
+@import '@fontsource/outfit/latin-600.css';
+@import '@fontsource/outfit/latin-ext-400.css';
+@import '@fontsource/outfit/latin-ext-600.css';
+
+/* ── Themes from the user's reference images (themegen.py) ── */
+@import '@fontsource/lora/latin-400.css';
+@import '@fontsource/lora/latin-600.css';
+@import '@fontsource/lora/latin-700.css';
+@import '@fontsource/lora/latin-ext-400.css';
+@import '@fontsource/lora/latin-ext-600.css';
+@import '@fontsource/lora/latin-ext-700.css';
+@import '@fontsource/manrope/latin-400.css';
+@import '@fontsource/manrope/latin-500.css';
+@import '@fontsource/manrope/latin-600.css';
+@import '@fontsource/manrope/latin-700.css';
+@import '@fontsource/manrope/latin-800.css';
+@import '@fontsource/manrope/latin-ext-400.css';
+@import '@fontsource/manrope/latin-ext-500.css';
+@import '@fontsource/manrope/latin-ext-600.css';
+@import '@fontsource/manrope/latin-ext-700.css';
+@import '@fontsource/manrope/latin-ext-800.css';
+@import '@fontsource/playfair-display/latin-600.css';
+@import '@fontsource/playfair-display/latin-700.css';
+@import '@fontsource/playfair-display/latin-ext-600.css';
+@import '@fontsource/playfair-display/latin-ext-700.css';
+@import '@fontsource/dm-serif-display/latin-400.css';
+@import '@fontsource/dm-serif-display/latin-ext-400.css';
+@import '@fontsource/josefin-sans/latin-600.css';
+@import '@fontsource/josefin-sans/latin-700.css';
+@import '@fontsource/josefin-sans/latin-ext-600.css';
+@import '@fontsource/josefin-sans/latin-ext-700.css';
+@import '@fontsource/dm-sans/latin-400.css';
+@import '@fontsource/dm-sans/latin-500.css';
+@import '@fontsource/dm-sans/latin-700.css';
+@import '@fontsource/dm-sans/latin-ext-400.css';
+@import '@fontsource/dm-sans/latin-ext-500.css';
+@import '@fontsource/dm-sans/latin-ext-700.css';
+@import '@fontsource/urbanist/latin-400.css';
+@import '@fontsource/urbanist/latin-600.css';
+@import '@fontsource/urbanist/latin-700.css';
+@import '@fontsource/urbanist/latin-ext-400.css';
+@import '@fontsource/urbanist/latin-ext-600.css';
+@import '@fontsource/urbanist/latin-ext-700.css';
+@import '@fontsource/plus-jakarta-sans/latin-400.css';
+@import '@fontsource/plus-jakarta-sans/latin-600.css';
+@import '@fontsource/plus-jakarta-sans/latin-700.css';
+@import '@fontsource/plus-jakarta-sans/latin-ext-400.css';
+@import '@fontsource/plus-jakarta-sans/latin-ext-600.css';
+@import '@fontsource/plus-jakarta-sans/latin-ext-700.css';
+@import '@fontsource/oxanium/latin-400.css';
+@import '@fontsource/oxanium/latin-600.css';
+@import '@fontsource/oxanium/latin-700.css';
+@import '@fontsource/oxanium/latin-ext-400.css';
+@import '@fontsource/oxanium/latin-ext-600.css';
+@import '@fontsource/oxanium/latin-ext-700.css';
+@import '@fontsource/rajdhani/latin-500.css';
+@import '@fontsource/rajdhani/latin-600.css';
+@import '@fontsource/rajdhani/latin-700.css';
+@import '@fontsource/rajdhani/latin-ext-500.css';
+@import '@fontsource/rajdhani/latin-ext-600.css';
+@import '@fontsource/rajdhani/latin-ext-700.css';
+@import '@fontsource/barlow/latin-300.css';
+@import '@fontsource/barlow/latin-400.css';
+@import '@fontsource/barlow/latin-500.css';
+@import '@fontsource/barlow/latin-700.css';
+@import '@fontsource/barlow/latin-ext-300.css';
+@import '@fontsource/barlow/latin-ext-400.css';
+@import '@fontsource/barlow/latin-ext-500.css';
+@import '@fontsource/barlow/latin-ext-700.css';
+@import '@fontsource/ibm-plex-sans/latin-400.css';
+@import '@fontsource/ibm-plex-sans/latin-500.css';
+@import '@fontsource/ibm-plex-sans/latin-600.css';
+@import '@fontsource/ibm-plex-sans/latin-700.css';
+@import '@fontsource/ibm-plex-sans/latin-ext-400.css';
+@import '@fontsource/ibm-plex-sans/latin-ext-500.css';
+@import '@fontsource/ibm-plex-sans/latin-ext-600.css';
+@import '@fontsource/ibm-plex-sans/latin-ext-700.css';
+@import '@fontsource/amiri/arabic-400.css';
+@import '@fontsource/amiri/arabic-700.css';

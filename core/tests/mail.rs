@@ -61,8 +61,12 @@ fn attachments_of_an_eml_including_an_attached_zip() {
     let hit = &indexed(&text("chevronnage"))[0];
     assert_eq!(hit.kind, "email", "an attachment belongs to the e-mail family");
     assert_eq!(hit.modified, 1_710_498_600, "dated like its message");
-    // The message itself lists its attachments.
-    assert_eq!(both(text("\"devis-charpente.docx\"")), ["mail/devis-charpente.eml"]);
+    // The message itself lists its attachments; the attachment answers to
+    // its own name (BUG-077), in the index as in live scan.
+    assert_eq!(
+        both(text("\"devis-charpente.docx\"")),
+        ["mail/devis-charpente.eml", "mail/devis-charpente.eml › devis-charpente.docx"]
+    );
 }
 
 #[test]

@@ -1,0 +1,155 @@
+/*
+ * Theme "Notebook" (light) — mockup docs/mockups/b-carnet.html.
+ * A ruled school notebook: cream page, blue lines, a double pink margin,
+ * ink strokes that wobble slightly, highlighter-marker fills.
+ *
+ * Fonts: Caveat for the brand and titles, Mali for the text (digits
+ * included), Courier Prime for paths. Kalam, from the mockup, was dropped:
+ * its "I", "l" and "1" are the same stroke ("1 263" read "I 263").
+ * Checked on "Il1 O0 C 5S 8B 3 V/Y 2024-11".
+ * Contrast measured on --surface #fffef9: --text 13.9:1, --text-dim 5.9:1.
+ */
+:root[data-theme='carnet'] {
+  /* Page & ink */
+  --bg: #fffdf6;
+  --surface: #fffef9;
+  --text: #2f2a3a;
+  --text-dim: #625a70; /* 5.9:1 */
+  --text-faint: #a39cb0; /* decoration only */
+  --line: #2f2a3a;
+
+  /* Felt pens */
+  --green: #3fa65f;
+  --blue: #3b82d6;
+  --pink: #e8558a;
+  --orange: #f08a24;
+  --purple: #7b5fd6;
+  --yellow: #e6b400;
+
+  --accent: var(--pink);
+  --accent-ink: #b8336a; /* 5.6:1 */
+  --secondary: var(--purple);
+  --secondary-ink: #5f43c0; /* 6.4:1 */
+  --ok: var(--green);
+  --ok-ink: #2f7a46; /* 5.2:1 */
+  --warn: var(--orange);
+  --warn-ink: #8a5300; /* 5.9:1 */
+  --danger: #e5484d;
+  --danger-ink: #b3262b; /* 6.3:1 */
+
+  /* The query in violet ink, like the mockup's operators. */
+  --query-ink: #5f43c0;
+
+  /* Matches: a highlighter stroke with ragged ends; the active one pink. */
+  --mark-text: var(--text);
+  --mark-bg: linear-gradient(100deg, transparent 1%, #ffe16b 4% 95%, transparent 99%);
+  --mark-active-text: var(--text);
+  --mark-active-bg: linear-gradient(100deg, transparent 1%, #ffb8cf 4% 95%, transparent 99%);
+
+  /* Highlighter fills (--h) */
+  --fill-accent: rgb(255 184 207 / 0.75);
+  --fill-accent-strong: rgb(255 160 192 / 0.95);
+  --fill-secondary: rgb(214 198 255 / 0.8);
+  --fill-ok: rgb(184 235 196 / 0.85);
+  --fill-warn: rgb(255 225 107 / 0.9);
+  --fill-yellow: rgb(255 225 107 / 0.7);
+
+  /* Effects: post-it shadows, cards placed by hand. */
+  --shadow-pop: 4px 12px 22px -12px rgb(60 40 20 / 0.45);
+  --tilt: 0.4deg;
+  --doodle-opacity: 0.85;
+  --sweep-bg: linear-gradient(100deg, transparent, rgb(214 198 255 / 0.35) 70%, rgb(214 198 255 / 0.8) 97%, transparent);
+  --ping-bg: linear-gradient(100deg, rgb(255 225 107 / 0.7), transparent 75%);
+
+  /* PROSPECTOR title: solid felt-pen letters, a light offset. */
+  --title-stroke: 0px;
+  --title-mix: #fff;
+  --title-mix-pct: 100%;
+  --title-shadow: drop-shadow(2px 2px 0 rgb(47 42 58 / 0.18));
+
+  /* Handwriting: no capitals for labels and buttons. */
+  --display-case: none;
+
+  /* Code preview syntax colors */
+  --syn-kw: #5f43c0;
+  --syn-str: #2f7a46;
+  --syn-com: #6e6680; /* 5.2:1 */
+  --syn-num: #8a5300;
+
+  /* Fonts. Caveat only for the brand (title, panel headers): at chip size it
+     gets too small to read, so labels and buttons use Mali. */
+  --font-brand: 'Caveat', 'Baloo Bhaijaan 2', cursive;
+  --font-display: 'Mali', 'Baloo Bhaijaan 2', cursive;
+  --font-body: 'Mali', 'Baloo Bhaijaan 2', cursive;
+  --font-mono: 'Courier Prime', 'Baloo Bhaijaan 2', monospace;
+
+  /* Caveat is narrow: a larger title. Mali is wide: a smaller body, a wider rail. */
+  --fs-display: 64px;
+  --lh-display: 66px;
+  --fs-body: 16px;
+  --lh-body: 24px;
+  --rail-w: 300px;
+
+  /* Ink pen: a slight wobble, corners cut by hand. */
+  --stroke: 2px;
+  --r-sketch: 14px 18px 12px 20px;
+  --wobble: url(#wobble);
+  --focus-ring: 2.5px dashed var(--purple);
+
+  color-scheme: light;
+}
+
+/* Arabic: the rounded Baloo Bhaijaan 2 leads. */
+:root[data-theme='carnet']:lang(ar) {
+  --font-brand: 'Baloo Bhaijaan 2', 'Caveat', sans-serif;
+  /* Latin words in an Arabic page fall back to the next font: Mali, not Caveat. */
+  --font-display: 'Baloo Bhaijaan 2', 'Mali', sans-serif;
+  --font-body: 'Baloo Bhaijaan 2', 'Mali', sans-serif;
+  --fs-display: 56px;
+  --lh-display: 60px;
+}
+
+/* ── Treatments (scoped to this theme) ─────────────────────────────── */
+
+/* Ink outline, slightly wobbly. --k = pen color, --sw = stroke width. */
+[data-theme='carnet'] .sketch::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border: var(--sw, var(--stroke)) solid var(--k, var(--line));
+  border-radius: var(--r-sketch);
+  filter: var(--wobble);
+  pointer-events: none;
+}
+
+[data-theme='carnet'] .sketch.dashed::before {
+  border-style: dashed;
+}
+
+[data-theme='carnet'] .sketch.round::before {
+  border-radius: 50%;
+}
+
+/* Highlighter marker with ragged ends. --h = color. */
+[data-theme='carnet'] .hatch {
+  background-image: linear-gradient(100deg, transparent 2%, var(--h, var(--fill-yellow)) 5% 95%, transparent 98%);
+}
+
+/* The notebook page: blue rules every 34 px and a double pink margin. */
+[data-theme='carnet'] body {
+  background:
+    linear-gradient(90deg, transparent 8px, #f3b7c3 8px, #f3b7c3 10px, transparent 10px, transparent 13px, #f3b7c3 13px, #f3b7c3 14px, transparent 14px),
+    repeating-linear-gradient(180deg, transparent 0 33px, #dbe6f3 33px 34px),
+    var(--bg);
+  background-attachment: fixed;
+}
+
+/* Right to left: the margin goes to the right. */
+[data-theme='carnet']:lang(ar) body {
+  background:
+    linear-gradient(270deg, transparent 8px, #f3b7c3 8px, #f3b7c3 10px, transparent 10px, transparent 13px, #f3b7c3 13px, #f3b7c3 14px, transparent 14px),
+    repeating-linear-gradient(180deg, transparent 0 33px, #dbe6f3 33px 34px),
+    var(--bg);
+  background-attachment: fixed;
+}

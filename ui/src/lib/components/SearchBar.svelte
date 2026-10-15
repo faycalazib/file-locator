@@ -330,7 +330,7 @@
     padding: 1px var(--sp-8);
     font: 20px/26px var(--font-brand);
     letter-spacing: 1px;
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
   }
 
   .title {
@@ -340,14 +340,17 @@
     direction: ltr;
   }
 
+  /* Each letter has its color (--c); a theme may give them all one color
+     (--title-color, e.g. white or gold). */
   .title span {
+    --tc: var(--title-color, var(--c));
     color: transparent;
     -webkit-text-stroke-color: var(--line);
     -webkit-text-stroke-width: var(--title-stroke);
     background-image: repeating-linear-gradient(
       -30deg,
-      var(--c) 0 3px,
-      color-mix(in srgb, var(--c) var(--title-mix-pct), var(--title-mix)) 3px 5px
+      var(--tc) 0 3px,
+      color-mix(in srgb, var(--tc) var(--title-mix-pct), var(--title-mix)) 3px 5px
     );
     background-clip: text;
     -webkit-background-clip: text;
@@ -383,7 +386,7 @@
   .lead {
     flex: none;
     font: 22px/30px var(--font-display);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
   }
 
   .query {
@@ -423,7 +426,7 @@
     background-color: transparent;
     border: 0;
     font: 28px/36px var(--font-display);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
     white-space: nowrap;
   }
 
@@ -464,7 +467,7 @@
   .names-lead {
     flex: none;
     font: 17px/26px var(--font-display);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
   }
 
   .names-input {
@@ -518,7 +521,7 @@
     border: 0;
     border-radius: 999px;
     font: 15px/24px var(--font-display);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
     white-space: nowrap;
   }
 

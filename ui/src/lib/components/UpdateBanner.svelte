@@ -70,7 +70,7 @@
     --k: var(--ok);
     --h: var(--fill-ok);
     font-family: var(--font-display);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
   }
 
   .later:hover {

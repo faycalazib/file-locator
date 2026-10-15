@@ -402,12 +402,19 @@ fn prefix_query(f: &Fields, prefix: &str) -> Option<Box<dyn Query>> {
     Some(Box::new(RangeQuery::new(lower, Bound::Excluded(Term::from_field_text(f.path, &upper)))))
 }
 
+/// A phrase (or a word the tokenizer splits, "2004.m20") in the text, or in
+/// the file name (×2), like a single word (BUG-077).
 fn phrase_query(f: &Fields, folded: &[String]) -> Option<Box<dyn Query>> {
-    match folded {
-        [] => None,
-        [one] => Some(Box::new(TermQuery::new(Term::from_field_text(f.body, one), IndexRecordOption::WithFreqs))),
-        many => Some(Box::new(PhraseQuery::new(many.iter().map(|t| Term::from_field_text(f.body, t)).collect()))),
-    }
+    let in_field = |field| -> Option<Box<dyn Query>> {
+        match folded {
+            [] => None,
+            [one] => Some(Box::new(TermQuery::new(Term::from_field_text(field, one), IndexRecordOption::WithFreqs))),
+            many => Some(Box::new(PhraseQuery::new(many.iter().map(|t| Term::from_field_text(field, t)).collect()))),
+        }
+    };
+    let body = in_field(f.body)?;
+    let name = in_field(f.name)?;
+    Some(Box::new(BooleanQuery::union(vec![body, Box::new(BoostQuery::new(name, 2.0))])))
 }
 
 fn clause_query(f: &Fields, clause: &Clause, mode: WordMode) -> Option<Box<dyn Query>> {

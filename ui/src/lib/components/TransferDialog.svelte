@@ -240,7 +240,7 @@
   h2 {
     margin: 0;
     font: var(--fs-h2) / var(--lh-h2) var(--font-display);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
   }
 
   fieldset {
@@ -252,7 +252,7 @@
   legend {
     margin-block-end: var(--sp-1);
     font: 15px/22px var(--font-display);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
     color: var(--text-dim);
   }
 
@@ -324,7 +324,7 @@
     background: transparent;
     border: 0;
     font: 16px/22px var(--font-display);
-    text-transform: uppercase;
+    text-transform: var(--display-case, uppercase);
   }
 
   @media (prefers-reduced-motion: reduce) {

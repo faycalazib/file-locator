@@ -1,0 +1,136 @@
+/*
+ * Theme "Brush" (light) — mockup docs/mockups/f-brush-banners.html.
+ * Pastel bands painted with a brush (frayed edges, SVG filter #rough in
+ * ThemeDefs.svelte), on a warm white page, with 3D stickers.
+ *
+ * Fonts: Caveat Brush for the brand and panel headers, Itim for everything
+ * else (digits included), Courier Prime for paths. Checked on
+ * "Il1 O0 C 5S 8B 3 V/Y 2024-11": Caveat Brush gets narrow at chip size,
+ * so it stays on the brand.
+ * Contrast measured on --surface #fffdfb: --text 16.9:1, --text-dim 5.4:1.
+ */
+:root[data-theme='brush'] {
+  /* Warm white & ink */
+  --bg: #fffdfb;
+  --surface: #fffdfb;
+  --text: #1d1a22;
+  --text-dim: #625b6c; /* 5.4:1 */
+  --text-faint: #a59fae; /* decoration only */
+  --line: #b89be8; /* lilac: the color of a band nobody colored */
+
+  /* Paint pots */
+  --green: #4dbf7d;
+  --blue: #4f9fe0;
+  --pink: #e8659a;
+  --orange: #f2914f;
+  --purple: #8a68dc;
+  --yellow: #f0c93a;
+
+  --accent: var(--pink);
+  --accent-ink: #b52f63; /* 5.6:1 */
+  --secondary: var(--purple);
+  --secondary-ink: #5f3dc4; /* 6.9:1 */
+  --ok: var(--green);
+  --ok-ink: #237a48; /* 5.3:1 */
+  --warn: var(--orange);
+  --warn-ink: #8a4e00; /* 6.0:1 */
+  --danger: #e5484d;
+  --danger-ink: #b3262b; /* 6.2:1 */
+
+  --query-ink: #5f3dc4;
+
+  /* Matches: a pink brush stroke under the word; the active one fully painted. */
+  --mark-text: var(--text);
+  --mark-bg: linear-gradient(176deg, transparent 52%, #f9c6d3 52%, #f9c6d3 94%, transparent 94%);
+  --mark-active-text: var(--text);
+  --mark-active-bg: #f7b3c8;
+
+  /* Pastel paint (--h) */
+  --fill-accent: rgb(249 198 211 / 0.85);
+  --fill-accent-strong: rgb(247 179 200 / 1);
+  --fill-secondary: rgb(220 205 250 / 0.85);
+  --fill-ok: rgb(196 239 212 / 0.9);
+  --fill-warn: rgb(251 234 161 / 0.95);
+  --fill-yellow: rgb(251 234 161 / 0.85);
+
+  /* Effects */
+  --shadow-pop: 0 18px 32px -18px rgb(29 26 34 / 0.38);
+  --tilt: 0.5deg;
+  --doodle-opacity: 1;
+  --sweep-bg: linear-gradient(90deg, transparent, rgb(220 205 250 / 0.4) 70%, rgb(220 205 250 / 0.9) 98%, transparent);
+  --ping-bg: linear-gradient(90deg, rgb(251 234 161 / 0.85), transparent 70%);
+
+  /* PROSPECTOR title: solid painted letters, no shadow. */
+  --title-stroke: 0px;
+  --title-mix: #fff;
+  --title-mix-pct: 100%;
+  --title-shadow: drop-shadow(0 3px 0 rgb(29 26 34 / 0.12));
+
+  /* Sentence case, as in the mockup. */
+  --display-case: none;
+
+  /* Code preview syntax colors */
+  --syn-kw: #5f3dc4;
+  --syn-str: #237a48;
+  --syn-com: #6e6878; /* 5.2:1 */
+  --syn-num: #8a4e00;
+
+  /* Fonts */
+  --font-brand: 'Caveat Brush', 'Baloo Bhaijaan 2', cursive;
+  --font-display: 'Itim', 'Baloo Bhaijaan 2', cursive;
+  --font-body: 'Itim', 'Baloo Bhaijaan 2', cursive;
+  --font-mono: 'Courier Prime', 'Baloo Bhaijaan 2', monospace;
+
+  --fs-display: 64px;
+  --lh-display: 68px;
+
+  --stroke: 2px;
+  --r-sketch: 14px 30px 12px 26px;
+  --wobble: opacity(1);
+  --focus-ring: 2.5px dashed var(--purple);
+
+  color-scheme: light;
+}
+
+/* Arabic: Baloo Bhaijaan 2 leads; Latin words fall back to Itim. */
+:root[data-theme='brush']:lang(ar) {
+  --font-brand: 'Baloo Bhaijaan 2', 'Caveat Brush', sans-serif;
+  --font-display: 'Baloo Bhaijaan 2', 'Itim', sans-serif;
+  --font-body: 'Baloo Bhaijaan 2', 'Itim', sans-serif;
+  --fs-display: 56px;
+  --lh-display: 60px;
+}
+
+/* ── Treatments (scoped to this theme) ─────────────────────────────── */
+
+/* The band is painted behind the content of its element, not over it. */
+[data-theme='brush'] .sketch {
+  isolation: isolate;
+}
+
+/* A pastel band of the component's color (--k), frayed by the brush, with
+   a stronger edge of the same color. */
+[data-theme='brush'] .sketch::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  background: color-mix(in srgb, var(--k, var(--line)) 20%, var(--bg));
+  border: var(--sw, var(--stroke)) solid color-mix(in srgb, var(--k, var(--line)) 75%, var(--bg));
+  border-radius: var(--r-sketch);
+  filter: url(#rough);
+  pointer-events: none;
+}
+
+[data-theme='brush'] .sketch.dashed::before {
+  border-style: dashed;
+}
+
+[data-theme='brush'] .sketch.round::before {
+  border-radius: 50%;
+}
+
+/* Flat pastel paint. */
+[data-theme='brush'] .hatch {
+  background-image: linear-gradient(var(--h, var(--fill-yellow)), var(--h, var(--fill-yellow)));
+}

@@ -1,0 +1,143 @@
+/*
+ * Theme "Modeling clay" (light) — mockups docs/mockups/a-clay-spotlight.html
+ * and h-clay-arabe.html (its Arabic version).
+ * Cream paper, soft clay shapes (rounded, lit from above, a lilac shadow
+ * below), pastel colors, rounded fonts.
+ *
+ * Fonts: Fredoka for the brand and titles, Nunito for the text (digits
+ * included), DM Mono for paths. Checked on "Il1 O0 C 5S 8B 3 V/Y 2024-11".
+ * Contrast measured on --surface #fffdf8: --text 13.0:1, --text-dim 6.1:1.
+ */
+:root[data-theme='clay'] {
+  /* Cream & cocoa */
+  --bg: #fbf3e6;
+  --surface: #fffdf8;
+  --text: #3d2b2f;
+  --text-dim: #6e5c60; /* 6.1:1 */
+  --text-faint: #a3949a; /* decoration only */
+  --line: rgb(61 43 47 / 0.14);
+
+  /* Pastel clay */
+  --green: #7fd1a6;
+  --blue: #86c3ef;
+  --pink: #f47fa9;
+  --orange: #ffb27a;
+  --purple: #a98bea;
+  --yellow: #ffd36b;
+
+  --accent: var(--purple);
+  --accent-ink: #6a4cc0; /* 6.2:1 */
+  --secondary: var(--pink);
+  --secondary-ink: #b8336a; /* 5.4:1 */
+  --ok: var(--green);
+  --ok-ink: #2f7a52; /* 5.2:1 */
+  --warn: var(--yellow);
+  --warn-ink: #8a5a00; /* 5.6:1 */
+  --danger: #e5566f;
+  --danger-ink: #b52e48; /* 5.9:1 */
+
+  --query-ink: #6a4cc0;
+
+  /* Matches: a butter highlighter band; the active one in pink. */
+  --mark-text: var(--text);
+  --mark-bg: linear-gradient(180deg, transparent 16%, #ffe27a 16%, #ffe27a 88%, transparent 88%);
+  --mark-active-text: var(--text);
+  --mark-active-bg: linear-gradient(180deg, transparent 10%, #f9a8c6 10%, #f9a8c6 92%, transparent 92%);
+
+  /* Flat pastel fills (--h) */
+  --fill-accent: rgb(169 139 234 / 0.26);
+  --fill-accent-strong: rgb(169 139 234 / 0.5);
+  --fill-secondary: rgb(244 127 169 / 0.24);
+  --fill-ok: rgb(127 209 166 / 0.32);
+  --fill-warn: rgb(255 211 107 / 0.75);
+  --fill-yellow: rgb(255 211 107 / 0.45);
+
+  /* Effects */
+  --shadow-pop: 0 22px 44px -20px rgb(110 80 160 / 0.45);
+  --tilt: 0deg;
+  --doodle-opacity: 1; /* the 3D magnifier and gem, like the mockup's emojis */
+  --sweep-bg: linear-gradient(90deg, transparent, rgb(169 139 234 / 0.16) 70%, rgb(169 139 234 / 0.5) 98%, transparent);
+  --ping-bg: linear-gradient(90deg, rgb(255 211 107 / 0.5), transparent 70%);
+
+  /* PROSPECTOR title: plump solid letters (no hatching), a soft shadow. */
+  --title-stroke: 0px;
+  --title-mix: #fff;
+  --title-mix-pct: 100%;
+
+  /* Sentence case, as in the mockup: no capitals for labels and buttons. */
+  --display-case: none;
+  --title-shadow: drop-shadow(0 5px 0 rgb(61 43 47 / 0.12)) drop-shadow(0 14px 16px rgb(110 80 160 / 0.32));
+
+  /* Code preview syntax colors */
+  --syn-kw: #6a4cc0;
+  --syn-str: #2f7a52;
+  --syn-com: #7f6f73; /* 4.9:1 */
+  --syn-num: #8a5a00;
+
+  /* Fonts */
+  --font-brand: 'Fredoka', 'Baloo Bhaijaan 2', sans-serif;
+  --font-display: 'Fredoka', 'Baloo Bhaijaan 2', sans-serif;
+  --font-body: 'Nunito', 'Baloo Bhaijaan 2', sans-serif;
+  --font-mono: 'DM Mono', 'Baloo Bhaijaan 2', monospace;
+
+  /* Clay: no wobble, round corners. --wobble must stay a valid filter. */
+  --stroke: 2px;
+  --r-sketch: 20px;
+  --wobble: opacity(1);
+  --focus-ring: 3px solid var(--purple);
+
+  color-scheme: light;
+}
+
+/* Arabic (mockup h-clay-arabe): the rounded Baloo Bhaijaan 2 leads. */
+:root[data-theme='clay']:lang(ar) {
+  --font-brand: 'Baloo Bhaijaan 2', 'Fredoka', sans-serif;
+  --font-display: 'Baloo Bhaijaan 2', 'Fredoka', sans-serif;
+  --font-body: 'Baloo Bhaijaan 2', 'Nunito', sans-serif;
+}
+
+/* ── Treatments (scoped to this theme) ─────────────────────────────── */
+
+/* The background follows the round corners (components paint it square). */
+[data-theme='clay'] .sketch {
+  border-radius: var(--r-sketch);
+}
+
+[data-theme='clay'] .sketch.round {
+  border-radius: 50%;
+}
+
+/* Clay shape: a light rim on top, a darker one below, a lilac shadow under
+   it. The outline stays faint unless a component colors it (--k). */
+[data-theme='clay'] .sketch::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border: var(--sw, var(--stroke)) solid var(--k, var(--line));
+  border-radius: inherit;
+  box-shadow:
+    0 14px 28px -20px rgb(110 80 160 / 0.5),
+    inset 0 2px 0 rgb(255 255 255 / 0.85),
+    inset 0 -4px 0 rgb(61 43 47 / 0.05);
+  pointer-events: none;
+}
+
+[data-theme='clay'] .sketch.dashed::before {
+  border-style: dashed;
+}
+
+/* Flat pastel fill instead of hatching. */
+[data-theme='clay'] .hatch {
+  background-image: linear-gradient(var(--h, var(--fill-yellow)), var(--h, var(--fill-yellow)));
+}
+
+/* Soft clay blobs behind the page. */
+[data-theme='clay'] body {
+  background:
+    radial-gradient(circle at 6% 72%, rgb(185 161 242 / 0.4), transparent 20%),
+    radial-gradient(circle at 68% -4%, rgb(249 179 203 / 0.42), transparent 17%),
+    radial-gradient(circle at 42% 104%, rgb(169 227 195 / 0.42), transparent 17%),
+    var(--bg);
+  background-attachment: fixed;
+}

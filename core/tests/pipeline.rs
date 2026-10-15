@@ -1,5 +1,5 @@
-//! BUG-068: indexing progress and independence between sites; BUG-071: Arabic
-//! words with ل attached. Its own test binary: one test blocks the shared rayon pool for a moment.
+//! Regression tests of the user test sessions: BUG-068 (indexing progress, sites independent), BUG-071 (Arabic
+//! words with ل attached), BUG-073 (live scan), BUG-077 (phrases in file names). Own binary: one test blocks the shared rayon pool.
 
 use std::path::Path;
 use std::sync::atomic::AtomicBool;
@@ -128,4 +128,37 @@ fn the_live_scan_reads_while_walking_and_counts_both() {
     let progress = progress.into_inner().unwrap();
     assert_eq!(progress.last(), Some(&(300, 300)), "the last report: everything found and read");
     assert!(progress.iter().all(|(read, found)| read <= found), "never more read than found: {progress:?}");
+}
+
+/// BUG-077: a phrase ("2004.m20", split in two by the tokenizer) is also
+/// looked for in file names, like a single word, inside an archive too.
+#[test]
+fn a_phrase_finds_a_file_by_its_name() {
+    use std::io::Write;
+    let root = temp_dir();
+    std::fs::write(root.path().join("2004.m20.i406.n016.txt"), "Portrait d'un personnage.").unwrap();
+    std::fs::write(root.path().join("notes.txt"), "Le rapport annuel est prêt.").unwrap();
+    let mut zip = zip::ZipWriter::new(std::fs::File::create(root.path().join("avatars.zip")).unwrap());
+    zip.start_file("2005.k31.i407.n017.txt", zip::write::SimpleFileOptions::default()).unwrap();
+    zip.write_all(b"Un autre portrait.").unwrap();
+    zip.finish().unwrap();
+    let data = temp_dir();
+    let engine = Engine::open(data.path()).unwrap();
+    let site = engine.add_site("Avatars", vec![root.path().to_string_lossy().into_owned()]).unwrap();
+    engine.index_site(&site.id, &[], &AtomicBool::new(false), &|_| {}).unwrap();
+    let found = |query: &str| -> Vec<String> {
+        let req = prospector_core::SearchRequest { query: query.into(), fuzzy: false, ..Default::default() };
+        let mut names: Vec<String> = engine
+            .search(std::slice::from_ref(&site.id), &req)
+            .unwrap()
+            .hits
+            .into_iter()
+            .map(|h| h.path.rsplit(['\\', '/', '›']).next().unwrap().trim().to_owned())
+            .collect();
+        names.sort();
+        names
+    };
+    assert_eq!(found("2004.m20"), ["2004.m20.i406.n016.txt"]);
+    assert_eq!(found("2005.k31"), ["2005.k31.i407.n017.txt"], "inside a ZIP");
+    assert_eq!(found("\"rapport annuel\""), ["notes.txt"], "a phrase of the text still found");
 }

@@ -105,8 +105,17 @@
 - [x] Sur un de ces résultats, « Ouvrir » extrait le fichier interne et l'ouvre lui-même (depuis le lot 6.7 ; avant : l'archive).
 - [x] `verrouille.rar`, protégé par mot de passe, n'est pas lu ; le site affiche un fichier illisible de plus.
 - [ ] 👤 Sur tes propres archives : un vrai .rar, un .7z et un RAR en plusieurs parties (`.part1.rar`, `.part2.rar`), dont le contenu n'apparaît qu'une fois. (13/10/2026 : un vrai ZIP de l'utilisateur vérifié, documents internes trouvés une fois avec aperçu ; .rar, .7z et RAR en plusieurs parties encore à faire quand il en aura.)
+- [x] 👤 (BUG-077) Taper un nom de fichier qui contient des points ou des tirets (`2004.m20`, `facture_2024-117`) dans la zone de recherche : le fichier sort, même rangé dans un ZIP. (Vérifié le 15/10/2026 : `2004.m20` trouve l'image du ZIP de l'utilisateur, version installée.)
 - [x] Le filtre « Archives » ne montre que des documents venant d'archives.
 - [x] En scan direct, les RAR et 7z sont lus aussi.
+
+### Thèmes (ajoutés le 15/10/2026)
+- [x] Captures des 5 nouveaux thèmes (Pâte à modeler, Carnet, Scrapbook, Appli douce, Pinceau) dans les 3 mises en page, en français et en arabe (`target/tmp/themes/`), validées une à une par l'utilisateur.
+- [x] Captures des 23 thèmes générés (3 mises en page, FR et AR), relues ; contrastes vérifiés par le générateur.
+- [ ] 👤 Dans l'appli : le bouton palette en bas du rail ouvre le menu des 32 thèmes en deux colonnes (Clairs, Sombres) ; un clic change le thème tout de suite ; il est retrouvé au lancement suivant ; en arabe, les colonnes sont en miroir.
+- [ ] 👤 Un thème sombre (Sonar, Électrique, Mine d'or…) : la barre de titre de Windows passe en sombre ; un thème clair la remet en clair.
+- [ ] 👤 Pinceau : une longue liste (plus de 200 résultats) défile sans saccade (les bords au pinceau sont un filtre SVG sur chaque bande).
+- [ ] 👤 Chaque thème : le rapport PDF (Ctrl + P) reste sur page blanche, lisible.
 
 ## Étape 4 — Installation et distribution
 
@@ -162,7 +171,7 @@
 - [x] 👤 Sur tes vrais documents : un PDF scanné par ton scanner ou ton téléphone, une photo d'un document, une capture d'écran. (Vérifié par l'utilisateur le 13/10/2026 dans le site Youtube.)
 - [x] Les petites icônes (moins de 200 pixels) ne sont pas lues.
 - [ ] 👤 Décocher la case, puis la recocher : un message dit que les sites sont mis à jour, et seules les images et les PDF sont relus.
-- [ ] 👤 Note le temps d'indexation d'un dossier de photos (l'OCR ralentit ce cas).
+- [x] 👤 Note le temps d'indexation d'un dossier de photos (l'OCR ralentit ce cas). (15/10/2026, version installée : `H:\Pictures`, 13 795 images et 52 Go, indexé en **41 min** (13 875 documents, aucun fichier illisible), pendant que le calcul du sens d'un autre site tournait en rythme économe.)
 
 ### 5.3 Anciens formats et autres documents
 - [x] Au premier lancement, les index se reconstruisent une fois : les .doc, .ppt, RTF, ODT… déjà vus comme « non pris en charge » sont relus.
@@ -170,7 +179,7 @@
 - [x] Sur `test_fixtures` : `boring` trouve `legacy/test2.doc`, `Molière` trouve `HeaderFooterUnicode.doc`, `subtitle` trouve `basic_test_ppt_file.ppt` (l'aperçu montre des cartes par diapositive), `bornage` trouve le `.rtf`, `ardoises` le `.odt`, `zinguerie` le `.odp`, `sémaphore` l'EPUB.
 - [x] Archives : `lampadaires` trouve `sauvegarde.tar.gz › rapports/bilan.txt`, `pare-feu` trouve `serveur.log.gz › serveur.log`, `javanais` trouve le `.jar`.
 - [x] `quinquennale` trouve `fr/protege.pdf` (PDF protégé contre la copie).
-- [ ] 👤 **Sur tes vrais fichiers** (le plus important) : des anciens .doc et .ppt de tes archives, un RTF, un document LibreOffice, un livre EPUB. (13/10/2026 : un vrai .docx de l'utilisateur vérifié ; .doc, .ppt, RTF, LibreOffice et EPUB encore à faire, dont le .doc arabe de Religion une fois indexé.)
+- [ ] 👤 **Sur tes vrais fichiers** (le plus important) : des anciens .doc et .ppt de tes archives, un RTF, un document LibreOffice, un livre EPUB. (13/10/2026 : un vrai .docx de l'utilisateur vérifié ; .doc, .ppt, RTF, LibreOffice et EPUB encore à faire, le .doc arabe de Religion vérifié le 15/10/2026 : texte Word 97 lisible, « الدويش » trouvé et surligné ; l'utilisateur n'a pas d'autres vieux fichiers, couverts par les tests automatiques.)
 
 ### 5.4 Pièces jointes des e-mails et boîtes MBOX
 - [x] Au premier lancement, les index se reconstruisent une fois (les e-mails sont relus avec leurs pièces jointes).

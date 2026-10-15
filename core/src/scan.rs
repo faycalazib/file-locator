@@ -181,7 +181,16 @@ pub fn live_scan(
                         if !req.langs.is_empty() && !req.langs.iter().any(|l| l == lang.code()) {
                             continue;
                         }
-                        if !logic.accepts(&doc.text, lang) {
+                        // Its own name counts, as in the index, where every word
+                        // or phrase is looked for in `body` and `name` (BUG-077);
+                        // not with LINES, which counts the lines of the text.
+                        let own_name = doc.inner.as_deref().map_or(container.as_str(), inner_name);
+                        let accepted = if parsed.lines.is_some() {
+                            logic.accepts(&doc.text, lang)
+                        } else {
+                            logic.accepts(&format!("{own_name}\n{}", doc.text), lang)
+                        };
+                        if !accepted {
                             continue;
                         }
                         // Last: the digest of the file (an inner document has none).
