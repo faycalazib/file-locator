@@ -21,7 +21,7 @@ use crate::crawler::{crawl, file_entry, is_reachable, Exclusions, FileEntry};
 use crate::error::{CoreError, Result};
 use crate::fsutil::write_atomic;
 use crate::extract::{extract_one, split_inner, ExtractedDoc, SkipReason, INNER_SEP};
-use crate::pipeline::process_files;
+use crate::pipeline::{process_files_watched, SLOW_FILE};
 use crate::kind::FileKind;
 use crate::lang::DocLang;
 use crate::highlight::{preview_lines, PreviewLine};
@@ -71,7 +71,7 @@ pub struct SiteRecord {
     pub sense: bool,
 }
 
-#[derive(Clone, Copy, Debug, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum IndexPhase {
     Scanning,
@@ -87,6 +87,10 @@ pub struct IndexProgress {
     /// Files found so far (scanning) / total to read.
     pub total: usize,
     pub done: usize,
+    /// The file read for more than a few seconds, if any (BUG-068): a large
+    /// archive of scanned books can take a long time, and the bar waits.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub current: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -427,6 +431,12 @@ impl Engine {
     pub fn add_site(&self, name: &str, roots: Vec<String>) -> Result<SiteRecord> {
         self.writable()?;
         let mut sites = lock(&self.sites);
+        // The same folder twice would index and show every file twice (BUG-056).
+        // Windows paths: no case, no final separator.
+        let same = |a: &str, b: &str| a.trim_end_matches(['\\', '/']).eq_ignore_ascii_case(b.trim_end_matches(['\\', '/']));
+        if let Some(site) = sites.iter().find(|s| s.roots.iter().any(|r| roots.iter().any(|n| same(r, n)))) {
+            return Err(CoreError::SiteExists { name: site.name.clone() });
+        }
         let base: String = name
             .chars()
             .map(|c| if c.is_alphanumeric() { c.to_ascii_lowercase() } else { '-' })
@@ -613,7 +623,7 @@ impl Engine {
     ) -> Result<SiteRecord> {
         let roots: Vec<PathBuf> = site.roots.iter().map(PathBuf::from).collect();
         let outcome = crawl(&roots, &self.exclusions(excluded), cancel, &|n| {
-            progress(IndexProgress { site_id: site.id.clone(), phase: IndexPhase::Scanning, total: n, done: 0 })
+            progress(IndexProgress { site_id: site.id.clone(), phase: IndexPhase::Scanning, total: n, done: 0, current: None })
         });
         if outcome.files.is_empty() && !outcome.missing_roots.is_empty() {
             let path = outcome.missing_roots[0].to_string_lossy().into_owned();
@@ -670,7 +680,12 @@ impl Engine {
         cancel: &AtomicBool,
         progress: &(dyn Fn(IndexProgress) + Sync),
     ) -> Result<bool> {
-        let report = |phase, total, done| progress(IndexProgress { site_id: site_id.to_owned(), phase, total, done });
+        // The slow file stays named in every report until it is done.
+        let current: Mutex<Option<String>> = Mutex::new(None);
+        let report = |phase, total, done| {
+            let current = if phase == IndexPhase::Reading { lock(&current).clone() } else { None };
+            progress(IndexProgress { site_id: site_id.to_owned(), phase, total, done, current })
+        };
         let total = changed.len();
         report(IndexPhase::Reading, total, 0);
         if !full && changed.is_empty() && removed.is_empty() {
@@ -699,7 +714,14 @@ impl Engine {
 
         let done = AtomicUsize::new(0);
         let stamps: Mutex<Vec<(String, FileStamp)>> = Mutex::new(Vec::with_capacity(total));
-        process_files(&mut changed, cancel, |file, extracted| {
+        // The bar moves at least every 1 % (every 64 files left a site of 293
+        // at 88 % until the end, BUG-068).
+        let step = (total / 100).max(1);
+        let slow = |path: Option<&Path>| {
+            *lock(&current) = path.map(|p| p.to_string_lossy().into_owned());
+            report(IndexPhase::Reading, total, done.load(Ordering::Relaxed));
+        };
+        process_files_watched(&mut changed, cancel, SLOW_FILE, slow, |file, extracted| {
             let file_path = file.path.to_string_lossy();
             let (docs, skipped) = match extracted {
                 Ok(docs) => {
@@ -727,7 +749,7 @@ impl Engine {
             let stamp = FileStamp { size: file.size, modified: file.modified, docs, skipped, ocr: crate::extract::ocr::enabled() };
             lock(&stamps).push((file_path.into_owned(), stamp));
             let n = done.fetch_add(1, Ordering::Relaxed) + 1;
-            if n.is_multiple_of(64) || n == total {
+            if n.is_multiple_of(step) || n == total {
                 report(IndexPhase::Reading, total, n);
             }
         });

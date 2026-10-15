@@ -23,7 +23,10 @@ use crate::fsutil::write_atomic;
 /// 6: .doc, .ppt, RTF, ODT/ODP, EPUB, TAR/gzip/bzip2/JAR, protected PDFs.
 /// 7: e-mail attachments, mbox, ost.
 /// 8: Excel dates read as dates (BUG-041); only spreadsheets are read again.
-const VERSION: u32 = 8;
+/// 9: `.ppt` fast saves, only the live slides (BUG-045); only `.ppt` read again.
+/// 10: Arabic in PDFs as letters, in reading order (BUG-070); PDFs read again,
+///     and archives and mailboxes, which may hold some.
+const VERSION: u32 = 10;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct FileStamp {
@@ -66,19 +69,29 @@ impl Manifest {
     /// caller then rebuilds the whole index.
     pub fn load(path: &Path) -> Option<Self> {
         let mut manifest: Self = serde_json::from_slice(&std::fs::read(path).ok()?).ok()?;
-        // 7 → 8 changed only spreadsheets: they are read again, not the whole site.
+        // Steps that changed only some files: those are read again, not the whole site.
         if manifest.version == 7 {
-            manifest.reread(FileKind::Excel);
-            manifest.version = VERSION;
+            manifest.reread(|path| FileKind::from_path(path) == Some(FileKind::Excel));
+            manifest.version = 8;
+        }
+        if manifest.version == 8 {
+            manifest.reread(|path| path.extension().is_some_and(|e| e.eq_ignore_ascii_case("ppt")));
+            manifest.version = 9;
+        }
+        if manifest.version == 9 {
+            manifest.reread(|path| {
+                matches!(FileKind::from_path(path), Some(FileKind::Pdf | FileKind::Archive | FileKind::Email))
+            });
+            manifest.version = 10;
         }
         (manifest.version == VERSION).then_some(manifest)
     }
 
-    /// Files of this kind no longer match their stamp: the next update reads
-    /// them again (and replaces their documents).
-    fn reread(&mut self, kind: FileKind) {
+    /// Files for which `which` is true no longer match their stamp: the next
+    /// update reads them again (and replaces their documents).
+    fn reread(&mut self, which: impl Fn(&Path) -> bool) {
         for (path, stamp) in &mut self.files {
-            if FileKind::from_path(Path::new(path)) == Some(kind) {
+            if which(Path::new(path)) {
                 stamp.modified = 0;
             }
         }
@@ -149,18 +162,26 @@ mod tests {
     }
 
     #[test]
-    fn version_7_rereads_only_spreadsheets() {
+    fn old_versions_reread_only_what_changed() {
         let dir = crate::test_tmp();
         let path = dir.path().join("site.manifest.json");
         let mut old = Manifest { version: 7, files: BTreeMap::new() };
         old.files.insert(r"D:\a\ventes.xlsx".into(), stamp(1, None));
         old.files.insert(r"D:\a\notes.txt".into(), stamp(1, None));
+        old.files.insert(r"D:\a\vieux.PPT".into(), stamp(1, None));
+        old.files.insert(r"D:\a\neuf.pptx".into(), stamp(1, None));
+        old.files.insert(r"D:\a\livre.pdf".into(), stamp(1, None));
+        old.files.insert(r"D:\a\livres.zip".into(), stamp(1, None));
         old.save(&path).unwrap();
 
         let m = Manifest::load(&path).expect("kept, not rebuilt");
         assert_eq!(m.version, VERSION);
         assert_eq!(m.files[r"D:\a\ventes.xlsx"].modified, 0, "read again");
         assert_eq!(m.files[r"D:\a\notes.txt"].modified, 1, "untouched");
+        assert_eq!(m.files[r"D:\a\vieux.PPT"].modified, 0, "7 → 9: .ppt read again too");
+        assert_eq!(m.files[r"D:\a\neuf.pptx"].modified, 1, "untouched");
+        assert_eq!(m.files[r"D:\a\livre.pdf"].modified, 0, "9 → 10: PDFs read again");
+        assert_eq!(m.files[r"D:\a\livres.zip"].modified, 0, "9 → 10: and archives, which may hold PDFs");
         // Older versions: rebuilt.
         Manifest { version: 6, files: BTreeMap::new() }.save(&path).unwrap();
         assert!(Manifest::load(&path).is_none());

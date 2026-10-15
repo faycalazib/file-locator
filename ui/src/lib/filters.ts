@@ -89,13 +89,18 @@ export const DETECTOR_GROUPS: { group: 'bank' | 'contact' | 'business' | 'identi
 export const ALL_DETECTORS: Detector[] = DETECTOR_GROUPS.flatMap((g) => g.detectors);
 
 /**
- * The PDF report masks what looks like an account or identity number: in a
- * highlighted passage with at least 8 digits, only the last 4 characters
- * stay (`•••• •••• •••• 4242`). E-mails and short amounts are kept.
+ * The PDF report masks account, card and identity numbers (BUG-064): the
+ * highlighted passages that are among `sensitive` (what the engine's IBAN,
+ * RIB, card, social security, DNI and passport detectors found). Only the
+ * last 4 characters stay (`•••• •••• •••• 4242`). Phones, e-mails and amounts
+ * stay readable, however long.
  */
-export function maskSensitive(marked: string): string {
+export function maskSensitive(marked: string, sensitive: readonly string[] = []): string {
+  if (sensitive.length === 0) return marked;
+  const squeeze = (v: string) => v.replace(/\s+/g, '');
+  const secret = new Set(sensitive.map(squeeze));
   return marked.replace(/⟦([^⟧]*)⟧/g, (whole, inner: string) => {
-    if ((inner.match(/\p{Nd}/gu) ?? []).length < 8) return whole;
+    if (!secret.has(squeeze(inner))) return whole;
     const chars = [...inner];
     let keep = 4;
     for (let i = chars.length - 1; i >= 0; i--) {

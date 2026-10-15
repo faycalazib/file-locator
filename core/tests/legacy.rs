@@ -123,3 +123,20 @@ fn tar_gzip_bzip2_and_jar() {
 fn pdf_protected_only_against_copying_is_read() {
     assert_eq!(both("quinquennale"), ["fr/protege.pdf"]);
 }
+
+/// Fast-saved `.ppt` files keep old versions of their slides: only the live
+/// version is read (BUG-045). basic_test_ppt_file.ppt has 2 slides.
+#[test]
+fn ppt_reads_only_the_live_slides() {
+    use prospector_core::extract::extract_docs;
+    use prospector_core::kind::FileKind;
+    let text = |name: &str| extract_docs(&fixtures().join("legacy").join(name), FileKind::Powerpoint).unwrap().remove(0).text;
+    let basic = text("basic_test_ppt_file.ppt");
+    println!("{basic}");
+    assert_eq!(basic.matches("— ").count(), 2, "{basic}");
+    assert!(basic.contains("This is the title on page 2"), "{basic}");
+    let textbox = text("with_textbox.ppt");
+    println!("{textbox}");
+    assert!(textbox.contains("Roman"), "{textbox}");
+}
+

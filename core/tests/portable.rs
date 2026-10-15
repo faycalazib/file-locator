@@ -6,6 +6,13 @@ use std::sync::atomic::AtomicBool;
 use prospector_core::portable::{drive_of, move_drive, DriveMove};
 use prospector_core::{Engine, SearchRequest};
 
+/// The drive letter in upper case: `drive_of` / `move_drive` write it so, and
+/// the temporary folder may start with `h:` (it follows the terminal).
+fn upper_drive(path: &str) -> String {
+    let mut chars = path.chars();
+    chars.next().map(|c| c.to_ascii_uppercase().to_string() + chars.as_str()).unwrap_or_default()
+}
+
 fn search(engine: &Engine, id: &str, query: &str) -> Vec<String> {
     let request = SearchRequest { query: query.into(), ..Default::default() };
     let mut paths: Vec<String> = engine.search(&[id.to_owned()], &request).unwrap().hits.into_iter().map(|h| h.path).collect();
@@ -56,7 +63,8 @@ fn a_new_drive_letter_moves_sites_indexes_and_saved_searches() {
     assert_eq!(move_drive(data.path(), data.path(), &here, other).unwrap(), DriveMove::default());
     move_drive(data.path(), data.path(), other, &here).unwrap();
     let engine = Engine::open(data.path()).unwrap();
-    assert_eq!(search(&engine, &id, "charpente"), before);
+    let back: Vec<String> = search(&engine, &id, "charpente").iter().map(|p| upper_drive(p)).collect();
+    assert_eq!(back, before.iter().map(|p| upper_drive(p)).collect::<Vec<_>>());
     // The manifest matches the files again: an update finds nothing to do.
     let site = engine.index_site(&id, &[], &AtomicBool::new(false), &|_| {}).unwrap();
     assert_eq!(site.doc_count, 2);

@@ -96,19 +96,45 @@ pub fn crawl_with(
     cancel: &AtomicBool,
     on_found: &(dyn Fn(usize) + Sync),
 ) -> CrawlOutcome {
-    let mut outcome = CrawlOutcome::default();
+    let files = Mutex::new(Vec::new());
+    let found = AtomicUsize::new(0);
+    let missing_roots = crawl_each(roots, exclusions, hidden, cancel, &|entry| {
+        if let Ok(mut list) = files.lock() {
+            list.push(entry);
+        }
+        let n = found.fetch_add(1, Ordering::Relaxed) + 1;
+        if n.is_multiple_of(256) {
+            on_found(n);
+        }
+    });
+    let outcome = CrawlOutcome { files: files.into_inner().unwrap_or_default(), missing_roots };
+    on_found(outcome.files.len());
+    outcome
+}
+
+/// The same walk, each file handed to `on_file` as soon as it is found (live
+/// scan, BUG-073: on a whole disk, reading starts at once). Returns the roots
+/// that do not exist.
+pub fn crawl_each(
+    roots: &[PathBuf],
+    exclusions: &Exclusions,
+    hidden: bool,
+    cancel: &AtomicBool,
+    on_file: &(dyn Fn(FileEntry) + Sync),
+) -> Vec<PathBuf> {
+    let mut missing_roots = Vec::new();
     let existing: Vec<&PathBuf> = roots
         .iter()
         .filter(|root| {
             let ok = root.is_dir() || root.is_file();
             if !ok {
-                outcome.missing_roots.push((*root).clone());
+                missing_roots.push((*root).clone());
             }
             ok
         })
         .collect();
     let Some((first, rest)) = existing.split_first() else {
-        return outcome;
+        return missing_roots;
     };
 
     let mut builder = WalkBuilder::new(first);
@@ -123,9 +149,6 @@ pub fn crawl_with(
         .ignore(false)
         .parents(false)
         .follow_links(false);
-
-    let files = Mutex::new(Vec::new());
-    let found = AtomicUsize::new(0);
 
     builder.build_parallel().run(|| {
         Box::new(|entry| {
@@ -153,27 +176,17 @@ pub fn crawl_with(
             let Ok(meta) = entry.metadata() else {
                 return WalkState::Continue;
             };
-            let entry = FileEntry {
+            on_file(FileEntry {
                 path: path.to_path_buf(),
                 kind,
                 size: meta.len(),
                 modified: modified_secs(&meta),
                 facts: Facts::from_meta(path, &meta),
-            };
-            if let Ok(mut list) = files.lock() {
-                list.push(entry);
-            }
-            let n = found.fetch_add(1, Ordering::Relaxed) + 1;
-            if n.is_multiple_of(256) {
-                on_found(n);
-            }
+            });
             WalkState::Continue
         })
     });
-
-    outcome.files = files.into_inner().unwrap_or_default();
-    on_found(outcome.files.len());
-    outcome
+    missing_roots
 }
 
 /// Every folder under `roots` (the roots themselves excluded) whose name is

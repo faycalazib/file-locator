@@ -121,7 +121,7 @@ impl SearchRequest {
             parsed.must.push(self.detectors.iter().map(|d| Clause::Detector(*d)).collect());
         }
         // A term list (lot 7.4): one more group (any of them), or one per term.
-        let terms = self.term_list.iter().map(|t| crate::terms::clause(t));
+        let terms = self.term_list.iter().map(|t| crate::terms::clause(t, self.term_list.len()));
         if self.term_list_all {
             parsed.must.extend(terms.map(|c| vec![c]));
         } else if !self.term_list.is_empty() {
@@ -233,6 +233,9 @@ pub struct Hit {
     /// Occurrences per detector (lot 6.2); empty without detectors.
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     pub detections: BTreeMap<String, usize>,
+    /// Account, card and identity numbers found (masked in the PDF report).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub sensitive: Vec<String>,
     pub match_count: usize,
     /// Matches found without typo tolerance. 0 = the file only matched
     /// approximately (shown after the others, marked as such).
@@ -291,7 +294,7 @@ impl Contains {
     pub(crate) fn expand(index: &SiteIndex, parsed: &ParsedQuery, req: &SearchRequest) -> Result<Self> {
         fn words<'a>(clause: &'a Clause, out: &mut Vec<&'a str>) {
             match clause {
-                Clause::Word(w) | Clause::Like(w) => out.push(w),
+                Clause::Word(w) | Clause::Like(w) | Clause::Exact(w) => out.push(w),
                 Clause::Near { terms, .. } => terms.iter().for_each(|t| words(t, out)),
                 _ => {}
             }
@@ -361,6 +364,17 @@ fn word_query(f: &Fields, word: &str, mode: WordMode) -> Option<Box<dyn Query>> 
             0.7,
         )));
     }
+    // Arabic: the form with ل attached ("for design"), which the stemmer keeps
+    // apart (BUG-071).
+    if let Some(lam) = crate::lang::with_lam(&token).filter(|_| mode.forms) {
+        should.push(Box::new(TermQuery::new(Term::from_field_text(f.body, &lam), IndexRecordOption::WithFreqs)));
+        if let (Some(field), Some(stemmed)) = (f.stem(DocLang::Ar), analyze(&mut stem_analyzer(DocLang::Ar), &lam).into_iter().next()) {
+            should.push(Box::new(BoostQuery::new(
+                Box::new(TermQuery::new(Term::from_field_text(field, &stemmed), IndexRecordOption::WithFreqs)),
+                0.7,
+            )));
+        }
+    }
     // `ab` off: the word may be inside a longer one ("contrat" → "sous-contrats").
     if let Some(longer) = mode.contains.0.get(&token).filter(|l| !l.is_empty()) {
         let terms = longer.iter().map(|t| Term::from_field_text(f.body, t));
@@ -401,6 +415,7 @@ fn clause_query(f: &Fields, clause: &Clause, mode: WordMode) -> Option<Box<dyn Q
         Clause::Word(w) => word_query(f, w, mode),
         Clause::Phrase(p) => phrase_query(f, &analyze(&mut generic_analyzer(), p)),
         Clause::Like(w) => word_query(f, w, WordMode { fuzzy: true, ..mode }),
+        Clause::Exact(w) => word_query(f, w, WordMode { fuzzy: false, ..mode }),
         // The index narrows to files with every term; the distance is
         // checked on the text afterwards (`QueryLogic`).
         Clause::Near { terms, .. } => {
@@ -605,6 +620,7 @@ pub fn search_site(
             modified: first_u64(&doc, f.modified),
             created: first_u64(&doc, f.created),
             detections: matcher.detections(&body),
+            sensitive: matcher.sensitive(&body),
             match_count: matches.len(),
             exact_count,
             score,

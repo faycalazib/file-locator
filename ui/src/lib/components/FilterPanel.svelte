@@ -184,7 +184,7 @@
       <input
         id="f-hash-{placement}"
         class="hash mono"
-        dir="ltr"
+        dir={hash ? 'ltr' : undefined}
         spellcheck="false"
         autocomplete="off"
         placeholder={t('filters.hashPlaceholder')}

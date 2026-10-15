@@ -79,6 +79,12 @@ pub enum AppError {
     AutostartFailed,
     /// The PATH could not be changed (lot 7.1).
     CliPathFailed,
+    /// Meaning module (BUG-060): no download address in this version.
+    SenseNoDownload,
+    /// The module download failed (connection).
+    SenseDownloadFailed,
+    /// The module download was cancelled.
+    SenseDownloadCancelled,
 }
 
 impl From<CoreError> for AppError {
@@ -573,7 +579,12 @@ pub fn opened_dir(data_dir: &Path) -> PathBuf {
 /// written where the user chose in the save dialog.
 #[tauri::command]
 pub async fn extract_to(path: String, target: String) -> CmdResult<()> {
-    blocking(move || prospector_core::unpack::extract_to(&path, Path::new(&target))).await
+    // Read and write apart: a write error names the file chosen, not the
+    // index folder (BUG-055).
+    let (_, bytes) = blocking(move || prospector_core::unpack::read(&path)).await?;
+    tauri::async_runtime::spawn_blocking(move || std::fs::write(&target, bytes).map_err(|_| AppError::WriteFailed { path: target }))
+        .await
+        .map_err(|_| AppError::TaskFailed)?
 }
 
 #[tauri::command]

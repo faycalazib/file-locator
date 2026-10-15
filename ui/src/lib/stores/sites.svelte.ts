@@ -120,6 +120,7 @@ class SitesStore {
       phase: p.phase,
       found: p.phase === 'scanning' ? p.total : undefined,
       progress: p.phase === 'scanning' ? undefined : p.total ? p.done / p.total : 1,
+      current: p.current,
     });
   }
 

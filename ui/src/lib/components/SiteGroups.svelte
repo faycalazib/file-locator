@@ -132,8 +132,10 @@
             role="menuitem"
             disabled={ticked === 0}
             onclick={() => {
+              // The id first: `group` is derived from `menuFor`, gone once the menu closes (BUG-057).
+              const id = group.id;
               menuFor = null;
-              void groups.update(group.id, { ticked: true });
+              void groups.update(id, { ticked: true });
             }}>{t('groups.replace', { count: ticked })}</button
           >
           <button
@@ -141,8 +143,9 @@
             role="menuitem"
             class="danger"
             onclick={() => {
+              const id = group.id;
               menuFor = null;
-              void groups.remove(group.id);
+              void groups.remove(id);
             }}>{t('groups.remove')}</button
           >
         </div>

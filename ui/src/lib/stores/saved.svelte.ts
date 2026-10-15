@@ -10,7 +10,7 @@ import { t } from '../i18n/index.svelte';
 import { savedSearches as mockSaved } from '../mock/data';
 import type { Attribute, DateField, DateFilter, Detector, DocLang, FileKind, SizeFilter } from '../types';
 import { notices } from './notices.svelte';
-import { buildRequest, DISK_FILTERS_OFF, search, type SearchMode, type SearchOptions } from './search.svelte';
+import { buildRequest, DISK_FILTERS_OFF, search, type SearchMode, type SearchOptions, type TermList } from './search.svelte';
 import { sitesStore } from './sites.svelte';
 
 export interface SavedSettings {
@@ -29,6 +29,8 @@ export interface SavedSettings {
     hash?: string;
     /** Lot 6.2; absent when off. */
     detectors?: Detector[];
+    /** Lot 7.4, the terms themselves (the file may move); absent when off (BUG-059). */
+    termList?: TermList;
   };
   sites: string[];
   /** File-name criterion (lot 5.1); absent in searches saved before. */
@@ -48,6 +50,10 @@ export interface SavedEntry {
 }
 
 const STORAGE_KEY = 'prospector.saved';
+
+/** Filters a saved search keeps only when set: off before applying one, so
+ * none is left over from the search on screen (BUG-059). */
+const OPTIONAL_FILTERS_OFF = { ...DISK_FILTERS_OFF, attributes: [], detectors: [], termList: null };
 
 /** JSON with sorted keys: Rust sends the settings back with its own key order. */
 function canonical(value: unknown): string {
@@ -69,6 +75,8 @@ function snapshot(): SavedSettings {
       wholeWord: options.wholeWord,
       regex: options.regex,
       fuzzy: options.fuzzy,
+      // Lot 8.3, only when on: searches saved before still count as the same (BUG-062).
+      ...(options.meaning ? { meaning: true } : {}),
     },
     filters: {
       kinds: filters.kinds.toSorted(),
@@ -80,6 +88,7 @@ function snapshot(): SavedSettings {
       ...(filters.attributes.length > 0 ? { attributes: filters.attributes.toSorted() } : {}),
       ...(filters.hash.trim() ? { hash: filters.hash.trim() } : {}),
       ...(filters.detectors.length > 0 ? { detectors: filters.detectors.toSorted() } : {}),
+      ...(filters.termList ? { termList: { ...filters.termList, terms: [...filters.termList.terms] } } : {}),
     },
     sites: [...search.scope].toSorted(),
     names: { pattern: search.namePattern.trim(), folders: search.folders },
@@ -181,7 +190,7 @@ class SavedStore {
       const sites = (settings?.sites ?? [...search.scope]).filter((id) => known.has(id));
       let request: SearchRequestDto | null = null;
       if (on) {
-        const filters = { ...search.filters, ...DISK_FILTERS_OFF, attributes: [], ...settings?.filters };
+        const filters = { ...search.filters, ...OPTIONAL_FILTERS_OFF, ...settings?.filters };
         request = buildRequest({
           query: entry.query,
           options: settings?.options ?? search.options,
@@ -211,7 +220,7 @@ class SavedStore {
     if (settings) {
       search.mode = settings.mode;
       search.options = { ...settings.options };
-      search.filters = { ...search.filters, ...DISK_FILTERS_OFF, attributes: [], ...settings.filters };
+      search.filters = { ...search.filters, ...OPTIONAL_FILTERS_OFF, ...settings.filters };
       search.copiesOf = null;
       search.namePattern = settings.names?.pattern ?? '';
       search.folders = settings.names?.folders ?? false;

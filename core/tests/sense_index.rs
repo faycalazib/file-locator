@@ -214,6 +214,10 @@ fn search_by_words_and_by_meaning() {
     let preview = engine.preview_passage(&site.id, &arabic.path, &prospector_core::SearchRequest::default(), Some((meaning.start, meaning.end))).unwrap();
     assert_eq!(preview.match_count, 1);
 
+    // A question about nothing in these files: nothing by meaning (MEANING_FLOOR).
+    let unrelated = ask("météo de demain à Lyon", &[]);
+    assert!(unrelated.hits.iter().all(|h| h.meaning.as_ref().is_none_or(|m| !m.only)), "{:?}", unrelated.hits.iter().map(name).collect::<Vec<_>>());
+
     // Filters apply to the documents found by meaning too.
     assert!(ask("bail d'habitation entre propriétaire et locataire", &["pdf"]).hits.iter().all(|h| name(h) != "عقد_إيجار.docx"));
 
@@ -252,4 +256,46 @@ fn a_reader_of_a_shared_index_searches_by_meaning() {
 
 fn walk(dir: &Path) -> u64 {
     std::fs::read_dir(dir).map(|entries| entries.flatten().map(|e| if e.path().is_dir() { walk(&e.path()) } else { e.metadata().map(|m| m.len()).unwrap_or(0) }).sum()).unwrap_or(0)
+}
+
+/// BUG-075: a computation stopped then started again shows the passages
+/// already computed (it does not start again from 0 %). Fake vectors: no
+/// module needed.
+#[test]
+fn a_resumed_computation_counts_what_was_done() {
+    use std::sync::Mutex;
+    let files = tempfile::tempdir_in(env!("CARGO_TARGET_TMPDIR")).unwrap();
+    // 96 short files: 3 batches of 32 files, one call each.
+    for i in 0..96 {
+        std::fs::write(files.path().join(format!("note-{i:02}.txt")), format!("Courte note numéro {i} sur un contrat de location.")).unwrap();
+    }
+    let data = tempfile::tempdir_in(env!("CARGO_TARGET_TMPDIR")).unwrap();
+    let engine = Engine::open(data.path()).unwrap();
+    let site = engine.add_site("Notes", vec![files.path().to_string_lossy().into_owned()]).unwrap();
+    engine.index_site(&site.id, &[], &AtomicBool::new(false), &|_| {}).unwrap();
+    engine.set_site_sense(&site.id, true).unwrap();
+    let whole = engine.sense_plan(&site.id, true).unwrap().passages;
+
+    // Stopped during the second call: the first two batches are kept.
+    let cancel = AtomicBool::new(false);
+    let calls = AtomicUsize::new(0);
+    let fake = |texts: &[String]| {
+        if calls.fetch_add(1, Ordering::Relaxed) == 1 {
+            cancel.store(true, Ordering::Relaxed);
+        }
+        Ok(vec![[0.1f32; prospector_core::sense::DIM]; texts.len()])
+    };
+    assert!(!engine.sense_update(&site.id, &fake, &cancel, &|_| {}).unwrap(), "stopped");
+    let kept = engine.sense_plan(&site.id, false).unwrap().done as usize;
+    assert!(kept > 0 && kept < whole, "some passages kept: {kept} of {whole}");
+
+    // Started again: from what was kept, up to the whole site.
+    let reports = Mutex::new(Vec::new());
+    let quiet = |texts: &[String]| Ok(vec![[0.1f32; prospector_core::sense::DIM]; texts.len()]);
+    assert!(engine.sense_update(&site.id, &quiet, &AtomicBool::new(false), &|p| reports.lock().unwrap().push(p)).unwrap());
+    let reports = reports.into_inner().unwrap();
+    let first = reports.first().unwrap();
+    assert_eq!((first.done, first.total), (kept, whole), "resumed where it stopped, out of the whole site");
+    let last = reports.last().unwrap();
+    assert_eq!((last.done, last.total), (whole, whole), "ends at 100 %");
 }

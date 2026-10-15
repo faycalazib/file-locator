@@ -5,20 +5,24 @@
 
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::mpsc::sync_channel;
 use std::time::Instant;
 
 use serde::Serialize;
 
-use crate::crawler::{crawl_folders, crawl_with, Exclusions, FileEntry};
+use crate::crawler::{crawl_each, crawl_folders, Exclusions, FileEntry};
 use crate::disk::HIDDEN;
 use crate::error::Result;
 use crate::extract::{is_container, INNER_SEP};
-use crate::pipeline::process_files;
+use crate::pipeline::{process_stream, SLOW_FILE};
 use crate::highlight::snippets;
 use crate::lang::{detect, DocLang};
 use crate::names::NamePattern;
 use crate::scope::restrict_targets;
 use crate::search::{Hit, QueryLogic, SearchRequest};
+
+/// Files found by the walk and not read yet (bounded: memory stays small).
+const WALK_AHEAD: usize = 4096;
 
 /// Where to scan: a dig site's roots, labelled with its id.
 pub struct ScanTarget {
@@ -35,7 +39,8 @@ pub struct ScanSummary {
     pub cancelled: bool,
 }
 
-/// Scans the targets. `on_progress(scanned, total)` is throttled.
+/// Scans the targets. `on_progress(read, found)` is throttled: files read,
+/// and files found so far by the walk (which goes on while reading).
 ///
 /// The file-name criterion is applied first, so the other files are never
 /// read. Without text to look for, a plain file is answered from its name
@@ -79,6 +84,8 @@ pub fn live_scan(
     let within_files: Option<std::collections::HashSet<&str>> =
         within.as_ref().map(|w| w.iter().map(|p| p.split(INNER_SEP).next().unwrap_or(p)).collect());
     let scanned = AtomicUsize::new(0);
+    // Files found by the walk (and kept by the filters): what is left to read.
+    let walked = AtomicUsize::new(0);
     let found = AtomicUsize::new(0);
     let limit = req.limit.unwrap_or(1000);
 
@@ -86,34 +93,42 @@ pub fn live_scan(
         if cancel.load(Ordering::Relaxed) {
             break;
         }
-        let mut files = crawl_with(&target.roots, &exclusions, hidden, cancel, &|_| {}).files;
-        // Dates and attributes come with the walk: an archive's entries share them.
-        if let Some(disk) = &disk {
-            files.retain(|f| disk.accepts_facts(&f.facts));
-        }
-        // Kind filter before reading anything (archives may hold any kind).
-        if !req.kinds.is_empty() {
-            files.retain(|f| f.kind.as_str() == "archive" || req.kinds.iter().any(|k| k == f.kind.as_str()));
-        }
-        if let Some(names) = &names {
-            files.retain(|f| (is_container(&f.path, f.kind) && !whole_files) || names.matches(&file_name(&f.path)));
-        }
-        if !req.in_files.is_empty() {
-            files.retain(|f| req.in_files.iter().any(|p| Path::new(p) == f.path));
-        }
-        if let Some(keep) = &within_files {
-            files.retain(|f| keep.contains(f.path.to_string_lossy().as_ref()));
-        }
-        let total = files.len();
+        // Files are read as the walk finds them (BUG-073): on a whole disk,
+        // the first results come in seconds, not after the full listing.
+        let keep = |f: &FileEntry| {
+            // Dates and attributes come with the walk: an archive's entries share them.
+            disk.as_ref().is_none_or(|d| d.accepts_facts(&f.facts))
+                // Kind filter before reading anything (archives may hold any kind).
+                && (req.kinds.is_empty() || f.kind.as_str() == "archive" || req.kinds.iter().any(|k| k == f.kind.as_str()))
+                && names.as_ref().is_none_or(|n| (is_container(&f.path, f.kind) && !whole_files) || n.matches(&file_name(&f.path)))
+                && (req.in_files.is_empty() || req.in_files.iter().any(|p| Path::new(p) == f.path))
+                && within_files.as_ref().is_none_or(|keep| keep.contains(f.path.to_string_lossy().as_ref()))
+        };
         // Name only (and no language filter, which needs the text): nothing
         // to read in plain files.
-        if parsed.is_empty() && req.langs.is_empty() {
-            let (plain, containers): (Vec<FileEntry>, Vec<FileEntry>) =
-                files.into_iter().partition(|f| whole_files || !is_container(&f.path, f.kind));
-            for file in plain {
+        let name_only = parsed.is_empty() && req.langs.is_empty();
+        let (tx, rx) = sync_channel::<FileEntry>(WALK_AHEAD);
+        std::thread::scope(|scope| {
+            let (walked, keep, exclusions, scanned) = (&walked, &keep, &exclusions, &scanned);
+            scope.spawn(move || {
+                crawl_each(&target.roots, exclusions, hidden, cancel, &|file| {
+                    if !keep(&file) {
+                        return;
+                    }
+                    let n = walked.fetch_add(1, Ordering::Relaxed) + 1;
+                    if n.is_multiple_of(256) {
+                        on_progress(scanned.load(Ordering::Relaxed), n);
+                    }
+                    let _ = tx.send(file);
+                });
+            });
+            let to_read = rx.into_iter().filter_map(|file| {
+                if !name_only || (!whole_files && is_container(&file.path, file.kind)) {
+                    return Some(file);
+                }
                 if found.load(Ordering::Relaxed) >= limit {
                     cancel_if_full(cancel);
-                    break;
+                    return None;
                 }
                 let path = file.path.to_string_lossy().into_owned();
                 if passes_filters(req, file.kind.as_str(), file.size, file.modified, file.facts.created)
@@ -123,87 +138,89 @@ pub fn live_scan(
                     found.fetch_add(1, Ordering::Relaxed);
                     on_hit(name_hit(&target.site_id, path, file.kind.as_str(), file.size, file.modified, file.facts.created));
                 }
-                count(&scanned, total, on_progress);
-            }
-            files = containers;
-        }
-        process_files(&mut files, cancel, |file, extracted| {
-            if found.load(Ordering::Relaxed) >= limit {
-                cancel_if_full(cancel);
-                return;
-            }
-            if let Ok(docs) = extracted {
-                let file_path = file.path.to_string_lossy();
-                let container = file_name(&file.path);
-                for doc in docs {
-                    // An entry of an archive or a mailbox answers to its own
-                    // name or to its container's (same rule as the index).
-                    // A message (.msg, .eml) is also a document of its own,
-                    // without inner path: it answers to its file name.
-                    if let Some(names) = &names {
-                        let accepted = match &doc.inner {
-                            Some(inner) => names.matches_any(&[inner_name(inner), &container]),
-                            None => names.matches(&container),
-                        };
-                        if !accepted {
+                count(scanned, walked, on_progress);
+                None
+            });
+            process_stream(to_read, cancel, SLOW_FILE, |_| {}, |file, extracted| {
+                if found.load(Ordering::Relaxed) >= limit {
+                    cancel_if_full(cancel);
+                    return;
+                }
+                if let Ok(docs) = extracted {
+                    let file_path = file.path.to_string_lossy();
+                    let container = file_name(&file.path);
+                    for doc in docs {
+                        // An entry of an archive or a mailbox answers to its own
+                        // name or to its container's (same rule as the index).
+                        // A message (.msg, .eml) is also a document of its own,
+                        // without inner path: it answers to its file name.
+                        if let Some(names) = &names {
+                            let accepted = match &doc.inner {
+                                Some(inner) => names.matches_any(&[inner_name(inner), &container]),
+                                None => names.matches(&container),
+                            };
+                            if !accepted {
+                                continue;
+                            }
+                        }
+                        if let Some(within) = &within {
+                            let full = match &doc.inner {
+                                Some(inner) => format!("{file_path}{INNER_SEP}{inner}"),
+                                None => file_path.clone().into_owned(),
+                            };
+                            if !within.contains(full.as_str()) {
+                                continue;
+                            }
+                        }
+                        let size = doc.size.unwrap_or(file.size);
+                        let modified = doc.modified.unwrap_or(file.modified);
+                        if !passes_filters(req, doc.kind.as_str(), size, modified, file.facts.created) {
                             continue;
                         }
-                    }
-                    if let Some(within) = &within {
-                        let full = match &doc.inner {
+                        let lang = detect(&doc.text);
+                        if !req.langs.is_empty() && !req.langs.iter().any(|l| l == lang.code()) {
+                            continue;
+                        }
+                        if !logic.accepts(&doc.text, lang) {
+                            continue;
+                        }
+                        // Last: the digest of the file (an inner document has none).
+                        if digest.as_ref().is_some_and(|d| doc.inner.is_some() || !d.matches(&file.path)) {
+                            continue;
+                        }
+                        let matches = highlighter.find(&doc.text, lang);
+                        let path = match &doc.inner {
                             Some(inner) => format!("{file_path}{INNER_SEP}{inner}"),
                             None => file_path.clone().into_owned(),
                         };
-                        if !within.contains(full.as_str()) {
-                            continue;
+                        let exact_count = matches.iter().filter(|m| !m.fuzzy).count();
+                        found.fetch_add(1, Ordering::Relaxed);
+                        on_hit(Hit {
+                            site_id: target.site_id.clone(),
+                            path,
+                            kind: doc.kind.as_str().to_owned(),
+                            lang: lang.code().to_owned(),
+                            size_bytes: size,
+                            modified,
+                            created: file.facts.created,
+                            detections: highlighter.detections(&doc.text),
+                            sensitive: highlighter.sensitive(&doc.text),
+                            match_count: matches.len(),
+                            exact_count,
+                            // Live results arrive in disk order: more matches first when sorting.
+                            score: exact_count as f32 + 0.1 * matches.len() as f32,
+                            snippets: snippets(&doc.text, &matches, 2),
+                            inner_kind: None,
+                            meaning: None,
                         }
+                        .with_inner_kind());
                     }
-                    let size = doc.size.unwrap_or(file.size);
-                    let modified = doc.modified.unwrap_or(file.modified);
-                    if !passes_filters(req, doc.kind.as_str(), size, modified, file.facts.created) {
-                        continue;
-                    }
-                    let lang = detect(&doc.text);
-                    if !req.langs.is_empty() && !req.langs.iter().any(|l| l == lang.code()) {
-                        continue;
-                    }
-                    if !logic.accepts(&doc.text, lang) {
-                        continue;
-                    }
-                    // Last: the digest of the file (an inner document has none).
-                    if digest.as_ref().is_some_and(|d| doc.inner.is_some() || !d.matches(&file.path)) {
-                        continue;
-                    }
-                    let matches = highlighter.find(&doc.text, lang);
-                    let path = match &doc.inner {
-                        Some(inner) => format!("{file_path}{INNER_SEP}{inner}"),
-                        None => file_path.clone().into_owned(),
-                    };
-                    let exact_count = matches.iter().filter(|m| !m.fuzzy).count();
-                    found.fetch_add(1, Ordering::Relaxed);
-                    on_hit(Hit {
-                        site_id: target.site_id.clone(),
-                        path,
-                        kind: doc.kind.as_str().to_owned(),
-                        lang: lang.code().to_owned(),
-                        size_bytes: size,
-                        modified,
-                        created: file.facts.created,
-                        detections: highlighter.detections(&doc.text),
-                        match_count: matches.len(),
-                        exact_count,
-                        // Live results arrive in disk order: more matches first when sorting.
-                        score: exact_count as f32 + 0.1 * matches.len() as f32,
-                        snippets: snippets(&doc.text, &matches, 2),
-                        inner_kind: None,
-                        meaning: None,
-                    }
-                    .with_inner_kind());
                 }
-            }
-            count(&scanned, total, on_progress);
+                count(scanned, walked, on_progress);
+            });
         });
     }
+    on_progress(scanned.load(Ordering::Relaxed), walked.load(Ordering::Relaxed));
 
     Ok(ScanSummary {
         files_scanned: scanned.load(Ordering::Relaxed),
@@ -272,6 +289,7 @@ fn name_hit(site_id: &str, path: String, kind: &str, size: u64, modified: u64, c
         modified,
         created,
         detections: Default::default(),
+        sensitive: Vec::new(),
         match_count: 0,
         exact_count: 0,
         score: 1.0,
@@ -296,10 +314,11 @@ fn cancel_if_full(cancel: &AtomicBool) {
     cancel.store(true, Ordering::Relaxed);
 }
 
-fn count(scanned: &AtomicUsize, total: usize, on_progress: &(dyn Fn(usize, usize) + Sync)) {
+/// One more file read; `on_progress(read, found by the walk)` every 50.
+fn count(scanned: &AtomicUsize, walked: &AtomicUsize, on_progress: &(dyn Fn(usize, usize) + Sync)) {
     let n = scanned.fetch_add(1, Ordering::Relaxed) + 1;
-    if n.is_multiple_of(50) || n == total {
-        on_progress(n, total);
+    if n.is_multiple_of(50) {
+        on_progress(n, walked.load(Ordering::Relaxed));
     }
 }
 

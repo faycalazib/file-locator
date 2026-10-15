@@ -29,9 +29,6 @@ fn dir(state: &AppState) -> PathBuf {
     module::module_dir(&state.personal_dir)
 }
 
-fn sense_error(message: impl Into<String>) -> AppError {
-    AppError::Core(CoreError::Sense { message: message.into() })
-}
 
 /// At startup: finishes a removal asked before, cleans an interrupted install.
 pub fn cleanup(state: &AppState) {
@@ -72,7 +69,7 @@ struct Progress {
 /// Downloads the module from the release, checks its SHA-256, installs it.
 #[tauri::command]
 pub async fn download_sense_module(app: AppHandle, state: State<'_, AppState>) -> Result<ModuleStatus, AppError> {
-    let url = MODULE_URL.ok_or_else(|| sense_error("no download address in this version"))?;
+    let url = MODULE_URL.ok_or(AppError::SenseNoDownload)?;
     let cancel = Arc::new(AtomicBool::new(false));
     state.set_cancel(CANCEL_KEY, cancel.clone());
     let zip = download_path(&state);
@@ -100,7 +97,7 @@ pub async fn download_sense_module(app: AppHandle, state: State<'_, AppState>) -
 async fn download(app: &AppHandle, url: &str, zip: &std::path::Path, cancel: &AtomicBool) -> Result<(), AppError> {
     // The same TLS as the updater (rustls, ring): nothing more to ship.
     let _ = rustls::crypto::ring::default_provider().install_default();
-    let offline = |_| sense_error("the download failed; check the connection");
+    let offline = |_| AppError::SenseDownloadFailed;
     let mut response = reqwest::Client::new().get(url).send().await.map_err(offline)?.error_for_status().map_err(offline)?;
     let total = response.content_length().unwrap_or(MODULE_BYTES);
     if let Some(parent) = zip.parent() {
@@ -111,7 +108,7 @@ async fn download(app: &AppHandle, url: &str, zip: &std::path::Path, cancel: &At
     let mut reported = 0u64;
     while let Some(chunk) = response.chunk().await.map_err(offline)? {
         if cancel.load(Ordering::Relaxed) {
-            return Err(sense_error("download cancelled"));
+            return Err(AppError::SenseDownloadCancelled);
         }
         file.write_all(&chunk).map_err(|_| AppError::WriteFailed { path: zip.to_string_lossy().into_owned() })?;
         done += chunk.len() as u64;
@@ -264,7 +261,13 @@ fn run_round(app: &AppHandle) {
         }
         let next = engine.sites().into_iter().find(|s| s.sense && s.last_indexed.is_some() && !engine.is_busy(&s.id) && engine.sense_pending(&s.id));
         let Some(site) = next else { return };
-        let Ok(pool) = pool(app) else { return };
+        // Taken in hand: "0 %" until the first batch (the models may take a while to load).
+        lock(&state.sense_progress).entry(site.id.clone()).or_insert(SenseProgress { done: 0, total: 1 });
+        let _ = app.emit("sense://site", SiteProgress { site_id: site.id.clone(), done: 0, total: 1, finished: false });
+        let Ok(pool) = pool(app) else {
+            lock(&state.sense_progress).remove(&site.id);
+            return;
+        };
         let cancel = Arc::new(AtomicBool::new(false));
         state.set_cancel(&cancel_key(&site.id), cancel.clone());
         let emit = |p: SenseProgress, finished: bool| {
@@ -331,6 +334,11 @@ pub fn set_site_sense(app: AppHandle, state: State<'_, AppState>, id: String, on
     }
     let record = state.engine().set_site_sense(&id, on).map_err(AppError::Core)?;
     if on {
+        // Shown as "0 %" at once, not as "up to date · 0 passages" while the
+        // models load (BUG-061).
+        if state.engine().sense_pending(&id) {
+            lock(&state.sense_progress).insert(id.clone(), SenseProgress { done: 0, total: 1 });
+        }
         wake(&app);
     }
     Ok(crate::commands::view(&state, record))

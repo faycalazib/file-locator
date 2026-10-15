@@ -56,6 +56,8 @@ export function toResultsFile(s: SearchSnapshot): string {
       snippets: h.snippets,
       innerKind: h.innerKind,
       meaning: h.meaning,
+      // A report printed from reopened results still masks them (BUG-064).
+      sensitive: h.sensitive,
     })),
   };
   return JSON.stringify(file, null, 1);

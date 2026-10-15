@@ -178,8 +178,10 @@ impl Matcher {
         for clause in query.positive_clauses() {
             // LIKE: this word with typo tolerance, whatever the option.
             let like = matches!(clause, Clause::Like(_));
+            // A term of a long list: no typos, whatever the option (BUG-074).
+            let exact = matches!(clause, Clause::Exact(_));
             let raw = match clause {
-                Clause::Word(w) | Clause::Phrase(w) | Clause::Like(w) => w.as_str(),
+                Clause::Word(w) | Clause::Phrase(w) | Clause::Like(w) | Clause::Exact(w) => w.as_str(),
                 Clause::Near { terms, chars } => {
                     let parts = terms
                         .iter()
@@ -217,7 +219,14 @@ impl Matcher {
                         matcher.stems.entry(lang).or_default().entry(s).or_default().push(len);
                     }
                 }
-                if options.fuzzy || like {
+                // Arabic: the form with ل attached is a form of the word (BUG-071).
+                if let Some(lam) = crate::lang::with_lam(&word) {
+                    if let Some(s) = stem(DocLang::Ar, &lam) {
+                        matcher.stems.entry(DocLang::Ar).or_default().entry(s).or_default().push(core_len(&lam));
+                    }
+                    matcher.words.insert(lam);
+                }
+                if (options.fuzzy && !exact) || like {
                     let d = usize::from(fuzzy_distance(&word)).max(usize::from(like));
                     if d > 0 {
                         matcher.fuzzy.push((word.clone(), d));
@@ -236,6 +245,26 @@ impl Matcher {
             && self.regexes.is_empty()
             && self.near.is_empty()
             && self.detectors.is_empty()
+    }
+
+    /// Texts found by the sensitive detectors (account, card, identity
+    /// numbers), at most 100: the PDF report masks those only (BUG-064).
+    pub fn sensitive(&self, text: &str) -> Vec<String> {
+        if !self.detectors.iter().any(|d| d.is_sensitive()) {
+            return Vec::new();
+        }
+        let scan = &text[..floor_char_boundary(text, MAX_SCAN_BYTES)];
+        let mut out: Vec<String> = Vec::new();
+        for (detector, range) in Detectors::new(&self.detectors).find(scan) {
+            let found = scan[range].to_owned();
+            if detector.is_sensitive() && !out.contains(&found) {
+                out.push(found);
+                if out.len() == 100 {
+                    break;
+                }
+            }
+        }
+        out
     }
 
     /// Occurrences per detector code (lot 6.2); empty without detectors.
@@ -559,6 +588,18 @@ mod tests {
     use super::*;
     use crate::query::parse;
 
+    /// Only account, card and identity numbers are "sensitive" (BUG-064):
+    /// phones, e-mails and amounts stay readable in the PDF report.
+    #[test]
+    fn sensitive_data_is_only_account_card_and_identity_numbers() {
+        let audit = ParsedQuery { must: vec![Detector::ALL.iter().map(|d| Clause::Detector(*d)).collect()], ..Default::default() };
+        let matcher = Matcher::new(&audit, MatchOptions::default()).unwrap();
+        let text = "IBAN FR76 3000 6000 0112 3456 7890 189, carte 4111 1111 1111 1111,                     tél. 06 12 34 56 78, jean@exemple.fr, total 12 500 000,00 €";
+        assert_eq!(matcher.sensitive(text), ["FR76 3000 6000 0112 3456 7890 189", "4111 1111 1111 1111"]);
+        let words = Matcher::new(&parse("contrat"), MatchOptions::default()).unwrap();
+        assert!(words.sensitive(text).is_empty(), "no detector, nothing to mask");
+    }
+
     fn hits(query: &str, fuzzy: bool, text: &str, lang: DocLang) -> Vec<String> {
         hits_with(query, MatchOptions { fuzzy, ..Default::default() }, text, lang)
     }
@@ -643,6 +684,23 @@ mod tests {
         assert_eq!(s[0].line, 3);
         assert_eq!(s[0].text, "Le présent ⟦contrat⟧ prend effet.");
         assert_eq!(s[1].line, 4);
+    }
+
+    #[test]
+    fn an_arabic_word_finds_its_form_with_lam() {
+        let text = "1000 أمر وبرومبت موك أب للذكاء الاصطناعي: اختصارات ChatGPT لتصميم\nلعبة جديدة";
+        let found = |q: &str| -> Vec<&str> {
+            let m = Matcher::new(&parse(q), MatchOptions::default()).unwrap();
+            m.find(text, DocLang::Ar).into_iter().map(|x| &text[x.range]).collect()
+        };
+        assert_eq!(found("تصميم"), ["لتصميم"], "\"for design\" is a form of \"design\" (BUG-071)");
+        assert_eq!(found("برومبت NEAR تصميم"), ["وبرومبت", "لتصميم"]);
+        // The text is never cut: a word that starts with ل stays itself.
+        assert_eq!(found("لعبة"), ["لعبة"]);
+        assert!(found("جديد NEAR:2 أمر").is_empty());
+        // `Aa`: exact spelling only.
+        let exact = Matcher::new(&parse("تصميم"), MatchOptions { case_sensitive: true, ..MatchOptions::default() }).unwrap();
+        assert!(exact.find(text, DocLang::Ar).is_empty());
     }
 
     #[test]

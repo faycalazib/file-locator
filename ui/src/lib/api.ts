@@ -53,6 +53,8 @@ export interface HitDto {
   created?: number;
   /** Detectors (lot 6.2): occurrences per kind of data. */
   detections?: Record<string, number>;
+  /** Account, card and identity numbers found (masked in the PDF report). */
+  sensitive?: string[];
   matchCount: number;
   exactCount: number;
   score: number;
@@ -146,6 +148,8 @@ export interface ProgressDto {
   phase: 'scanning' | 'reading' | 'saving';
   total: number;
   done: number;
+  /** The file read for more than a few seconds (BUG-068). */
+  current?: string;
 }
 
 export interface FinishedDto {

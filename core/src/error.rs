@@ -13,6 +13,10 @@ pub enum CoreError {
     #[error("dig site not found: {id}")]
     SiteNotFound { id: String },
 
+    /// The folder is already the root of a dig site (BUG-056).
+    #[error("this folder is already the dig site {name}")]
+    SiteExists { name: String },
+
     #[error("file not found in the index: {path}")]
     FileNotIndexed { path: String },
 
@@ -54,6 +58,18 @@ pub enum CoreError {
     /// Meaning search (Étape 8): module missing, damaged or unusable.
     #[error("meaning search: {message}")]
     Sense { message: String },
+
+    /// The file chosen is not a meaning module (BUG-060: codes, not English text).
+    #[error("not a Prospector meaning module")]
+    SenseNotModule,
+
+    /// A file of the module does not have its SHA-256.
+    #[error("the meaning module is damaged")]
+    SenseDamaged,
+
+    /// A module of another format version.
+    #[error("meaning module version {found}, this Prospector reads {expected}")]
+    SenseVersion { found: u32, expected: u32 },
 }
 
 impl From<tantivy::TantivyError> for CoreError {

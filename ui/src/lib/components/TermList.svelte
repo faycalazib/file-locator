@@ -14,6 +14,8 @@
 
   /** Terms shown in the panel; the others are counted. */
   const PREVIEW = 12;
+  /** Beyond this many terms, a list is searched without typos (core/src/terms.rs, BUG-074). */
+  const TYPO_TOLERANT_TERMS = 50;
 
   // Browser demo: `?terms=open` shows the panel (screenshots).
   let open = $state(!inTauri && new URLSearchParams(location.search).get('terms') === 'open');
@@ -128,6 +130,9 @@
         <span class="ltr-isolate" dir="ltr">{list.name}</span> · {t('terms.count', { count: list.terms.length })}{#if list.skipped > 0} · {t('terms.skipped', { count: list.skipped })}{/if}
       </span>
       <p class="hint">{list.all ? t('terms.allHint') : t('terms.anyHint')}</p>
+      {#if search.options.fuzzy && list.terms.length > TYPO_TOLERANT_TERMS}
+        <p class="hint">{t('terms.noTypos', { count: TYPO_TOLERANT_TERMS })}</p>
+      {/if}
       <div class="terms">
         {#each list.terms.slice(0, PREVIEW) as term, i (i)}
           <span class:rx={term.startsWith('/') && term.endsWith('/') && term.length > 2} dir="auto">{term}</span>

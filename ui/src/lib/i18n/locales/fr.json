@@ -19,6 +19,7 @@
     },
     "indexedAgo": "Indexé {when}",
     "indexingProgress": "Indexation… {percent}",
+    "readingFile": "Lecture de « {name} »…",
     "status": {
       "ready": "Prêt",
       "indexing": "Indexation",
@@ -89,6 +90,7 @@
     "all": "Tous",
     "anyHint": "Les fichiers qui contiennent au moins un de ces termes, en plus des mots de la recherche.",
     "allHint": "Les fichiers qui contiennent chacun de ces termes, en plus des mots de la recherche.",
+    "noTypos": "Au-delà de {count} termes, la liste est cherchée sans tolérance aux fautes (recherche rapide).",
     "hint": "Termes lus dans un fichier : cliquez pour les voir, changer le mode ou retirer la liste",
     "count": {
       "one": "{count} terme",
@@ -128,7 +130,11 @@
     "understand": "Comprendre ce site (recherche par le sens)",
     "understandShort": "Comprendre",
     "forget": "Ne plus comprendre ce site",
-    "forgetConfirm": "Ne plus comprendre « {name} » ? Son index du sens est supprimé ; le recalculer prendra le même temps.",
+    "forgetConfirm": "Effacer les {count} passages déjà calculés de « {name} » ? Il faudra tout recalculer, avec la même durée.",
+    "runningTitle": "Calcul du sens de « {name} » en cours",
+    "runningHint": "Il continue en arrière-plan, même si vous fermez Prospector : il reprendra là où il en était.",
+    "keep": "Continuer",
+    "stopForget": "Arrêter et oublier",
     "ask": "Comprendre « {name} » par le sens ?",
     "estimating": "Estimation…",
     "passages": "{count} passages",
@@ -146,6 +152,7 @@
     "start": "Comprendre les sites cochés",
     "paceNormal": "Rythme normal (priorité basse, environ 200 Mo de mémoire pendant le calcul)",
     "paceEconomy": "Rythme économe (2 cœurs seulement : 3 à 4 fois plus long)",
+    "paceNext": "Le nouveau rythme s’applique au prochain calcul (ou en rouvrant Prospector).",
     "noneChosen": "Aucun site coché"
   },
   "meaning": {
@@ -277,6 +284,8 @@
       "many": "{count} de fichiers",
       "other": "{count} fichiers"
     },
+    "firstOf": "{shown} premiers fichiers sur {total}",
+    "firstOfHint": "Les fichiers les plus pertinents sont listés en premier. Affinez la recherche (type, date, dossier) pour voir les autres.",
     "folders": {
       "one": "{count} dossier",
       "many": "{count} de dossiers",
@@ -293,6 +302,7 @@
       "many": "{count} de fichiers parcourus",
       "other": "{count} fichiers parcourus"
     },
+    "scannedOf": "{read} lus sur {found} trouvés",
     "scanning": "Fouille en cours…",
     "done": "Recherche terminée",
     "sort": {
@@ -530,6 +540,7 @@
   "detectors": {
     "title": "Détecteurs",
     "audit": "Audit des données personnelles",
+    "auditIn": "Audit · dans « {query} »",
     "hint": "Chaque donnée est vérifiée (clé de contrôle, Luhn…) : un numéro au hasard n'est pas signalé. Combinés aux mots de la recherche.",
     "groups": {
       "bank": "Banque",
@@ -680,6 +691,7 @@
   "errors": {
     "rootUnavailable": "Dossier introuvable : {path}",
     "siteNotFound": "Ce site de fouille n’existe plus.",
+    "siteExists": "Ce dossier est déjà le site « {name} ».",
     "fileNotIndexed": "Ce fichier n’est plus dans l’index. Réindexez le site.",
     "indexBusy": "Une indexation est déjà en cours. Attendez qu’elle se termine.",
     "index": "L’index n’a pas pu être lu. Réindexez le site.",
@@ -703,6 +715,12 @@
     "invalidGroup": "Un groupe a besoin d’un nom et d’au moins un site coché.",
     "groupNotFound": "Ce groupe n’existe plus.",
     "readOnly": "{pc} tient cet index partagé à jour : faites-le depuis ce PC.",
-    "sense": "Recherche par le sens : {message}"
+    "sense": "Recherche par le sens : {message}",
+    "senseNotModule": "Ce fichier n’est pas un module de recherche par le sens de Prospector.",
+    "senseDamaged": "Le module est abîmé (un fichier n’a pas l’empreinte attendue). Téléchargez-le de nouveau.",
+    "senseVersion": "Ce module (version {found}) n’est pas celui que lit cette version de Prospector (version {expected}).",
+    "senseNoDownload": "Le téléchargement sera possible avec la première version publiée.",
+    "senseDownloadFailed": "Le téléchargement a échoué : vérifiez la connexion et réessayez.",
+    "senseDownloadCancelled": "Téléchargement annulé."
   }
 }

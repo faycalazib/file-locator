@@ -6,7 +6,7 @@
 <script lang="ts">
   import Icon from './Icon.svelte';
   import { api, inTauri, type DupGroupDto, type DupReportDto } from '../api';
-  import { download } from '../export';
+  import { download, excelDate, toCsv } from '../export';
   import { formatBytes, formatDate, formatNumber, formatPercent, t } from '../i18n/index.svelte';
   import { hits as mockHits } from '../mock/data';
   import { notices } from '../stores/notices.svelte';
@@ -129,18 +129,20 @@
 
   /** Every group as CSV rows (group, kind, similarity, path, size, date). */
   async function exportCsv() {
-    const sep = ',';
-    const cell = (v: string | number) => (/[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v));
-    const rows = [[t('dupes.group'), t('dupes.kind'), t('dupes.similarity'), t('export.columns.path'), t('export.columns.size'), t('export.columns.modified')]];
+    // Same CSV as the results export: the language's separator, dates Excel reads (BUG-054).
+    const rows: (string | number)[][] = [[t('dupes.group'), t('dupes.kind'), t('dupes.similarity'), t('export.columns.path'), t('export.columns.size'), t('export.columns.modified')]];
     groups.forEach((g, i) =>
-      g.files.forEach((f) => rows.push([String(i + 1), t(g.kind === 'exact' ? 'dupes.exact' : 'dupes.similar'), `${Math.round(g.similarity * 100)}%`, f.path, String(f.size), new Date(f.modified * 1000).toISOString()])),
+      g.files.forEach((f) => rows.push([String(i + 1), t(g.kind === 'exact' ? 'dupes.exact' : 'dupes.similar'), `${Math.round(g.similarity * 100)}%`, f.path, f.size, excelDate(new Date(f.modified * 1000))])),
     );
-    const content = '﻿' + rows.map((r) => r.map(cell).join(sep)).join('\r\n');
+    const content = toCsv(rows);
     if (!inTauri) return download('doublons.csv', content, 'text/csv');
     const path = await api.pickSavePath('doublons.csv', 'csv', 'CSV').catch(() => null);
     if (path) await api.saveTextFile(path, content).then(() => notices.push(t('results.exported', { path }))).catch((e) => notices.error(e));
   }
 </script>
+
+<!-- Escape closes the dialog, like its button (BUG-053). -->
+<svelte:window onkeydown={(e) => { if (e.key === 'Escape' && ui.duplicates) close(); }} />
 
 {#if ui.duplicates}
   <div class="backdrop" role="presentation" onclick={close}></div>

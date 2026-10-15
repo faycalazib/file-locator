@@ -111,6 +111,16 @@ pub fn analyze(analyzer: &mut TextAnalyzer, text: &str) -> Vec<String> {
     out
 }
 
+/// The form "for + word" of an Arabic word typed in the search box
+/// (`تصميم` → `لتصميم`). The Arabic stemmer removes the attached prefixes
+/// و, ب, ال, لل… but never ل alone (too many words really start with it), so
+/// this form is looked for in addition (BUG-071). The text is never cut:
+/// a word that starts with ل is not mistaken for another one.
+pub fn with_lam(word: &str) -> Option<String> {
+    let arabic = word.chars().filter(|c| matches!(c, '\u{0621}'..='\u{064A}')).count();
+    (arabic >= 2 && arabic == word.chars().count()).then(|| format!("ل{word}"))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

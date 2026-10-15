@@ -35,6 +35,11 @@ const MEANING_DOCUMENTS: usize = 60;
 /// Scores are close together (an unrelated text is at about 0.77 when a good
 /// one is at 0.80): kept, the documents within this of the best one.
 const MEANING_MARGIN: f32 = 0.05;
+/// Below this, a passage is not about the search, however close to the best
+/// one: measured on 2026-10-13, related searches have their best passage at
+/// 0.81 to 0.87, unrelated ones at 0.75 to 0.77 (« recette du gâteau au
+/// chocolat » brought 13 documents). To check on a real site (lot 8.4).
+pub const MEANING_FLOOR: f32 = 0.78;
 /// Reciprocal rank fusion (words + meaning): the usual constant.
 const RRF_K: f32 = 60.0;
 
@@ -283,8 +288,11 @@ impl Engine {
         writer.commit()?;
         write_atomic(&self.sense_manifest_path(id), &serde_json::to_vec(&manifest)?)?;
 
-        let mut done = 0usize;
-        progress(SenseProgress { done, total: plan.passages });
+        // The passages computed before (an earlier run stopped, the app closed)
+        // count as done: a resumed computation does not show 0 % (BUG-075).
+        let total = plan.done as usize + plan.passages;
+        let mut done = plan.done as usize;
+        progress(SenseProgress { done, total });
         for batch in todo.chunks(FILES_PER_BATCH) {
             if cancel.load(Ordering::Relaxed) {
                 index.reader.reload()?;
@@ -312,7 +320,7 @@ impl Engine {
                 let texts: Vec<String> = chunk.iter().map(|(_, _, _, t)| t.clone()).collect();
                 vectors.extend(embed(&texts)?);
                 done += chunk.len();
-                progress(SenseProgress { done, total: plan.passages.max(done) });
+                progress(SenseProgress { done, total: total.max(done) });
             }
             // Then written and committed; an antivirus briefly locking a new
             // index file (BUG-036) is waited for, the vectors are kept.
@@ -402,7 +410,7 @@ impl Engine {
             }
         }
         let top = best.first().map_or(0.0, |b| b.hit.score);
-        best.retain(|b| b.hit.score >= top - MEANING_MARGIN);
+        best.retain(|b| b.hit.score >= (top - MEANING_MARGIN).max(MEANING_FLOOR));
         best.truncate(MEANING_DOCUMENTS);
 
         // The filters of the search, applied to them (by name: every name).

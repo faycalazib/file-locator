@@ -15,6 +15,7 @@
   import { ui } from '../stores/ui.svelte';
   import { sitesStore } from '../stores/sites.svelte';
   import { warning } from '../doodles';
+  import { isolate } from '../text';
   import type { IndexSite, SiteStatus } from '../types';
 
   let { compact = false, withFilters = false }: { compact?: boolean; withFilters?: boolean } = $props();
@@ -37,18 +38,36 @@
     empty: 'var(--text-dim)',
   };
 
-  /** Lot 8.2: the question asked before understanding a site, with its estimate. */
-  let askSense = $state<{ id: string; estimate: SenseEstimateDto | null | undefined } | null>(null);
+  /**
+   * Lot 8.2: the bubble of the ≈ button. `ask`: understand this site (its
+   * estimate comes when ready, the button does not wait for it). `running`:
+   * the computation goes on; stopping it forgets what was computed (BUG-076).
+   */
+  let askSense = $state<{ id: string; mode: 'ask' | 'running'; estimate: SenseEstimateDto | null | undefined } | null>(null);
 
   async function toggleSense(site: IndexSite) {
-    if (site.sense) {
-      const ok = inTauri ? await api.confirm(t('sense.forgetConfirm', { name: site.name }), t('sense.forget')).catch(() => false) : true;
-      if (ok) await sitesStore.setSense(site.id, false);
+    if (site.sense && site.senseProgress) {
+      askSense = { id: site.id, mode: 'running', estimate: null };
       return;
     }
-    askSense = { id: site.id, estimate: undefined };
+    if (site.sense) {
+      await forgetSense(site);
+      return;
+    }
+    askSense = { id: site.id, mode: 'ask', estimate: undefined };
     const estimate = await sense.estimate(site.id);
-    if (askSense?.id === site.id) askSense = { id: site.id, estimate };
+    if (askSense?.id === site.id && askSense.mode === 'ask') askSense = { id: site.id, mode: 'ask', estimate };
+  }
+
+  /** Forgetting deletes the passages computed: the confirmation says how many. */
+  async function forgetSense(site: IndexSite) {
+    const count = formatNumber(site.senseProgress?.done ?? site.sensePassages ?? 0);
+    const message = t('sense.forgetConfirm', { name: site.name, count });
+    const ok = inTauri ? await api.confirm(message, t('sense.forget')).catch(() => false) : true;
+    if (ok) {
+      askSense = null;
+      await sitesStore.setSense(site.id, false);
+    }
   }
 
   async function confirmSense() {
@@ -83,6 +102,9 @@
     {#if site.phase === 'reading' && site.progress !== undefined}
       <span class="bar sketch" aria-hidden="true"><span class="hatch" style:inline-size="{site.progress * 100}%"></span></span>
       <span class="meta">{t('rail.indexingProgress', { percent: formatPercent(site.progress) })}</span>
+      {#if site.current}
+        <span class="meta faint" title={site.current}>{t('rail.readingFile', { name: isolate(site.current.split(/[\\/]/).pop() ?? site.current) })}</span>
+      {/if}
     {:else if site.phase === 'saving'}
       <span class="meta">{t('rail.saving')}</span>
     {:else}
@@ -215,8 +237,8 @@
                       class="sense-toggle"
                       class:on={site.sense}
                       aria-pressed={site.sense ?? false}
-                      aria-label={site.sense ? t('sense.forget') : t('sense.understand')}
-                      title={site.sense ? t('sense.forget') : t('sense.understand')}
+                      aria-label={site.sense ? (site.senseProgress ? t('sense.runningTitle', { name: site.name }) : t('sense.forget')) : t('sense.understand')}
+                      title={site.sense ? (site.senseProgress ? t('sense.runningTitle', { name: site.name }) : t('sense.forget')) : t('sense.understand')}
                       onclick={() => toggleSense(site)}>≈</button
                     >
                   {/if}
@@ -226,7 +248,20 @@
                 {/if}
               </span>
             {/if}
-            {#if askSense?.id === site.id}
+            {#if askSense?.id === site.id && askSense.mode === 'running'}
+              <!-- A computation in progress: going on is the default, forgetting is explicit (BUG-076). -->
+              <div class="sense-ask sketch" role="dialog" aria-label={t('sense.runningTitle', { name: site.name })}>
+                <p class="q">{t('sense.runningTitle', { name: site.name })}</p>
+                {#if site.senseProgress && site.senseProgress.total > 0}
+                  <p class="n">{t('sense.computing', { percent: formatPercent(site.senseProgress.done / site.senseProgress.total) })}{#if site.senseRemaining} · {t('sense.left', { time: formatDuration(site.senseRemaining) })}{/if}</p>
+                {/if}
+                <p>{t('sense.runningHint')}</p>
+                <div class="row">
+                  <button type="button" class="sketch danger" onclick={() => forgetSense(site)}>{t('sense.stopForget')}</button>
+                  <button type="button" class="sketch hatch go" onclick={() => (askSense = null)}>{t('sense.keep')}</button>
+                </div>
+              </div>
+            {:else if askSense?.id === site.id}
               {@const e = askSense.estimate}
               <div class="sense-ask sketch" role="dialog" aria-label={t('sense.ask', { name: site.name })}>
                 <p class="q">{t('sense.ask', { name: site.name })}</p>
@@ -238,7 +273,8 @@
                 {/if}
                 <div class="row">
                   <button type="button" class="sketch" onclick={() => (askSense = null)}>{t('sense.cancel')}</button>
-                  <button type="button" class="sketch hatch go" onclick={confirmSense} disabled={e === undefined}>{t('sense.understandShort')}</button>
+                  <!-- The estimate only informs: the button does not wait for it (BUG-076). -->
+                  <button type="button" class="sketch hatch go" onclick={confirmSense}>{t('sense.understandShort')}</button>
                 </div>
               </div>
             {/if}
@@ -515,6 +551,11 @@
     color: var(--text);
     font: inherit;
     font-size: 14px;
+  }
+
+  .sense-ask .danger {
+    color: var(--danger-ink);
+    border-color: var(--danger-ink);
   }
 
   .sense-ask .go {

@@ -40,7 +40,7 @@ pub struct TermTotal {
 
 fn label(clause: &Clause) -> Option<String> {
     Some(match clause {
-        Clause::Word(w) => w.clone(),
+        Clause::Word(w) | Clause::Exact(w) => w.clone(),
         Clause::Phrase(p) => format!("\"{p}\""),
         Clause::Regex(r) => format!("/{r}/"),
         Clause::Like(w) => format!("LIKE {w}"),

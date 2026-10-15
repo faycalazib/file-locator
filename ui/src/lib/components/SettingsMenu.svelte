@@ -75,8 +75,14 @@
     } catch (e) {
       notices.error(e);
       shortcut = await api.getShortcut().catch(() => shortcut);
+      // The state is back to what it was before the click, so Svelte does
+      // not touch the radios: the refused one would stay checked (BUG-067).
+      for (const radio of shortcutBox?.querySelectorAll<HTMLInputElement>('input[name=shortcut]') ?? []) {
+        radio.checked = radio.value === shortcut?.shortcut;
+      }
     }
   }
+  let shortcutBox = $state<HTMLFieldSetElement>();
 
   // Windows integration (lot 5.7). The custom command is kept while typing
   // and saved when the field is left.
@@ -213,7 +219,7 @@
         {/if}
       {/if}
 
-      <fieldset>
+      <fieldset bind:this={shortcutBox}>
           <legend>{t('settings.shortcut')}</legend>
           {#each shortcutChoices as accelerator (accelerator)}
             <label class="option">
@@ -344,6 +350,8 @@
             <!-- Lot 8.2: how much of the PC the computation may use. -->
             <label class="option"><input type="radio" name="sense-pace" checked={sense.pace === 'normal'} onchange={() => sense.setPace('normal')} /><span>{t('sense.paceNormal')}</span></label>
             <label class="option"><input type="radio" name="sense-pace" checked={sense.pace === 'economy'} onchange={() => sense.setPace('economy')} /><span>{t('sense.paceEconomy')}</span></label>
+            <!-- The models are loaded again at the new pace at the next computation (src-tauri/src/sense.rs). -->
+            <p class="hint block">{t('sense.paceNext')}</p>
             <div class="row"><button type="button" class="move sketch danger" onclick={() => sense.remove()}>{t('sense.remove')}</button></div>
           {:else}
             <div class="row">

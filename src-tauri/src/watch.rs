@@ -72,19 +72,57 @@ pub fn watch(app: &AppHandle, site: &SiteRecord) {
     std::thread::spawn(move || worker(&app, &id, &rx));
 }
 
-/// Watches every indexed site, then brings each one up to date, one after
-/// the other (one disk at a time).
+/// Watches every indexed site, then brings each one up to date (BUG-072):
+/// the sites of one disk one after the other (no seeking between two
+/// folders), the disks side by side, the small sites first (a site with a
+/// 2 GB archive to read again no longer holds the others for hours). A site
+/// whose first indexing was cut off (app closed meanwhile) comes last on its
+/// disk, then is watched (BUG-069).
 pub fn start_all(app: AppHandle) {
     std::thread::spawn(move || {
-        let sites: Vec<SiteRecord> =
-            app.state::<AppState>().engine().sites().into_iter().filter(|s| s.last_indexed.is_some()).collect();
-        for site in &sites {
+        let sites = app.state::<AppState>().engine().sites();
+        for site in sites.iter().filter(|s| s.last_indexed.is_some()) {
             watch(&app, site);
         }
-        for site in &sites {
-            run_indexing(&app, &site.id, &site.excluded, true);
+        for disk in startup_plan(sites) {
+            let app = app.clone();
+            std::thread::spawn(move || {
+                for site in &disk {
+                    run_indexing(&app, &site.id, &site.excluded, true);
+                }
+            });
         }
     });
+}
+
+/// The sites grouped by disk, each group in the order it is brought up to
+/// date: indexed sites from the smallest, then the unfinished ones.
+fn startup_plan(sites: Vec<SiteRecord>) -> Vec<Vec<SiteRecord>> {
+    let mut disks: Vec<(String, Vec<SiteRecord>)> = Vec::new();
+    for site in sites {
+        let key = disk_of(site.roots.first().map_or("", String::as_str));
+        match disks.iter_mut().find(|(k, _)| *k == key) {
+            Some((_, group)) => group.push(site),
+            None => disks.push((key, vec![site])),
+        }
+    }
+    disks
+        .into_iter()
+        .map(|(_, mut group)| {
+            group.sort_by_key(|s| (s.last_indexed.is_none(), s.size_bytes));
+            group
+        })
+        .collect()
+}
+
+/// The disk of a folder: `D:` for `d:\Docs`, `\\server\share` for a network
+/// folder.
+fn disk_of(root: &str) -> String {
+    let unc = root.strip_prefix(r"\\").map(|rest| rest.split(['\\', '/']).take(2).collect::<Vec<_>>().join(r"\"));
+    match unc {
+        Some(share) => format!(r"\\{}", share.to_lowercase()),
+        None => root.split(['\\', '/']).next().unwrap_or(root).to_uppercase(),
+    }
 }
 
 /// Applies the batches of one site until its watcher is dropped.
@@ -136,5 +174,34 @@ fn worker(app: &AppHandle, id: &str, rx: &Receiver<Changes>) {
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn site(name: &str, root: &str, size: u64, indexed: bool) -> SiteRecord {
+        serde_json::from_value(serde_json::json!({
+            "id": name, "name": name, "roots": [root], "docCount": 0, "sizeBytes": size,
+            "lastIndexed": if indexed { Some(1) } else { None },
+        }))
+        .unwrap()
+    }
+
+    #[test]
+    fn small_sites_first_one_disk_at_a_time() {
+        let plan = startup_plan(vec![
+            site("git", r"F:\GIT Repositories", 190_000_000, true),
+            site("religion", r"H:\Religion", 3_800_000_000, true),
+            site("new", r"h:\Nouveau", 10, false),
+            site("youtube", r"H:\AI\Youtube", 69_000_000, true),
+            site("nas", r"\\NAS\Docs\Contrats", 5, true),
+            site("nas2", r"\\nas\docs\Factures", 1, true),
+        ]);
+        let names: Vec<Vec<&str>> = plan.iter().map(|g| g.iter().map(|s| s.name.as_str()).collect()).collect();
+        // One group per disk (letter case and network share case ignored);
+        // in each, the smallest first and the unfinished site last.
+        assert_eq!(names, [vec!["git"], vec!["youtube", "religion", "new"], vec!["nas2", "nas"]]);
     }
 }

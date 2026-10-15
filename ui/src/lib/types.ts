@@ -32,6 +32,8 @@ export interface IndexSite {
   phase?: IndexPhase;
   /** Files found so far (scanning phase). */
   found?: number;
+  /** The file being read for a while (reading phase): a big archive. */
+  current?: string;
   /** Files that could not be read at the last indexing. */
   skipped?: number;
   error?: { code: SiteErrorCode; path: string };
@@ -75,6 +77,8 @@ export interface SearchHit {
   created: Date;
   /** Detectors (lot 6.2): occurrences per kind of data. */
   detections?: Record<string, number>;
+  /** Account, card and identity numbers found (masked in the PDF report). */
+  sensitive?: string[];
   matchCount: number;
   /** Matches found without typo tolerance (0 = approximate only). */
   exactCount: number;

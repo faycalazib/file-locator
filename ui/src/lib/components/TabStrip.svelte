@@ -8,8 +8,14 @@
     return view.query || view.names || view.openedFrom || (view.copiesOf ? t('filters.copiesToken', { name: view.copiesOf }) : '') || t('tabs.untitled');
   }
 
-  function onAuxClick(event: MouseEvent, id: string) {
-    // Middle click closes, as in a browser.
+  // Middle click closes, as in a browser. On the release, not `auxclick`:
+  // WebView2 does not always send it (BUG-047). The press is cancelled so
+  // Windows does not start auto-scrolling.
+  function onMouseDown(event: MouseEvent) {
+    if (event.button === 1) event.preventDefault();
+  }
+
+  function onMouseUp(event: MouseEvent, id: string) {
     if (event.button === 1) {
       event.preventDefault();
       tabs.close(id);
@@ -29,7 +35,8 @@
         aria-selected={active}
         title={title(view)}
         onclick={() => tabs.select(tab.id)}
-        onauxclick={(e) => onAuxClick(e, tab.id)}
+        onmousedown={onMouseDown}
+        onmouseup={(e) => onMouseUp(e, tab.id)}
       >
         {#if view.openedFrom}<Icon name="open" size={13} />{/if}
         <span class="label" dir="auto">{title(view)}</span>

@@ -413,3 +413,316 @@
 - **Cause:** only the text of each line was `dir="ltr"`. The line itself (number + text, a flex row) followed the page direction, right to left: the number went to the right, and the long code lines, wider than the preview, ran under it.
 - **Fix:** `PreviewPanel.svelte`: the whole preview is `dir="ltr"` for code (numbers on the left, horizontal scroll from the left). Prose keeps the page direction, each line `dir="auto"`.
 - **Prevention:** code, paths and regexes always read left to right, whatever the interface language: set the direction on the block, not only on the text inside.
+
+## BUG-041: Excel dates shown and indexed as numbers (45293 instead of 2024-01-02)
+
+- **Date:** 2026-09-28, fixed 2026-10-13 · **Step:** manual tests of Étape 3, lot 3.4 (driven by script), on a generated workbook of 600 rows (`target/tmp/drive/make_xlsx.py`)
+- **Symptom:** in the preview of a workbook, a date column showed `45293`, `45294`… Searching a date in a workbook could not find it.
+- **Cause:** Excel stores a date as a number (days since 1899-12-30, or 1904-01-01 on old Macs) with a date format. calamine reads it as `Data::DateTime`, but its `to_string()` writes the number. `extract/office.rs` used `to_string()` for every cell.
+- **Fix:**
+  - `core/src/extract/office.rs` → `excel_date`: ISO 8601, the same in every language and unambiguous: `2024-01-02`, `2024-01-02 14:30` (seconds only when not zero), a time alone `14:30`, a duration `36:00:00`. Choice made with the user (option A, ISO).
+  - `core/src/manifest.rs`: `VERSION` 8. A version-7 manifest is kept and only its spreadsheets (`FileKind::Excel`) are read again at the next update (`Manifest::reread`), instead of rebuilding every site.
+  - Numbers stay raw (`137.5`): calamine does not give the number format.
+- **Prevention:** `office::tests::dates_read_as_dates` (date, date + time, time, duration, 1904 system), `manifest::tests::version_7_rereads_only_spreadsheets`. Known limit: a workbook inside an archive or an e-mail keeps its old text until the archive changes.
+
+## BUG-042: portable test failed when the temporary folder started with `h:`
+
+- **Date:** 2026-10-13 · **Step:** full test run after BUG-041
+- **Symptom:** `a_new_drive_letter_moves_sites_indexes_and_saved_searches` failed in `cargo test --workspace`, passed alone: `H:\…\devis.txt` found, `h:\…\devis.txt` expected.
+- **Cause:** the test, not the code. `drive_of` / `move_drive` write the drive letter in upper case (same path on Windows). `CARGO_TARGET_TMPDIR` follows the current folder of the terminal, which may start with `h:`: after a move to another letter and back, the paths came back as `H:`.
+- **Fix:** `core/tests/portable.rs` compares the paths with the drive letter in upper case (`upper_drive`), and nothing else.
+- **Prevention:** tests on Windows paths must not depend on the case of the drive letter.
+
+## BUG-043: Arabic — in "Word · 1 KB", the number left its unit
+
+- **Date:** 2026-10-13 · **Step:** manual tests of Étape 3, lot 3.5 (PDF report generated through CDP `Page.printToPDF`, interface in Arabic)
+- **Symptom:** in the PDF report and in the preview header, the details of a file whose kind has a Latin name read `Word · 1   كيلوبايت`: the size number stuck to "Word" and was cut from its unit. Arabic kind names (`نص · 226 بايت`) were fine.
+- **Cause:** the parts of the line (kind, size, date, language, matches) were plain text joined by `·`, with no isolation. The Unicode bidirectional algorithm grouped "Word · 1" as one left-to-right run.
+- **Fix:** `ReportView.svelte` and `PreviewPanel.svelte`: each part in its own `<bdi>`.
+- **Prevention:** a line that joins translated parts with numbers or Latin names (kind, size, date) isolates each part (`<bdi>`, or `isolate()` in `text.ts` for plain strings), like the sites and terms of the report already did.
+
+## BUG-044: the error of a search stayed on screen over the next search's results
+
+- **Date:** 2026-10-13 · **Step:** manual tests of Étape 5, lot 5.1 (driven by script)
+- **Symptom:** an invalid name regex (`/[a/`) showed "This search could not be understood". A valid search right after (`*.rar`) showed its results, with the error message still at the bottom of the screen.
+- **Cause:** errors stay 12 s (`notices.svelte.ts`), whatever happens next. A new search did not remove the message of the previous one.
+- **Fix:** `Notice.topic` and `notices.clear(topic)`. The search errors have the topic `search` (`search.svelte.ts`: indexed, live scan, end of a live scan), and each new search clears them first.
+- **Prevention:** a message about an action that can be redone gets a topic, cleared when the action runs again.
+
+## BUG-045: a `.ppt` showed old versions of its slides (5 cards for 2 slides)
+
+- **Date:** 2026-10-13 · **Step:** manual tests of Étape 5, lot 5.3 (driven by script), `legacy/basic_test_ppt_file.ppt` from the Apache POI corpus
+- **Symptom:** the preview showed 5 slide cards (1, 2 and 4 the same, 3 and 5 the same) for a presentation of 2 slides. Search results were right (same words), the preview and the slide numbers were not.
+- **Cause:** PowerPoint 97-2003 "fast saves" append the changed records instead of rewriting the file: older versions of the document and of its slides stay in the `PowerPoint Document` stream. `extract/ppt.rs` read the stream from start to end and took every `SlideListWithText` and every `Slide` container, old ones included.
+- **Fix:** `core/src/extract/ppt.rs` follows the edit chain of [MS-PPT]: `Current User` → `UserEditAtom` (`offsetLastEdit` back to the first edit) → persist directories, newer entries over older ones → the live document (`docPersistIdRef`) and each slide (`SlidePersistAtom.persistIdRef`). A file without that chain (damaged) is still read from start to end. `core/src/manifest.rs`: `VERSION` 9, only `.ppt` files are read again (a version-7 manifest goes through 8 then 9).
+- **Prevention:** `ppt::tests::fast_saves_read_only_the_live_version` (two saved versions, only the live one read); `legacy.rs` → `ppt_reads_only_the_live_slides` (2 slides in the real POI file); `manifest::tests::old_versions_reread_only_what_changed`. Binary formats with an edit history (.ppt, .doc fast saves) must be read through their live pointers, never by scanning the whole stream.
+
+## BUG-046: Alt+← brought back the old results with the new query (and kept the new filter)
+
+- **Date:** 2026-10-13 · **Step:** manual tests of Étape 5, lot 5.6 (driven by script)
+- **Symptom:** after `contrat`, `devis`, `facture`, Alt+← showed "facture" in the box with the results of "devis"; a second Alt+← showed "devis" with the results of "contrat". After switching the PDF chip on, Alt+← left it on.
+- **Cause:** `search.run()` recorded the step being left with `capture(false)`, the state at that moment. The box (`bind:value`) and the filters already held the new search: the step mixed the new criteria with the old results.
+- **Fix:** `search.svelte.ts`: each run keeps the criteria it ran with (`#ranCriteria`: query, name pattern, folders, mode, options, filters, sites, within, folder, copies). The next run records `{ ...capture(false), ...ranCriteria }`: the results on screen with the criteria that gave them. `restore()` resets them from the snapshot shown (its `lastQuery` when it has run).
+- **Prevention:** a history step pairs results with the request that produced them, never with the inputs as they are now.
+
+## BUG-047: middle click did not close a tab
+
+- **Date:** 2026-10-13 · **Step:** manual tests of Étape 5, lot 5.6 (driven by script)
+- **Symptom:** a middle click on a tab did nothing.
+- **Cause:** `TabStrip.svelte` closed on `auxclick`. The page received the press and the release of the middle button, but no `auxclick` event.
+- **Fix:** close on `mouseup` with `button === 1`; `mousedown` with the middle button is cancelled so Windows does not start auto-scrolling.
+- **Prevention:** for a mouse gesture, listen to `mousedown` / `mouseup`, which every WebView sends.
+
+## BUG-048: "No code editor found" with VS Code and Notepad++ installed on D:
+
+- **Date:** 2026-10-13 · **Step:** manual tests of Étape 5, lot 5.7 (driven by script)
+- **Symptom:** Settings → Code editor said "No code editor found on this PC", and the "Open at line N" button never showed, although VS Code and Notepad++ were installed (in `D:\Programs\…`).
+- **Cause:** `src-tauri/src/editor.rs` looked only in the default folders (`%LOCALAPPDATA%\Programs`, `%ProgramFiles%`, `%ProgramFiles(x86)%`). An editor installed elsewhere was invisible.
+- **Fix:** after the default folders, `program()` looks where Windows registered the program (`App Paths\<exe>`, then `Classes\Applications\<exe>\shell\open\command`, user then machine), then for its launcher in the PATH (`bin\code.cmd` → `Code.exe`; `codium.cmd`, `cursor.cmd`, `subl.exe`). On the user's PC: VS Code and Notepad++ found in `D:\Programs`.
+- **Prevention:** `editor::tests::an_editor_installed_elsewhere_is_found_through_its_launcher`; `editors_found_here` (ignored) prints what a PC has. Never assume a program is on C: or in its default folder.
+
+## BUG-049: Arabic — the example text of the digest field was scrambled
+
+- **Date:** 2026-10-13 · **Step:** manual tests of Étape 5, lot 5.8 (driven by script), interface in Arabic
+- **Symptom:** the empty digest field showed its Arabic example in a broken order ("إلى a أو 64 حرفًا من 0 إلى 9 ومن 32").
+- **Cause:** the field is `dir="ltr"` for the hexadecimal digests, and its placeholder (a translated sentence) followed that direction.
+- **Fix:** `FilterPanel.svelte`: `dir="ltr"` only once a digest is typed; empty, the field follows the page, and the Arabic example reads right to left.
+- **Prevention:** a field forced left to right (paths, digests, regexes) keeps a placeholder in Latin characters, or drops `dir` while empty.
+
+## BUG-050: the "New" tag of an alert was cut off with long file names
+
+- **Date:** 2026-10-13 · **Step:** manual tests of Étape 6, lot 6.1 (driven by script), "Registre" layout, seen first in Arabic
+- **Symptom:** in the results of an alert, the "New" tag ("جديد" in Arabic) showed as a pink sliver, or not at all, next to a long file name.
+- **Cause:** the tag sat inside `.name`, the element cut with `overflow: hidden` and an ellipsis: a long name pushed it past the edge of the column.
+- **Fix:** `ResultsList.svelte`: `.name` is a flex row; only the name itself (`.ltr-isolate`) is cut with "…", the tag (`flex: none`) always shows. Checked in French and Arabic with a 50-character name.
+- **Prevention:** a tag or badge next to a text that can be cut sits outside the cut element.
+
+## BUG-051: a phone number written in Arabic-Indic digits was not detected
+
+- **Date:** 2026-10-13 · **Step:** manual tests of Étape 6, lot 6.2 (driven by script)
+- **Symptom:** the "Phone" detector did not find `٠٦ ١٢ ٣٤ ٥٦ ٧٨`, although Arabic-Indic digits are announced as supported (the same number in Latin digits was found).
+- **Cause:** `core/src/detect.rs`: the national form of the phone pattern began with `\b0[1-9]`, in Latin digits only; the rest of the pattern used `{d}`, the three digit sets.
+- **Fix:** `zero` (`[0\u{660}\u{6f0}]`) and `nonzero` (1-9 in the three sets) for the start of a national number. Detectors run on the stored text at search time: nothing to index again.
+- **Prevention:** `detect::tests::contact_data` checks the number in Arabic-Indic and in Persian digits. A pattern that accepts other digit sets uses them everywhere, first digit included.
+
+## BUG-052: Arabic — the example text of the search box was scrambled and aligned left
+
+- **Date:** 2026-10-13 · **Step:** manual tests of Étape 6 (driven by script), interface in Arabic
+- **Symptom:** the empty search box showed "…AND / OR / NOT / NEAR ،«كلمات، «عبارة مطابقة" aligned left, in a broken order.
+- **Cause:** the box is `dir="auto"` (it follows what is typed). Empty, there is no letter to decide: the browser takes left to right, and the Arabic example followed. Same family as BUG-049.
+- **Fix:** `SearchBar.svelte`: `dir="auto"` only once something is typed; empty, the box follows the page. Checked: Arabic interface → example right to left; a Latin word → left to right; an Arabic word → right to left; French interface → left to right.
+- **Prevention:** a field with `dir="auto"` or `dir="ltr"` and a translated placeholder drops `dir` while empty.
+
+## BUG-053: Escape did not close the dialogs (export / copy, duplicates, meaning)
+
+- **Date:** 2026-10-13 · **Step:** manual tests of Étape 6, lot 6.4 (driven by script)
+- **Symptom:** Escape left the "Export" / "Copy" dialog open; its backdrop kept blocking every click behind it. Same for the "Duplicates" and "Understand the meaning" dialogs.
+- **Cause:** the three modal dialogs closed only through their buttons or a click on the backdrop; none listened to the keyboard.
+- **Fix:** `TransferDialog.svelte`, `DuplicatesDialog.svelte`, `SenseSitesDialog.svelte`: `<svelte:window onkeydown>` closes on Escape while open, through the same `close()` (a copy in progress is not interrupted by Escape: `close()` keeps the dialog while it runs).
+- **Prevention:** every modal dialog closes on Escape (WCAG, and what a Windows user expects).
+
+## BUG-054: the duplicates list exported as CSV opened in one column in French Excel
+
+- **Date:** 2026-10-13 · **Step:** manual tests of Étape 6, lot 6.5 (driven by script, the save dialog answered by the script)
+- **Symptom:** "Export the list" (Duplicates) wrote `Groupe,Type,Ressemblance,…` with commas. In French or Spanish, Excel uses `;` as list separator: every row stays in one column. Dates were ISO with a time zone (`2026-09-27T14:28:55.000Z`), not read as dates.
+- **Cause:** `DuplicatesDialog.svelte` had its own CSV code, with `,` hard-coded and `toISOString()`, instead of the rules of the results export (`csvSeparator`, `excelDate`, lot 6.4).
+- **Fix:** `export.ts` → `toCsv(rows)`: BOM, the language's separator, quoting; `toExcelCsv` and the duplicates export both use it, with `excelDate` (`2026-10-13 12:15`).
+- **Prevention:** every CSV of the app goes through `toCsv`; never a separator written by hand.
+
+## BUG-055: "Extract to…" — a write error spoke of the index folder
+
+- **Date:** 2026-10-13 · **Step:** manual tests of Étape 6, lot 6.7 (driven by script)
+- **Symptom:** when the chosen file could not be written (folder that does not exist, read-only, disk full), the message was "Impossible d'écrire dans le dossier des index", about another folder.
+- **Cause:** `extract_to` (core) read the document and wrote the target in one call; any `io::Error` became `CoreError::Io`, shown as the generic storage error of the index folder.
+- **Fix:** `src-tauri/src/commands.rs` → `extract_to`: reading (`unpack::read`, errors of its own: "could not be taken out of its archive") and writing apart; the write runs in a blocking task and fails with `WriteFailed { path }`: "Impossible d'enregistrer <file>". Checked: `Q:\dossier\inexistant\devis.txt` → "Impossible d'enregistrer Q:\dossier\inexistant\devis.txt".
+- **Prevention:** an error about a file the user chose names that file.
+
+## BUG-056: the same folder could be added twice as two dig sites
+
+- **Date:** 2026-10-13 · **Step:** manual tests of Étape 7, lot 7.2 (driven by script)
+- **Symptom:** two more `test_fixtures` sites appeared, on exactly the same folder (a "+ Add a folder" clicked by mistake during the tests, the folder chosen in the Windows dialog). The app accepted them: every file indexed and found twice, "Replace with the 4 ticked sites" with 2 real folders.
+- **Cause:** `Engine::add_site` checked nothing about the folders.
+- **Fix:** `add_site` refuses a folder that is already the root of a site, compared without case and without a final separator (`H:\Dossier\` = `h:\dossier`): `CoreError::SiteExists { name }`, "Ce dossier est déjà le site « … »" (4 languages, `errors.siteExists`). A folder inside a site stays possible (a sub-folder kept apart). Checked in the app: adding `test_fixtures` again is refused with its name.
+- **Prevention:** `engine.rs` → `the_same_folder_is_not_added_twice`. The two duplicate sites of the tests are left for the user to remove.
+
+## BUG-057: "Delete" and "Replace with the ticked sites" did nothing on a site group
+
+- **Date:** 2026-10-13 · **Step:** manual tests of Étape 7, lot 7.2 (driven by script)
+- **Symptom:** right-click on a group → "Supprimer" or "Remplacer par les N sites cochés": the menu closed, nothing changed, no message.
+- **Cause:** `SiteGroups.svelte`: `{@const group = groups.list.find((g) => g.id === menuFor)}`; the handlers did `menuFor = null;` then `group.id`. In Svelte 5 a `{@const}` is derived: once `menuFor` is null, `group` is undefined and `group.id` threw inside the click handler, before any call to the engine. "Rename" worked: it received the group as an argument before the menu closed.
+- **Fix:** read the id first (`const id = group.id; menuFor = null; …`). A scan of every component found no other handler of this kind.
+- **Prevention:** in a handler, read what a `{@const}` gives before changing the state it is derived from.
+
+## BUG-058: the terms of a list were not highlighted in the preview
+
+- **Date:** 2026-10-13 · **Step:** manual tests of Étape 7, lot 7.4 (driven by script)
+- **Symptom:** with a term list (and no word typed), the results counted their matches, but the preview highlighted nothing (no mark, ↑ / ↓ without effect).
+- **Cause:** `search.svelte.ts` → `previewRequest()` (what the preview highlights) sent the query and the detectors, not the term list.
+- **Fix:** `previewRequest()` adds `termList` / `termListAll`. Checked: "Martin" in an e-mail, "García" in a presentation, the multi-word "contrat de maintenance" in a ZIP and in an Excel table.
+- **Prevention:** a new criterion that finds text is added to both requests: the search (`buildRequest`) and the preview (`previewRequest`).
+
+## BUG-059: a saved search lost its term list, and could keep filters of another search
+
+- **Date:** 2026-10-13 · **Step:** manual tests of Étape 7, lot 7.4 (driven by script)
+- **Symptom:** a ★ saved with a term list came back without it. And applying a saved search without detectors (or without a list) kept the detectors / list left on screen: wrong results.
+- **Cause:** `saved.svelte.ts` → `snapshot()` did not store the term list; `apply()` (and the alert request) started from the filters on screen and only reset the disk filters and attributes, so detectors and lists absent from the saved search stayed.
+- **Fix:** `SavedSettings.filters.termList` (the terms themselves: the file may move), stored only when set (searches saved before still count as the same); `OPTIONAL_FILTERS_OFF` (disk filters, attributes, detectors, term list) is applied before the saved filters, in `apply()` and for the alert request. Checked both ways in the app.
+- **Prevention:** every optional filter has an "off" value in `OPTIONAL_FILTERS_OFF`, so that a saved search never inherits one.
+
+## BUG-060: errors of the meaning module were shown half in English
+
+- **Date:** 2026-10-13 · **Step:** manual tests of Étape 8, lot 8.1 (driven by script)
+- **Symptom:** "Installer depuis un fichier…" with a ZIP that is not the module: "Recherche par le sens : not a Prospector meaning module (no manifest)". Same for a damaged module, another version, and the download errors ("download cancelled"…).
+- **Cause:** the engine sent English text in `CoreError::Sense { message }`, shown as is, against the rule "the engine sends codes, the UI translates" (goal.md §5bis-A).
+- **Fix:** `CoreError::SenseNotModule`, `SenseDamaged`, `SenseVersion { found, expected }` (core, `sense/module.rs`; a manifest of another module is "not a module", no longer "wrong version"); `AppError::SenseNoDownload`, `SenseDownloadFailed`, `SenseDownloadCancelled` (app, `sense.rs`); 6 messages in 4 languages (`errors.sense…`, 532 keys). Checked in the app: "Ce fichier n'est pas un module de recherche par le sens de Prospector."
+- **Prevention:** `sense::module::tests::install_check_and_remove` checks the codes (damaged, not a module, another version). `CoreError::Sense { message }` stays for internal errors only.
+
+## BUG-061: right after "Understand", a site read "Meaning up to date · 0 passages"
+
+- **Date:** 2026-10-13 · **Step:** manual tests of Étape 8, lot 8.2 (driven by script)
+- **Symptom:** after "Comprendre" on a site, the rail showed "≈ Sens à jour · 0 passages" until the first batch was computed (the models take seconds to load), then the progress.
+- **Cause:** the progress was published only from inside `sense_update`; before it, the site had `sense` on and no progress, which the UI shows as "up to date".
+- **Fix:** `src-tauri/src/sense.rs`: `set_site_sense` puts "0 %" (0 of 1) at once when something is pending; `run_round` publishes "0 %" when it takes the site in hand, before loading the models (removed if the models cannot load). Checked: "≈ Sens · 0 %" → "52 %" → "100 %" → "à jour · 61 passages".
+- **Prevention:** a state shown as "up to date" is only shown when nothing is pending.
+
+## BUG-062: a saved search lost "≈ Sens"
+
+- **Date:** 2026-10-13 · **Step:** manual tests of Étape 8, lot 8.3 (driven by script)
+- **Symptom:** a ★ saved with "≈ Sens" on came back with it off.
+- **Cause:** `saved.svelte.ts` → `snapshot()` listed the options one by one (case, whole word, regex, fuzzy), without `meaning` (added at lot 8.3).
+- **Fix:** `meaning: true` stored when on (absent otherwise: searches saved before still count as the same). Checked in the app.
+- **Prevention:** an option added to `SearchOptions` is added to the saved settings in the same change (same family as BUG-059).
+
+## BUG-063: the list stopped at 200 files without saying so
+
+- **Date:** 2026-10-13 · **Step:** manual tests of Étape 6, lot 6.3 (driven by script); fixed after the user's choice
+- **Symptom:** `import` on the "GIT Repositories" site: "1 263 trouvailles dans 200 fichiers", although 15 703 files matched (the kind chips showed it). Nothing said that only the first 200 (the most relevant) were listed.
+- **Cause:** the engine returns `totalFiles`, but the interface kept only the hits and counted them.
+- **Fix:** `search.svelte.ts` keeps `totalFiles` (reset at each search, kept by tabs and history); `ResultsList.svelte` shows "1 263 trouvailles dans 200 premiers fichiers sur 15 703" when more files were found than listed, with a tooltip "narrow the search (kind, date, folder) to see the others" (`results.firstOf`, `results.firstOfHint`, 4 languages).
+- **Prevention:** a list cut at a limit says it is, with the real total.
+
+## BUG-064: the PDF report masked phones too
+
+- **Date:** 2026-10-13 · **Step:** manual tests of Étape 6, lot 6.2 (driven by script); fixed after the user's choice ("mask by type")
+- **Symptom:** in the PDF report of an audit, a phone came out as `+••-••-••••-3452`, and a large amount (`12 500 000,00 €`) would have been masked too. The report's note, however, says "account, card and identity numbers", and amounts must stay readable.
+- **Cause:** `filters.ts` → `maskSensitive` guessed from the text: any highlighted passage with at least 8 digits was masked, whatever the detector that found it.
+- **Fix:** the engine says what is sensitive. `Detector::is_sensitive()` (IBAN, RIB, card, social security, DNI, passport MRZ); `Highlighter::sensitive(text)` lists what those detectors found (deduplicated, at most 100); `Hit.sensitive` (indexed search and live scan, omitted when empty). `maskSensitive(marked, sensitive)` masks only the highlighted passages among them (spaces ignored), last 4 characters kept. Results files keep `sensitive`, so a report printed from reopened results is masked too. Test `sensitive_data_is_only_account_card_and_identity_numbers`; checked in the app (IBAN `•••• … •••0 189`, card `•••• •••• •••• 1111`; phone, amounts and e-mails readable).
+- **Prevention:** what a detector found is decided by the engine, not guessed again from the text in the interface.
+
+## BUG-065: the header line of a CSV term list became a term
+
+- **Date:** 2026-10-13 · **Step:** manual tests of Étape 7, lot 7.4 (driven by script); fixed after the user's choice
+- **Symptom:** a list `fournisseurs.csv` (`nom;ville`, then `Martin;Lyon`…) gave 3 terms: "nom" was one, and it is found almost everywhere.
+- **Cause:** `terms.rs` → `parse_list` read every line of a CSV / TSV the same way.
+- **Fix:** for a `.csv` / `.tsv`, the first line that is not empty nor a `#` comment is a header: left out and counted in "lines ignored". A `.txt` list is unchanged. Test `lines_columns_comments_repeats`; checked in the app ("fournisseurs.csv · 2 termes · 1 ligne ignorée").
+- **Prevention:** a CSV is read as a table (header first); a CSV without a header loses its first term, which the panel shows (preview and "1 ligne ignorée").
+
+## BUG-066: a new tab kept the term list
+
+- **Date:** 2026-10-13 · **Step:** manual tests of Étape 7, lot 7.4 (driven by script); fixed after the user's choice
+- **Symptom:** Ctrl+T opened an empty tab that still had "Liste : fournisseurs.txt", so its first search was filtered without the user asking.
+- **Cause:** `search.svelte.ts` → `blank()` copied every filter of the current tab (it left out only the digest).
+- **Fix:** `blank()` also sets `termList: null`: a list is a criterion of one search, like the digest; sites and options are still copied. Checked in the app (new tab without list, first tab keeps it).
+- **Prevention:** what belongs to one search (digest, term list) is not carried to a new tab.
+
+## BUG-067: a refused global shortcut stayed checked in Settings
+
+- **Date:** 2026-10-13 · **Step:** manual tests of Étape 3, lot 3.3 (by the user)
+- **Symptom:** Settings → Global shortcut → "Ctrl + Alt + Space", already held by another application on this PC: the error message appeared and Ctrl + Alt + F stayed active, but the radio button stayed on Ctrl + Alt + Space.
+- **Cause:** `SettingsMenu.svelte` → `changeShortcut` reloads the real shortcut after a refusal, but it is the same value as before the click: Svelte sees no change and leaves the radios as the click left them.
+- **Fix:** after a refusal, the radios of the fieldset are set again from the active shortcut (`shortcutBox`).
+- **Prevention:** a choice the back end can refuse puts the controls back explicitly (state unchanged = DOM untouched). The editor and "meaning pace" radios have the same pattern; they are refused only when the settings cannot be written.
+
+## BUG-068: indexing "stuck" at 88 %, and another site stuck at 100 %
+
+- **Date:** 2026-10-13 · **Step:** manual tests of Étape 3, lot 3.6 (by the user)
+- **Symptom:** the "Religion" site (293 files, 3.8 GB) stayed at "Indexing… 88 %" for a long time, and the "Youtube" site added next (30 files) stayed at "Indexing… 100 %" without finishing. Prospector was not frozen: it kept one core busy.
+- **Cause:** three faults together.
+  1. `engine.rs` reported the reading progress every 64 files: 256 / 293 = 88 %, then nothing until the end.
+  2. One file of the site, `alalbani_pdf.zip` (1.9 GB, 282 books in PDF, many scanned so read by OCR), counts as one file and takes hours, with nothing saying so.
+  3. `pipeline.rs` used the shared rayon pool for every site: the end of Youtube's run waited for a worker busy with that ZIP.
+- **Fix:**
+  1. A report at least every 1 % (`step = total / 100`).
+  2. `process_files_watched` watches the files being extracted; one read for more than 3 s (`SLOW_FILE`) is sent in `IndexProgress.current`, and the rail shows "Lecture de « alalbani_pdf.zip »…" under the bar (full path in the tooltip, `rail.readingFile`, 4 languages).
+  3. Each run has its own rayon pool (`prospector-read-N` threads); the live scan too.
+
+  Tests in `core/tests/pipeline.rs`: `the_bar_moves_at_least_every_percent` (250 files, ≥ 100 reports), `a_busy_shared_pool_does_not_hold_an_indexing` (every worker of the shared pool blocked: the indexing still ends; it hangs without the fix).
+- **Prevention:** a site never waits for another one; a long step always says what it is doing. Possible next step, not done: let "Stop indexing" interrupt a large archive between two of its documents (today it waits for the end of the file).
+
+## BUG-069: a site whose first indexing was cut off stayed "Not indexed"
+
+- **Date:** 2026-10-13 · **Step:** manual tests of Étape 4, lot 4.1 (by the user, installed version)
+- **Symptom:** "Religion" was being indexed for the first time when the app was closed. At the next start it showed "Not indexed" and nothing happened: no indexing, no watching, no message.
+- **Cause:** `watch.rs` → `start_all` kept only the sites with a `last_indexed` date: watched, then brought up to date. A site never finished has none, so it was left out for good.
+- **Fix:** `start_all` splits the sites: the indexed ones are watched and updated first (as before), then the unfinished ones are indexed in full, one after the other; `run_indexing` watches them once done. Also when this PC becomes the maintainer of a shared index (lot 7.3).
+- **Prevention:** at startup, every site ends up indexed or in error in the rail; none is silently left aside.
+
+## BUG-070: Arabic text of some PDFs could not be found (backwards, shaped glyphs)
+
+- **Date:** 2026-10-14 · **Step:** manual tests of Étape 5, lot 5.5 (by the user: `NEAR` in Arabic on their own PDF)
+- **Symptom:** in the user's PDF "1000 أمر وبرومبت موك أب…", no Arabic word was found (`برومبت`, `تصميم`…), only `1000` and Latin words. The index held `ﻢﯿﻤﺼﺘﻟ ChatGPT تارﺎﺼﺘﺧا :ﻲﻋﺎﻨﻄﺻﻻا … ﺮﻣأ 1000`.
+- **Cause:** pdf-extract returns the text as it is drawn. This PDF (like many Arabic PDFs) stores Arabic as **presentation forms** (shaped glyphs, U+FB50–FDFF / U+FE70–FEFC: `ﻟ` instead of `ل`) and in **display order** (left to right on the page): every line reads backwards. The search folds letters, not glyphs, and reads words in order.
+- **Fix:** `extract/pdf.rs` → `arabic(pages)`, on the text layer only (OCR text is already right):
+  1. glyphs back to letters with NFKC, only on presentation forms (`ﻻ` → `لا`); in an Arabic document, the Farsi yeh glyphs at the start or in the middle of a word (same drawing) become `ي`;
+  2. the document is backwards when, turned around, it has clearly more words starting with the article `ال` (≥ 3 and more than twice as many as kept as is); then each line with Arabic is turned around, Latin words and numbers are read left to right again, brackets outside them mirrored.
+
+  Manifest version 10: PDFs, archives and mailboxes (which may hold PDFs) are read again, nothing else. Tests `arabic_drawn_backwards_is_read_in_order` (the real title line gives back "1000 أمر وبرومبت موك أب للذكاء الاصطناعي: اختصارات ChatGPT لتصميم") and `arabic_in_reading_order_stays_as_it_is`; checked on the user's PDF with `prospector-cli scan` (`الاصطناعي`, `تصميم`, `برومبت`, `الذكاء NEAR الاصطناعي` found).
+- **Prevention:** text taken from a drawing (PDF) is put back in reading order before indexing; a test file with real Arabic glyphs keeps it so. Limit: a line mostly in Latin with a few Arabic words may keep those words in an imperfect order (each word is still found).
+
+## BUG-071: an Arabic word did not find its form with ل ("for") attached
+
+- **Date:** 2026-10-14 · **Step:** manual tests of Étape 5, lot 5.5 (by the user: `برومبت NEAR تصميم` on their PDF found nothing, after BUG-070)
+- **Symptom:** `تصميم` ("design") did not find `لتصميم` ("for design"), in a plain search as in `NEAR`, indexed or live scan. `وبرومبت`, `بتصميم`, `التصميم` were found.
+- **Cause:** the Snowball Arabic stemmer removes the attached prefixes و, ب, ك, ال, لل… but **never ل alone** (`لتصميم` → `لتصميم`, `لكتاب` → `لكتاب`), on purpose: many words really start with ل (لعبة, لون). The one-letter rule of the highlighter needs the same stem, so the form was a different word.
+- **Fix:** on the query side only, `lang::with_lam(word)` gives the form "ل + word" of an Arabic word typed (letters only, at least 2): `word_query` also looks for it in `body` and `stem_ar`, and `Matcher::new` adds it to its words and stems (so highlighting, NEAR, live scan and the preview follow). Not with `Aa` (exact spelling). The text is never cut: `لعبة` still finds only `لعبة`. No reindexing. Tests `an_arabic_word_finds_its_form_with_lam` (highlight) and `an_arabic_word_finds_its_form_with_lam_in_the_index` (core/tests/pipeline.rs); checked on the user's PDF (`برومبت NEAR تصميم` → "[وبرومبت] … [لتصميم]").
+- **Prevention:** Arabic test texts include words with attached prepositions (ل, ب, و), not only the bare word.
+
+## BUG-072: at startup, a long site held the update of the following ones
+
+- **Date:** 2026-10-14 · **Step:** manual tests of Étape 5 (by the user, installed version, after the BUG-070 update)
+- **Symptom:** after installing the version that reads PDFs again (manifest 10), "Youtube" (76 documents) still showed its old text: it was waiting behind "Religion", which was reading its PDFs and a 2 GB ZIP of scanned books again (hours). The user had to click "Update now" on Youtube.
+- **Cause:** `watch.rs` → `start_all` brought the sites up to date one after the other, in the order of the rail, all disks together.
+- **Fix:** `startup_plan` groups the sites by disk (`D:`, or `\\server\share` for a network folder, case ignored); each disk has its own thread, its sites one after the other (no seeking between two folders of the same disk), the smallest first (`size_bytes`), the sites whose first indexing was cut off last (BUG-069). The watching starts as before, in the background. Test `small_sites_first_one_disk_at_a_time`.
+- **Prevention:** a long site never delays a small one, nor another disk.
+
+## BUG-073: live scan of a whole disk: minutes without any result or counter
+
+- **Date:** 2026-10-14 · **Step:** manual tests of Étape 5, lot 5.7 (by the user: Explorer right-click on an external hard disk not covered by any site)
+- **Symptom:** "Search with Prospector" on the disk, then a word: several minutes with no result and no number moving, before the first results came.
+- **Cause:** `scan.rs` first walked the whole disk (`crawl_with`, with an empty progress callback), then sorted the list by path, then only started reading. On a whole disk the walk alone takes minutes, and nothing was reported meanwhile.
+- **Fix:**
+  - **B.** `crawler::crawl_each` hands each file over as soon as it is found (`crawl_with` now builds on it, unchanged for indexing); the live scan sends them through a bounded channel (4,096) to `pipeline::process_stream`, which reads them in that order while the walk goes on (`process_files_watched` sorts, then uses the same stream). The filters (dates, attributes, kind, name, files, "within") are applied as files come; name-only answers are given at once.
+  - **A.** `on_progress(read, found)`: the second number is now the files found so far by the walk; the results header shows "1 234 lus sur 56 789 trouvés" while scanning (`results.scannedOf`, 4 languages), then "N fichiers parcourus" as before.
+
+  Test `the_live_scan_reads_while_walking_and_counts_both` (core/tests/pipeline.rs); the other live-scan tests (formats, legacy, mail, OCR, query, detectors, disk) unchanged and green.
+- **Prevention:** a long step always shows a moving count; a stream is preferred to "list everything, then work". Note: in live scan the files are no longer read in path order but in walk order (still folder by folder).
+
+## BUG-074: a list of 2,656 terms took 89 s with typo tolerance
+
+- **Date:** 2026-10-15 · **Step:** manual tests of Étape 7, lot 7.4 (by the user: a list of thousands of terms on the 20,875-document site)
+- **Symptom:** "Liste : liste-3000-termes.txt · 2 656 termes" on all sites, typo tolerance on: 89,381 ms. Measured with `prospector-cli`: 75 s with `--fuzzy`, 1.6 s without, for 20,790 files against 20,784 (6 more).
+- **Cause:** typo tolerance applies to the whole request: each of the 2,656 terms became a `FuzzyTermQuery` (distance 1 or 2), each walking the dictionary of every site, plus the same check in the highlighter.
+- **Fix:** `terms::TYPO_TOLERANT_TERMS = 50`. A list of more terms gives `Clause::Exact` words (new clause, the opposite of `LIKE`): looked for with their forms (stems, plural) but without typos, in the index (`word_query`, `fuzzy: false`) and in the highlighter. Lists up to 50 terms and the words typed in the box follow the option as before. The list panel says so when tolerance is on ("Au-delà de 50 termes, la liste est cherchée sans tolérance aux fautes", `terms.noTypos`, 4 languages). Tests `a_term_is_a_word_a_phrase_or_a_regex` and `a_long_list_is_searched_without_typos`.
+- **Prevention:** an option that multiplies the cost per word (typos) is bounded when the number of words is large.
+
+## BUG-075: a resumed meaning computation showed 0 %
+
+- **Date:** 2026-10-15 · **Step:** manual tests of Étape 8, lot 8.2 (by the user: Prospector closed during the computation of "GIT Repositories", then opened again)
+- **Symptom:** after the restart, "≈ Meaning · 1 % · ≈ 37 min left": the bar started again from 0 %, as if everything was lost.
+- **Cause:** nothing was lost (each batch is committed as it goes, and `sense_todo` gives only the files left), but `sense_update` reported its progress from 0 out of the passages **left to compute** (`plan.passages`), not out of the whole site.
+- **Fix:** the progress starts at the passages already in the meaning index (`plan.done`) and its total is done + left; the interface's time left was already computed from the pace since the start of this run, so it stays right. Test `a_resumed_computation_counts_what_was_done` (fake vectors: stopped during the second of three batches, started again: first report = passages kept, out of the whole site; last = 100 %).
+- **Prevention:** a progress that can be resumed counts what was already done.
+
+## BUG-076: the ≈ button forgot a computation in progress; "Estimating…" blocked "Understand"
+
+- **Date:** 2026-10-15 · **Step:** manual tests of Étape 8, lot 8.2 (by the user, installed version)
+- **Symptom:**
+  1. After reinstalling, the user clicked ≈ on "GIT Repositories" (being computed) to restart it and confirmed the window: the site went back to "not understood", its meaning index deleted.
+  2. Clicking ≈ on GIT again: "Estimating…" for a long time, and "Understand" could not be clicked meanwhile.
+- **Cause:**
+  1. `IndexRail.svelte` → `toggleSense`: the same ≈ button asked "Understand?" on a site not understood, and "Stop understanding?" (a native confirmation, deleting the index) on a site understood **or being computed**; the confirmation did not say what was lost.
+  2. The "Understand" button was `disabled` until the estimate came (reading the 20,875 stored texts and loading the models).
+- **Fix:**
+  1. On a site being computed, ≈ opens a bubble "Computing the meaning of …" with the progress and time left, "It goes on in the background…", **Continue** (default) and **Stop and forget** (red). Forgetting a site asks "Delete the N passages already computed for …? Everything will have to be computed again…" (`sense.runningTitle`, `runningHint`, `keep`, `stopForget`, `forgetConfirm` with `{count}`, 4 languages).
+  2. "Understand" can be clicked at once; the estimate only informs and shows when ready.
+- **Prevention:** a button never does two opposite things without saying which; a destructive confirmation says what is lost; an estimate never blocks the action it describes.

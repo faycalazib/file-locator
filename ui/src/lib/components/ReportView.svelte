@@ -43,7 +43,7 @@
   // Detectors (lot 6.2): a summary per kind; account and identity numbers masked.
   const detecting = $derived(search.filters.detectors.length > 0);
   const detected = $derived(Object.entries(search.detections).toSorted((a, b) => b[1].files - a[1].files));
-  const shown = (text: string) => (detecting ? maskSensitive(text) : text);
+  const shown = (text: string, sensitive?: string[]) => (detecting ? maskSensitive(text, sensitive) : text);
 
   // Keyword report (lot 6.4): totals per term, and each file's counts.
   const keywords = $derived(ui.reportKeywords);
@@ -133,8 +133,9 @@
         <h2><span class="ltr-isolate" dir="ltr">{p.name}</span></h2>
         <p class="path mono"><span class="ltr-isolate" dir="ltr">{hit.path}</span></p>
         <p class="meta">
-          {t(`filters.kinds.${hit.kind}` as MessageKey)} · <span class="mono">{formatBytes(hit.sizeBytes)}</span> · {formatDate(hit.modified)} ·
-          {t(`languages.${hit.lang}` as MessageKey)} · <strong>{t('results.matches', { count: hit.matchCount })}</strong>
+          <!-- Each part isolated: "Word" next to "1 KB" in Arabic (BUG-043). -->
+          <bdi>{t(`filters.kinds.${hit.kind}` as MessageKey)}</bdi> · <bdi class="mono">{formatBytes(hit.sizeBytes)}</bdi> · <bdi>{formatDate(hit.modified)}</bdi> ·
+          <bdi>{t(`languages.${hit.lang}` as MessageKey)}</bdi> · <strong><bdi>{t('results.matches', { count: hit.matchCount })}</bdi></strong>
         </p>
         {#if keywords && countsOf.has(hit.id)}
           <p class="meta">
@@ -142,7 +143,7 @@
           </p>
         {/if}
         {#each hit.snippets as snippet, i (i)}
-          <p class="snippet" dir="auto"><Marked text={shown(snippet.text)} /></p>
+          <p class="snippet" dir="auto"><Marked text={shown(snippet.text, hit.sensitive)} /></p>
         {/each}
       </li>
     {/each}

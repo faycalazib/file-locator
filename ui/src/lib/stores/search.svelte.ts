@@ -107,6 +107,8 @@ export interface SearchSnapshot {
   hits: SearchHit[];
   hasRun: boolean;
   durationMs: number | null;
+  /** Files found by the engine, beyond the ones listed (null: unknown, live scan). */
+  totalFiles?: number | null;
   scanned: number;
   selectedId: string | null;
   quickFilter: string;
@@ -121,6 +123,12 @@ export interface SearchSnapshot {
   interrupted: boolean;
   /** Live scan still running while the tab is not shown. */
   scanId: string | null;
+}
+
+/** What a search asks (not what it found): kept per history step. */
+function criteriaOf(s: SearchSnapshot): Partial<SearchSnapshot> {
+  const { query, namePattern, folders, mode, options, filters, scope, within, folder, copiesOf } = s;
+  return { query, namePattern, folders, mode, options, filters, scope, within, folder, copiesOf };
 }
 
 const MB = 1024 * 1024;
@@ -368,7 +376,11 @@ class SearchStore {
   fresh = new SvelteSet<string>();
   scanning = $state(false);
   scanned = $state(0);
+  /** Live scan: files found so far by the walk, which goes on while reading (BUG-073). */
+  scanFound = $state(0);
   durationMs = $state<number | null>(null);
+  /** Every file the engine found; the list holds the first ones (BUG-063). */
+  totalFiles = $state<number | null>(null);
   hasRun = $state(false);
   selectedId = $state<string | null>(null);
 
@@ -399,10 +411,13 @@ class SearchStore {
       this.#pending.push(fromHitDto(hit));
       this.#flushTimer ??= setTimeout(() => this.#flush(), 80);
     });
-    void api.onScanProgress(({ scanId, scanned }) => {
+    void api.onScanProgress(({ scanId, scanned, total }) => {
       const hidden = this.#background.get(scanId);
       if (hidden) hidden.scanned = scanned;
-      if (scanId === this.#scanId) this.scanned = scanned;
+      if (scanId === this.#scanId) {
+        this.scanned = scanned;
+        this.scanFound = total;
+      }
     });
     void api.onScanFinished(({ scanId, summary, error }) => {
       const hidden = this.#background.get(scanId);
@@ -420,7 +435,7 @@ class SearchStore {
       this.scanning = false;
       this.durationMs = summary?.tookMs ?? null;
       if (summary) this.scanned = summary.filesScanned;
-      if (error) notices.error(error);
+      if (error) notices.error(error, 'search');
       this.#timers.push(setTimeout(() => this.fresh.clear(), 1000));
     });
   }
@@ -489,7 +504,11 @@ class SearchStore {
   run({ history = true }: { history?: boolean } = {}) {
     // The same search again (Enter pressed twice) is not a new history step.
     const key = this.#runKey();
-    if (history && this.hasRun && key !== this.#lastRunKey) this.beforeRun?.(this.capture(false));
+    const now = this.capture(false);
+    // The step keeps the results on screen with the criteria that gave them:
+    // the box and the filters already hold the new search (BUG-046).
+    if (history && this.hasRun && key !== this.#lastRunKey) this.beforeRun?.({ ...now, ...this.#ranCriteria });
+    this.#ranCriteria = criteriaOf(now);
     this.#lastRunKey = key;
     this.openedFrom = null;
     this.ranSignature = this.signature();
@@ -497,6 +516,8 @@ class SearchStore {
   }
 
   #lastRunKey = '';
+  /** Criteria of the search on screen, as it was run. */
+  #ranCriteria: Partial<SearchSnapshot> = {};
 
   #runKey(): string {
     return JSON.stringify([this.query.trim(), this.namePattern.trim(), this.mode, this.within?.paths.length ?? 0, this.signature()]);
@@ -528,6 +549,7 @@ class SearchStore {
       hits: this.scanning && this.#streaming ? this.#streaming : this.hits,
       hasRun: this.hasRun,
       durationMs: this.durationMs,
+      totalFiles: this.totalFiles,
       scanned: this.scanned,
       selectedId: this.selectedId,
       quickFilter: this.quickFilter,
@@ -545,8 +567,9 @@ class SearchStore {
     const current = this.capture(false);
     return {
       ...current,
-      // A digest belongs to one search (its copies), not to the next tab.
-      filters: { ...current.filters, hash: '' },
+      // A digest belongs to one search (its copies), not to the next tab;
+      // nor does a term list (BUG-066): sites and options are kept.
+      filters: { ...current.filters, hash: '', termList: null },
       query: '',
       lastQuery: '',
       namePattern: '',
@@ -554,6 +577,7 @@ class SearchStore {
       hits: [],
       hasRun: false,
       durationMs: null,
+      totalFiles: null,
       scanned: 0,
       selectedId: null,
       quickFilter: '',
@@ -595,6 +619,7 @@ class SearchStore {
     this.fresh.clear();
     this.hasRun = s.hasRun;
     this.durationMs = s.durationMs;
+    this.totalFiles = s.totalFiles ?? null;
     this.scanned = s.scanned;
     this.selectedId = s.selectedId;
     this.quickFilter = s.quickFilter;
@@ -604,6 +629,8 @@ class SearchStore {
     this.openedFrom = s.openedFrom;
     this.ranSignature = this.signature();
     this.#lastRunKey = '';
+    // Text typed in that tab but not searched yet is not what its results answer.
+    this.#ranCriteria = { ...criteriaOf(s), query: s.hasRun ? s.lastQuery : s.query };
     // Its live scan went on in the background: it comes back on screen.
     const running = s.scanId !== null && this.#background.delete(s.scanId);
     this.#scanId = running ? s.scanId : null;
@@ -669,6 +696,9 @@ class SearchStore {
       langs: [],
       // Detected data are highlighted in the preview too.
       detectors: this.filters.detectors.length > 0 ? this.filters.detectors : undefined,
+      // And the terms of a list (BUG-058).
+      termList: this.filters.termList?.terms,
+      termListAll: this.filters.termList?.all || undefined,
     };
   }
 
@@ -750,15 +780,19 @@ class SearchStore {
     const generation = ++this.#generation;
     const query = this.query.trim();
     this.hits = [];
+    this.totalFiles = null;
     this.fresh.clear();
     this.durationMs = null;
     this.selectedId = null;
     this.hasRun = this.hasCriteria;
+    // The error of the previous search no longer applies.
+    notices.clear('search');
     if (!this.hasRun) return;
     this.lastQuery = query;
     if (query) this.#remember(query);
     this.scanning = true;
     this.scanned = 0;
+    this.scanFound = 0;
     if (this.mode === 'live') {
       // Live scan: hits arrive through `scan://hit` events.
       this.#scanId = crypto.randomUUID();
@@ -766,7 +800,7 @@ class SearchStore {
         await api.liveScan(this.#scanId, [...this.scope], this.filters.excluded, { ...this.#request(), limit: 1000 });
       } catch (e) {
         this.scanning = false;
-        notices.error(e);
+        notices.error(e, 'search');
       }
       return;
     }
@@ -774,13 +808,14 @@ class SearchStore {
       const response = await api.search([...this.scope], { ...this.#request(), facets: true });
       if (generation !== this.#generation) return;
       this.durationMs = response.tookMs;
+      this.totalFiles = response.totalFiles;
       this.engineDetections = response.detections ?? null;
       this.engineFacets = response.facets ?? null;
       this.#stream(response.hits.map(fromHitDto));
     } catch (e) {
       if (generation !== this.#generation) return;
       this.scanning = false;
-      notices.error(e);
+      notices.error(e, 'search');
     }
   }
 
@@ -801,6 +836,7 @@ class SearchStore {
       const known = new Set(this.hits.map((h) => h.id));
       this.hits = found;
       this.durationMs = response.tookMs;
+      this.totalFiles = response.totalFiles;
       for (const hit of found) if (!known.has(hit.id)) this.fresh.add(hit.id);
       if (!found.some((h) => h.id === this.selectedId)) this.selectedId = found[0]?.id ?? null;
       this.#timers.push(setTimeout(() => this.fresh.clear(), 1000));
@@ -1003,6 +1039,7 @@ export function fromHitDto(dto: HitDto): SearchHit {
     // Saved results from before lot 5.8 have no creation date.
     created: new Date((dto.created ?? dto.modified) * 1000),
     detections: dto.detections,
+    sensitive: dto.sensitive,
     matchCount: dto.matchCount,
     exactCount: dto.exactCount,
     score: dto.score,

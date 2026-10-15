@@ -26,16 +26,18 @@ pub struct TermList {
 }
 
 /// The terms of a text: one per line; for a CSV / TSV, the first column
-/// (quotes removed); `#` comments, empty lines and repeats left out.
+/// (quotes removed) and its first line is a header ("nom;ville"), left out
+/// (BUG-065); `#` comments, empty lines and repeats left out.
 pub fn parse_list(text: &str, csv: bool) -> TermList {
     let mut list = TermList::default();
     let mut seen = std::collections::HashSet::new();
+    let mut header = csv;
     for line in text.lines() {
         let line = line.trim().trim_start_matches('\u{feff}');
         if line.is_empty() {
             continue;
         }
-        if line.starts_with('#') {
+        if line.starts_with('#') || std::mem::take(&mut header) {
             list.skipped += 1;
             continue;
         }
@@ -85,13 +87,20 @@ pub fn read_list(path: &Path) -> Result<TermList> {
     Ok(parse_list(&text, matches!(ext.as_str(), "csv" | "tsv")))
 }
 
-/// The clause of one term.
-pub fn clause(term: &str) -> Clause {
+/// Up to this many terms, a list follows the typo-tolerance option; beyond,
+/// its words are looked for without typos (BUG-074: 2,656 terms took 89 s
+/// with tolerance, 1.6 s without, for 6 more files out of 20,790).
+pub const TYPO_TOLERANT_TERMS: usize = 50;
+
+/// The clause of one term of a list of `count` terms.
+pub fn clause(term: &str, count: usize) -> Clause {
     let term = term.trim();
     if term.len() > 2 && term.starts_with('/') && term.ends_with('/') {
         Clause::Regex(term[1..term.len() - 1].to_owned())
     } else if term.contains(char::is_whitespace) {
         Clause::Phrase(term.to_owned())
+    } else if count > TYPO_TOLERANT_TERMS {
+        Clause::Exact(term.to_owned())
     } else {
         Clause::Word(term.to_owned())
     }
@@ -106,8 +115,11 @@ mod tests {
         let list = parse_list("\u{feff}Dupont SARL\n# fournisseurs 2024\n\n  García Hermanos  \n/FR\\d{11}/\ndupont sarl\n", false);
         assert_eq!(list.terms, ["Dupont SARL", "García Hermanos", "/FR\\d{11}/"]);
         assert_eq!(list.skipped, 2, "the comment and the repeat");
-        let csv = parse_list("\"Dupont \"\"père\"\" SARL\";Lyon\nBâti-Sud,Toulouse\nRoux\tNîmes\n", true);
-        assert_eq!(csv.terms, ["Dupont \"père\" SARL", "Bâti-Sud", "Roux"]);
+        let csv = parse_list("nom;ville\n\"Dupont \"\"père\"\" SARL\";Lyon\nBâti-Sud,Toulouse\nRoux\tNîmes\n", true);
+        assert_eq!(csv.terms, ["Dupont \"père\" SARL", "Bâti-Sud", "Roux"], "the header line is not a term");
+        assert_eq!(csv.skipped, 1);
+        // A comment before the header: the header is still the first data line.
+        assert_eq!(parse_list("# export\nnom;ville\nMartin;Lyon\n", true).terms, ["Martin"]);
         let many: String = (0..MAX_TERMS + 3).map(|i| format!("t{i}\n")).collect();
         let capped = parse_list(&many, false);
         assert_eq!((capped.terms.len(), capped.skipped), (MAX_TERMS, 3));
@@ -115,9 +127,30 @@ mod tests {
 
     #[test]
     fn a_term_is_a_word_a_phrase_or_a_regex() {
-        assert_eq!(clause("contrat"), Clause::Word("contrat".into()));
-        assert_eq!(clause("Dupont SARL"), Clause::Phrase("Dupont SARL".into()));
-        assert_eq!(clause("/INV-\\d+/"), Clause::Regex("INV-\\d+".into()));
-        assert_eq!(clause("/"), Clause::Word("/".into()));
+        assert_eq!(clause("contrat", 3), Clause::Word("contrat".into()));
+        assert_eq!(clause("Dupont SARL", 3), Clause::Phrase("Dupont SARL".into()));
+        assert_eq!(clause("/INV-\\d+/", 3), Clause::Regex("INV-\\d+".into()));
+        assert_eq!(clause("/", 3), Clause::Word("/".into()));
+        // A long list: its words without typo tolerance (BUG-074).
+        assert_eq!(clause("contrat", TYPO_TOLERANT_TERMS), Clause::Word("contrat".into()));
+        assert_eq!(clause("contrat", TYPO_TOLERANT_TERMS + 1), Clause::Exact("contrat".into()));
+        assert_eq!(clause("Dupont SARL", 500), Clause::Phrase("Dupont SARL".into()));
+    }
+
+    /// BUG-074: with typo tolerance on, a word of a short list finds a typo,
+    /// a word of a long list does not (its plural still does).
+    #[test]
+    fn a_long_list_is_searched_without_typos() {
+        use crate::highlight::{MatchOptions, Matcher};
+        use crate::lang::DocLang;
+        use crate::query::ParsedQuery;
+        let text = "Le fournisseur Bâtiments Martineau livre les fournisseurs.";
+        let found = |count: usize| -> Vec<String> {
+            let query = ParsedQuery { must: vec![vec![clause("Martinaau", count), clause("fournisseur", count)]], ..Default::default() };
+            let m = Matcher::new(&query, MatchOptions { fuzzy: true, ..MatchOptions::default() }).unwrap();
+            m.find(text, DocLang::Fr).into_iter().map(|x| text[x.range].to_owned()).collect()
+        };
+        assert_eq!(found(2), ["fournisseur", "Martineau", "fournisseurs"], "short list: the typo is tolerated");
+        assert_eq!(found(TYPO_TOLERANT_TERMS + 1), ["fournisseur", "fournisseurs"], "long list: exact words and their forms only");
     }
 }

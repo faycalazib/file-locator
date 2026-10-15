@@ -105,6 +105,15 @@
   }
 </script>
 
+<!-- More files found than listed: say so, with the total (BUG-063). -->
+{#snippet filesCount()}
+  {#if search.totalFiles !== null && search.totalFiles > search.hits.length && search.visible.length === search.hits.length}
+    <span class="capped" title={t('results.firstOfHint')}>{t('results.firstOf', { shown: formatNumber(search.hits.length), total: formatNumber(search.totalFiles) })}</span>
+  {:else}
+    {t('results.files', { count: search.visible.length })}
+  {/if}
+{/snippet}
+
 {#snippet excerpt(hit: SearchHit, clip: boolean)}
   {@const s = hit.snippets[0]}
   {#if hit.meaning?.only}
@@ -206,12 +215,15 @@
           <b>{t('results.folders', { count: search.visible.length })}</b>
         {:else if search.lastQuery === ''}
           <!-- Found by name only: there are files, not matches. -->
-          <b>{t('results.files', { count: search.visible.length })}</b>
+          <b>{@render filesCount()}</b>
         {:else}
           <b>{formatNumber(search.totalMatches)} {t('results.matchesIn', { count: search.totalMatches, files: '' }).trim()}</b>
-          <span>{t('results.files', { count: search.visible.length })}</span>
+          <span>{@render filesCount()}</span>
         {/if}
-        {#if search.mode === 'live' && search.scanned > 0}
+        {#if search.mode === 'live' && search.scanning && search.scanFound > 0}
+          <!-- The walk goes on while reading: both counts move (BUG-073). -->
+          <small>· {t('results.scannedOf', { read: formatNumber(search.scanned), found: formatNumber(search.scanFound) })}</small>
+        {:else if search.mode === 'live' && search.scanned > 0}
           <small>· {t('results.scanned', { count: search.scanned })}</small>
         {/if}
         {#if search.durationMs !== null}
@@ -470,6 +482,12 @@
     color: var(--secondary-ink);
     font-size: 14px;
     font-weight: 700;
+  }
+
+  .capped {
+    text-decoration: underline dotted;
+    text-underline-offset: 4px;
+    cursor: help;
   }
 
   .meaning-count {
@@ -858,12 +876,21 @@
     min-inline-size: 0;
   }
 
+  /* Only the file name is cut with "…": the "New" tag stays visible next to
+     it, whatever the width of the column (BUG-050). */
   .name {
-    overflow: hidden;
-    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    min-inline-size: 0;
     white-space: nowrap;
     font: var(--fs-h2) / var(--lh-h2) var(--font-display);
     letter-spacing: 0.3px;
+  }
+
+  .name > .ltr-isolate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-inline-size: 0;
   }
 
   .where {
@@ -1102,6 +1129,7 @@
   }
   /* Announced by an alert (lot 6.1). */
   .new-tag {
+    flex: none;
     margin-inline-start: var(--sp-2);
     padding: 0 6px;
     border-radius: 8px;

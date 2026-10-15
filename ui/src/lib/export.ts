@@ -51,7 +51,7 @@ export function csvSeparator(): ';' | ',' {
 }
 
 /** `2026-09-27 14:32`: a date Excel recognizes, in local time. */
-function excelDate(d: Date): string {
+export function excelDate(d: Date): string {
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
@@ -124,9 +124,15 @@ function csvCell(value: string | number, sep: string): string {
   return s.includes(sep) || /["\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
-/** CSV for Excel: UTF-8 with BOM (accents and Arabic), the list separator of the language. */
-export function toExcelCsv(data: ExportData): string {
+/** Rows as a CSV for Excel: UTF-8 with BOM (accents and Arabic), the list
+ * separator of the language. Every CSV of the app goes through it (BUG-054). */
+export function toCsv(rows: (string | number)[][]): string {
   const sep = csvSeparator();
+  return '\uFEFF' + rows.map((r) => r.map((v) => csvCell(v, sep)).join(sep)).join('\r\n');
+}
+
+/** CSV for Excel of the search results. */
+export function toExcelCsv(data: ExportData): string {
   const cols = layout(data);
   const rows: (string | number)[][] = [cols.map((c) => c.label), ...data.hits.map((h) => cols.map((c) => c.value(h, false)))];
   // Keyword report: a totals row (files that contain each term).
@@ -134,7 +140,7 @@ export function toExcelCsv(data: ExportData): string {
   if (cols.some((c) => c.term !== undefined)) {
     rows.push(cols.map((c, i) => (c.term !== undefined ? (totals[c.term]?.files ?? 0) : i === 0 ? t('export.totalFiles') : '')));
   }
-  return '﻿' + rows.map((r) => r.map((v) => csvCell(v, sep)).join(sep)).join('\r\n');
+  return toCsv(rows);
 }
 
 const escape = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');

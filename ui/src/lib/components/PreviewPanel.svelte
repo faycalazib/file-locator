@@ -201,7 +201,8 @@
         {#if hit.kind === 'folder'}
           {kindKey ? t(kindKey) : ''} · {formatDate(hit.modified)}
         {:else}
-          {kindKey ? t(kindKey) : ''} · <span class="mono">{formatBytes(hit.sizeBytes)}</span> · <span title={t('preview.created', { date: formatDate(hit.created) })}>{formatDate(hit.modified)}</span> · {langKey ? t(langKey) : ''}
+          <!-- Each part isolated: "Word" next to "1 KB" in Arabic (BUG-043). -->
+          <bdi>{kindKey ? t(kindKey) : ''}</bdi> · <bdi class="mono">{formatBytes(hit.sizeBytes)}</bdi> · <bdi title={t('preview.created', { date: formatDate(hit.created) })}>{formatDate(hit.modified)}</bdi> · <bdi>{langKey ? t(langKey) : ''}</bdi>
         {/if}
       </p>
     </header>

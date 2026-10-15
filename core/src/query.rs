@@ -23,6 +23,9 @@ pub enum Clause {
     Near { terms: Vec<Clause>, chars: usize },
     /// A word with typo tolerance, even when the option is off.
     Like(String),
+    /// A word without typo tolerance, even when the option is on: the terms
+    /// of a long list (BUG-074). Its forms (plural…) are still found.
+    Exact(String),
     /// Validated data (IBAN, card…, lot 6.2), checked on the text.
     Detector(crate::detect::Detector),
 }
@@ -208,7 +211,7 @@ fn lex(input: &str) -> Vec<Token> {
 
 /// Words, phrases and fuzzy words can be near each other (and a NEAR chain).
 fn is_near_term(clause: &Clause) -> bool {
-    matches!(clause, Clause::Word(_) | Clause::Phrase(_) | Clause::Like(_) | Clause::Near { .. })
+    matches!(clause, Clause::Word(_) | Clause::Phrase(_) | Clause::Like(_) | Clause::Exact(_) | Clause::Near { .. })
 }
 
 pub fn parse(input: &str) -> ParsedQuery {

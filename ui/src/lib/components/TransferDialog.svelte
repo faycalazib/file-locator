@@ -92,6 +92,9 @@
   }
 </script>
 
+<!-- Escape closes the dialog, like its button (BUG-053). -->
+<svelte:window onkeydown={(e) => { if (e.key === 'Escape' && mode) close(); }} />
+
 {#if mode}
   <div class="backdrop" role="presentation" onclick={close}></div>
   <div class="dialog sketch" role="dialog" aria-modal="true" aria-labelledby="transfer-title">

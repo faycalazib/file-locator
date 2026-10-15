@@ -156,3 +156,21 @@ fn missing_root_is_reported_as_a_code() {
     assert_eq!(json["code"], "rootUnavailable");
     assert_eq!(json["params"]["path"], "Z:\\does\\not\\exist");
 }
+
+/// The same folder cannot be added twice (BUG-056): its files would be
+/// indexed and shown twice. Case and final separator do not matter.
+#[test]
+fn the_same_folder_is_not_added_twice() {
+    let data = tempfile::tempdir_in(env!("CARGO_TARGET_TMPDIR")).unwrap();
+    let engine = Engine::open(data.path()).unwrap();
+    engine.add_site("Contrats", vec![r"D:\Clients\Contrats".to_owned()]).unwrap();
+    for again in [r"D:\Clients\Contrats", r"d:\clients\contrats\", r"D:\Clients\Contrats/"] {
+        match engine.add_site("Encore", vec![again.to_owned()]) {
+            Err(prospector_core::CoreError::SiteExists { name }) => assert_eq!(name, "Contrats"),
+            other => panic!("{again}: {other:?}"),
+        }
+    }
+    // Another folder, even inside the first, stays possible.
+    engine.add_site("Archives", vec![r"D:\Clients\Contrats\2019".to_owned()]).unwrap();
+    assert_eq!(engine.sites().len(), 2);
+}

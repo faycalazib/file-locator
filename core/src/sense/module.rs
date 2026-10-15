@@ -95,25 +95,28 @@ pub fn status(dir: &Path) -> ModuleStatus {
 pub fn install_zip(zip_path: &Path, dir: &Path, expected: Option<&str>) -> Result<Manifest> {
     let size = std::fs::metadata(zip_path)?.len();
     if size > MAX_ZIP_BYTES {
-        return Err(invalid("not a Prospector meaning module (too large)"));
+        return Err(CoreError::SenseNotModule);
     }
     let bytes = std::fs::read(zip_path)?;
     if let Some(expected) = expected {
         if !sha256_hex(&bytes).eq_ignore_ascii_case(expected) {
-            return Err(invalid("the downloaded module is damaged (wrong SHA-256)"));
+            return Err(CoreError::SenseDamaged);
         }
     }
-    let mut archive = zip::ZipArchive::new(std::io::Cursor::new(bytes)).map_err(|_| invalid("not a ZIP file"))?;
+    let mut archive = zip::ZipArchive::new(std::io::Cursor::new(bytes)).map_err(|_| CoreError::SenseNotModule)?;
     let read = |archive: &mut zip::ZipArchive<std::io::Cursor<Vec<u8>>>, name: &str| -> Result<Vec<u8>> {
-        let mut entry = archive.by_name(name).map_err(|_| invalid(format!("{name} is missing")))?;
+        let mut entry = archive.by_name(name).map_err(|_| CoreError::SenseNotModule)?;
         let mut data = Vec::new();
         entry.read_to_end(&mut data)?;
         Ok(data)
     };
     let manifest: Manifest =
-        serde_json::from_slice(&read(&mut archive, "manifest.json")?).map_err(|_| invalid("not a Prospector meaning module (no manifest)"))?;
-    if manifest.module != "sense" || manifest.version != MODULE_VERSION {
-        return Err(invalid(format!("module version {} is not the one this Prospector reads ({MODULE_VERSION})", manifest.version)));
+        serde_json::from_slice(&read(&mut archive, "manifest.json")?).map_err(|_| CoreError::SenseNotModule)?;
+    if manifest.module != "sense" {
+        return Err(CoreError::SenseNotModule);
+    }
+    if manifest.version != MODULE_VERSION {
+        return Err(CoreError::SenseVersion { found: manifest.version, expected: MODULE_VERSION });
     }
 
     let parent = dir.parent().ok_or_else(|| invalid("no folder for the module"))?;
@@ -126,12 +129,12 @@ pub fn install_zip(zip_path: &Path, dir: &Path, expected: Option<&str>) -> Resul
     for (name, sha) in &manifest.files {
         // Names are plain file names: nothing written outside the folder.
         if name.contains(['/', '\\']) || name.starts_with('.') {
-            return Err(invalid(format!("unexpected file name {name}")));
+            return Err(CoreError::SenseNotModule);
         }
         let data = read(&mut archive, name)?;
         if !sha256_hex(&data).eq_ignore_ascii_case(sha) {
             let _ = std::fs::remove_dir_all(&staging);
-            return Err(invalid(format!("{name} is damaged (wrong SHA-256)")));
+            return Err(CoreError::SenseDamaged);
         }
         std::fs::write(staging.join(name), data)?;
     }
@@ -176,10 +179,14 @@ mod tests {
     use std::io::Write;
 
     fn module_zip(path: &Path, tamper: bool) {
+        module_zip_version(path, tamper, MODULE_VERSION);
+    }
+
+    fn module_zip_version(path: &Path, tamper: bool, version: u32) {
         let files = [("model.onnx", b"model".as_slice()), ("tokenizer.json", b"{}".as_slice())];
         let manifest = Manifest {
             module: "sense".into(),
-            version: MODULE_VERSION,
+            version,
             model: "test".into(),
             dimensions: 384,
             onnxruntime: "1.28.0".into(),
@@ -203,8 +210,8 @@ mod tests {
         let good = tmp.path().join("good.zip");
         module_zip(&good, false);
         assert!(!status(&dir).installed);
-        // A download must have the expected SHA-256.
-        assert!(install_zip(&good, &dir, Some("00")).is_err());
+        // A download must have the expected SHA-256 (codes, not text: BUG-060).
+        assert!(matches!(install_zip(&good, &dir, Some("00")), Err(CoreError::SenseDamaged)));
         let manifest = install_zip(&good, &dir, None).unwrap();
         assert_eq!(manifest.model, "test");
         let s = status(&dir);
@@ -212,11 +219,18 @@ mod tests {
         // A damaged file is refused, and the installed module stays.
         let bad = tmp.path().join("bad.zip");
         module_zip(&bad, true);
-        assert!(install_zip(&bad, &dir, None).is_err());
+        assert!(matches!(install_zip(&bad, &dir, None), Err(CoreError::SenseDamaged)));
         assert!(status(&dir).installed);
         // Not a module at all.
         std::fs::write(tmp.path().join("x.zip"), b"hello").unwrap();
-        assert!(install_zip(&tmp.path().join("x.zip"), &dir, None).is_err());
+        assert!(matches!(install_zip(&tmp.path().join("x.zip"), &dir, None), Err(CoreError::SenseNotModule)));
+        // Another format version.
+        let later = tmp.path().join("later.zip");
+        module_zip_version(&later, false, MODULE_VERSION + 1);
+        assert!(matches!(
+            install_zip(&later, &dir, None),
+            Err(CoreError::SenseVersion { found, expected }) if found == MODULE_VERSION + 1 && expected == MODULE_VERSION
+        ));
         remove(&dir).unwrap();
         cleanup(&dir);
         assert!(!status(&dir).installed && !dir.exists());

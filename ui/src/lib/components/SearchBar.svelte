@@ -46,9 +46,12 @@
     for (const lang of f.langs) {
       list.push({ id: `l-${lang}`, label: t(`languages.${lang}` as MessageKey), remove: () => search.toggleLang(lang as DocLang) });
     }
-    // Every detector = the audit: one chip, not thirteen.
+    // Every detector = the audit: one chip, not thirteen. With words typed,
+    // the audit looks only at the files that have them: the chip says so.
     if (f.detectors.length === ALL_DETECTORS.length) {
-      list.push({ id: 'audit', label: t('detectors.audit'), remove: () => (search.filters.detectors = []) });
+      const words = search.query.trim();
+      const label = words ? t('detectors.auditIn', { query: isolate(words) }) : t('detectors.audit');
+      list.push({ id: 'audit', label, remove: () => (search.filters.detectors = []) });
     } else {
       for (const detector of f.detectors) {
         list.push({ id: `d-${detector}`, label: t(`detectors.names.${detector}` as MessageKey), remove: () => search.toggleDetector(detector) });
@@ -110,7 +113,7 @@
       <input
         id="query"
         class="query"
-        dir="auto"
+        dir={search.query ? 'auto' : undefined}
         type="search"
         autocomplete="off"
         spellcheck="false"

@@ -58,6 +58,9 @@
   }
 </script>
 
+<!-- Escape closes the dialog, like its button (BUG-053). -->
+<svelte:window onkeydown={(e) => { if (e.key === 'Escape' && sense.askSites) sense.askSites = false; }} />
+
 {#if sense.askSites}
   <div class="shade" role="presentation" onclick={() => (sense.askSites = false)}></div>
   <div class="dialog sketch" role="dialog" aria-modal="true" aria-labelledby="sense-sites-title">

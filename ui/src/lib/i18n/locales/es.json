@@ -19,6 +19,7 @@
     },
     "indexedAgo": "Indexado {when}",
     "indexingProgress": "Indexando… {percent}",
+    "readingFile": "Leyendo «{name}»…",
     "status": {
       "ready": "Listo",
       "indexing": "Indexando",
@@ -89,6 +90,7 @@
     "all": "Todos",
     "anyHint": "Los archivos que contienen al menos uno de estos términos, además de las palabras de la búsqueda.",
     "allHint": "Los archivos que contienen cada uno de estos términos, además de las palabras de la búsqueda.",
+    "noTypos": "A partir de {count} términos, la lista se busca sin tolerancia a errores (búsqueda rápida).",
     "hint": "Términos leídos de un archivo: haga clic para verlos, cambiar el modo o quitar la lista",
     "count": {
       "one": "{count} término",
@@ -128,7 +130,11 @@
     "understand": "Comprender este sitio (búsqueda por significado)",
     "understandShort": "Comprender",
     "forget": "Dejar de comprender este sitio",
-    "forgetConfirm": "¿Dejar de comprender «{name}»? Su índice de significado se elimina; volver a calcularlo llevará el mismo tiempo.",
+    "forgetConfirm": "¿Borrar los {count} pasajes ya calculados de «{name}»? Habrá que calcularlo todo de nuevo, con la misma duración.",
+    "runningTitle": "Calculando el sentido de «{name}»",
+    "runningHint": "Sigue en segundo plano; si cierra Prospector, retomará donde estaba.",
+    "keep": "Continuar",
+    "stopForget": "Detener y olvidar",
     "ask": "¿Comprender «{name}» por su significado?",
     "estimating": "Estimando…",
     "passages": "{count} pasajes",
@@ -146,6 +152,7 @@
     "start": "Comprender los sitios marcados",
     "paceNormal": "Ritmo normal (prioridad baja, unos 200 MB de memoria durante el cálculo)",
     "paceEconomy": "Ritmo ahorrador (solo 2 núcleos: de 3 a 4 veces más largo)",
+    "paceNext": "El nuevo ritmo se aplica al próximo cálculo (o al volver a abrir Prospector).",
     "noneChosen": "Ningún sitio marcado"
   },
   "meaning": {
@@ -277,6 +284,8 @@
       "many": "{count} de archivos",
       "other": "{count} archivos"
     },
+    "firstOf": "los {shown} primeros archivos de {total}",
+    "firstOfHint": "Los archivos más relevantes aparecen primero. Afine la búsqueda (tipo, fecha, carpeta) para ver los demás.",
     "folders": {
       "one": "{count} carpeta",
       "many": "{count} de carpetas",
@@ -293,6 +302,7 @@
       "many": "{count} de archivos recorridos",
       "other": "{count} archivos recorridos"
     },
+    "scannedOf": "{read} leídos de {found} encontrados",
     "scanning": "Excavando…",
     "done": "Búsqueda terminada",
     "sort": {
@@ -530,6 +540,7 @@
   "detectors": {
     "title": "Detectores",
     "audit": "Auditoría de datos personales",
+    "auditIn": "Auditoría · en «{query}»",
     "hint": "Cada dato se valida (dígitos de control, Luhn…): un número al azar no se señala. Se combinan con las palabras buscadas.",
     "groups": {
       "bank": "Banco",
@@ -680,6 +691,7 @@
   "errors": {
     "rootUnavailable": "Carpeta no encontrada: {path}",
     "siteNotFound": "Este yacimiento ya no existe.",
+    "siteExists": "Esta carpeta ya es el sitio «{name}».",
     "fileNotIndexed": "Este archivo ya no está en el índice. Reindexa el yacimiento.",
     "indexBusy": "Ya hay una indexación en curso. Espera a que termine.",
     "index": "No se pudo leer el índice. Reindexa el yacimiento.",
@@ -703,6 +715,12 @@
     "invalidGroup": "Un grupo necesita un nombre y al menos un sitio marcado.",
     "groupNotFound": "Este grupo ya no existe.",
     "readOnly": "{pc} mantiene actualizado este índice compartido: hágalo desde ese PC.",
-    "sense": "Búsqueda por significado: {message}"
+    "sense": "Búsqueda por significado: {message}",
+    "senseNotModule": "Este archivo no es un módulo de búsqueda por significado de Prospector.",
+    "senseDamaged": "El módulo está dañado (un archivo no tiene la huella esperada). Descárguelo de nuevo.",
+    "senseVersion": "Este módulo (versión {found}) no es el que lee esta versión de Prospector (versión {expected}).",
+    "senseNoDownload": "La descarga será posible con la primera versión publicada.",
+    "senseDownloadFailed": "La descarga falló: compruebe la conexión e inténtelo de nuevo.",
+    "senseDownloadCancelled": "Descarga cancelada."
   }
 }

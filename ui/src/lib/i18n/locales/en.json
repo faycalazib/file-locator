@@ -18,6 +18,7 @@
     },
     "indexedAgo": "Indexed {when}",
     "indexingProgress": "Indexing… {percent}",
+    "readingFile": "Reading “{name}”…",
     "status": {
       "ready": "Ready",
       "indexing": "Indexing",
@@ -84,6 +85,7 @@
     "all": "All",
     "anyHint": "Files holding at least one of these terms, besides the words of the search.",
     "allHint": "Files holding every one of these terms, besides the words of the search.",
+    "noTypos": "Beyond {count} terms, the list is searched without typo tolerance (fast search).",
     "hint": "Terms read from a file: click to see them, change the mode or remove the list",
     "count": {
       "one": "{count} term",
@@ -121,7 +123,11 @@
     "understand": "Understand this site (meaning search)",
     "understandShort": "Understand",
     "forget": "Stop understanding this site",
-    "forgetConfirm": "Stop understanding “{name}”? Its meaning index is deleted; computing it again will take the same time.",
+    "forgetConfirm": "Delete the {count} passages already computed for “{name}”? Everything will have to be computed again, taking the same time.",
+    "runningTitle": "Computing the meaning of “{name}”",
+    "runningHint": "It goes on in the background; if you close Prospector, it resumes where it was.",
+    "keep": "Continue",
+    "stopForget": "Stop and forget",
     "ask": "Understand “{name}” by its meaning?",
     "estimating": "Estimating…",
     "passages": "{count} passages",
@@ -139,6 +145,7 @@
     "start": "Understand the ticked sites",
     "paceNormal": "Normal pace (low priority, about 200 MB of memory while computing)",
     "paceEconomy": "Economy pace (2 cores only: 3 to 4 times longer)",
+    "paceNext": "The new pace applies to the next computation (or when Prospector is opened again).",
     "noneChosen": "No site ticked"
   },
   "meaning": {
@@ -266,6 +273,8 @@
       "one": "{count} file",
       "other": "{count} files"
     },
+    "firstOf": "first {shown} of {total} files",
+    "firstOfHint": "The most relevant files are listed first. Narrow the search (type, date, folder) to see the others.",
     "folders": {
       "one": "{count} folder",
       "other": "{count} folders"
@@ -279,6 +288,7 @@
       "one": "{count} file scanned",
       "other": "{count} files scanned"
     },
+    "scannedOf": "{read} read of {found} found",
     "scanning": "Digging…",
     "done": "Search finished",
     "sort": {
@@ -513,6 +523,7 @@
   "detectors": {
     "title": "Detectors",
     "audit": "Personal-data audit",
+    "auditIn": "Audit · in “{query}”",
     "hint": "Every item is validated (check digits, Luhn…): a random number is not reported. Combined with the words searched.",
     "groups": {
       "bank": "Bank",
@@ -661,6 +672,7 @@
   "errors": {
     "rootUnavailable": "Folder not found: {path}",
     "siteNotFound": "This dig site no longer exists.",
+    "siteExists": "This folder is already the dig site “{name}”.",
     "fileNotIndexed": "This file is not in the index anymore. Re-index the site.",
     "indexBusy": "An indexing is already running. Wait for it to finish.",
     "index": "The index could not be read. Re-index the site.",
@@ -684,6 +696,12 @@
     "invalidGroup": "A group needs a name and at least one ticked site.",
     "groupNotFound": "This group no longer exists.",
     "readOnly": "{pc} keeps this shared index up to date: do it from that PC.",
-    "sense": "Meaning search: {message}"
+    "sense": "Meaning search: {message}",
+    "senseNotModule": "This file is not a Prospector meaning-search module.",
+    "senseDamaged": "The module is damaged (a file does not have the expected fingerprint). Download it again.",
+    "senseVersion": "This module (version {found}) is not the one this Prospector reads (version {expected}).",
+    "senseNoDownload": "The download will be possible with the first published version.",
+    "senseDownloadFailed": "The download failed: check the connection and try again.",
+    "senseDownloadCancelled": "Download cancelled."
   }
 }

@@ -76,6 +76,12 @@ impl Detector {
         &PATTERNS[self as usize]
     }
 
+    /// Account, card and identity numbers: masked in the PDF report (BUG-064).
+    /// Phones, e-mails, amounts, IP, VAT and SIREN stay readable.
+    pub fn is_sensitive(self) -> bool {
+        matches!(self, Detector::Iban | Detector::Rib | Detector::Card | Detector::Nir | Detector::Dni | Detector::Mrz)
+    }
+
     /// The reported part of a match: group 1 when the pattern has one
     /// (context words such as "SIRET" are not part of the data).
     fn valid(self, found: &str, whole: &str) -> bool {
@@ -102,6 +108,9 @@ const SEP: &str = r"[ \u{a0}\u{202f}.\-]";
 
 static PATTERNS: LazyLock<Vec<Regex>> = LazyLock::new(|| {
     let d = r"[0-9\u{660}-\u{669}\u{6f0}-\u{6f9}]";
+    // 0 and 1-9 in the three digit sets: a national phone starts "06", "٠٦" or "۰۶" (BUG-051).
+    let zero = r"[0\u{660}\u{6f0}]";
+    let nonzero = r"[1-9\u{661}-\u{669}\u{6f1}-\u{6f9}]";
     let money_words = r"EUR|USD|GBP|MAD|DZD|TND|CHF|CAD|DH|Dhs?|euros?|dollars?|dirhams?|dinars?";
     let number = format!(r"(?:{d}{{1,3}}(?:[ \u{{a0}}\u{{202f}}.,']{d}{{3}})+|{d}+)(?:[.,]{d}{{1,2}})?");
     let sources = [
@@ -116,7 +125,7 @@ static PATTERNS: LazyLock<Vec<Regex>> = LazyLock::new(|| {
         r"\b[A-Za-z0-9][A-Za-z0-9._%+\-]*@[A-Za-z0-9\-]+(?:\.[A-Za-z0-9\-]+)*\.[A-Za-z]{2,24}\b".to_owned(),
         // Phone: international, French / Maghreb national, Spanish, US.
         format!(
-            r"(?:\+|\b00){d}{{1,3}}{SEP}?(?:\(0\){SEP}?)?{d}{{1,4}}(?:{SEP}?{d}{{2,4}}){{2,4}}\b|\b0[1-9](?:{SEP}?{d}{{2}}){{4}}\b|\b[6789]{d}{{1,2}}(?:[ .]{d}{{2,3}}){{2,3}}\b|\({d}{{3}}\) ?{d}{{3}}-{d}{{4}}"
+            r"(?:\+|\b00){d}{{1,3}}{SEP}?(?:\(0\){SEP}?)?{d}{{1,4}}(?:{SEP}?{d}{{2,4}}){{2,4}}\b|\b{zero}{nonzero}(?:{SEP}?{d}{{2}}){{4}}\b|\b[6789]{d}{{1,2}}(?:[ .]{d}{{2,3}}){{2,3}}\b|\({d}{{3}}\) ?{d}{{3}}-{d}{{4}}"
         ),
         r"\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b".to_owned(),
         // Amount: a currency before or after a number.
@@ -409,6 +418,8 @@ mod tests {
         assert_eq!(found(Detector::Phone, "Tél. 06 12 34 56 78 ou +33 1 23 45 67 89"), ["06 12 34 56 78", "+33 1 23 45 67 89"]);
         assert_eq!(found(Detector::Phone, "llamar al 612 345 678"), ["612 345 678"]);
         assert!(found(Detector::Phone, "facture 2024-117").is_empty());
+        assert_eq!(found(Detector::Phone, "الهاتف ٠٦ ١٢ ٣٤ ٥٦ ٧٨"), ["٠٦ ١٢ ٣٤ ٥٦ ٧٨"], "Arabic-Indic digits");
+        assert_eq!(found(Detector::Phone, "تلفن ۰۶ ۱۲ ۳۴ ۵۶ ۷۸"), ["۰۶ ۱۲ ۳۴ ۵۶ ۷۸"], "Persian digits");
         assert_eq!(found(Detector::Ip, "serveur 192.168.1.20, version 10.0.19041.1"), ["192.168.1.20"]);
     }
 
