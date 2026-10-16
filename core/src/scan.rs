@@ -3,22 +3,23 @@
 //! needs no indexing and always sees the current content of the files.
 //! Hits are streamed to `on_hit` as soon as they are found.
 
+use std::collections::{BTreeSet, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::mpsc::sync_channel;
-use std::time::Instant;
+use std::time::{Instant, UNIX_EPOCH};
 
 use serde::Serialize;
 
 use crate::crawler::{crawl_each, crawl_folders, Exclusions, FileEntry};
-use crate::disk::HIDDEN;
+use crate::disk::{Facts, HIDDEN};
 use crate::error::Result;
 use crate::extract::{is_container, INNER_SEP};
 use crate::pipeline::{process_stream, SLOW_FILE};
 use crate::highlight::snippets;
 use crate::lang::{detect, DocLang};
 use crate::names::NamePattern;
-use crate::scope::restrict_targets;
+use crate::scope::{inside, restrict_targets};
 use crate::search::{Hit, QueryLogic, SearchRequest};
 
 /// Files found by the walk and not read yet (bounded: memory stays small).
@@ -287,6 +288,69 @@ pub fn find_folders(
     })
 }
 
+/// Folders whose name matches, taken from the paths of a site's indexed files
+/// (BUG-078): the disk is not walked, only the folders found are read on it
+/// (date, attributes). A folder holding no indexed file is not seen: the live
+/// scan ([`find_folders`]) walks the disk for those.
+pub fn folders_from_files<'a>(
+    site_id: &str,
+    roots: &[String],
+    files: impl Iterator<Item = &'a str>,
+    excluded: &[String],
+    req: &SearchRequest,
+) -> Result<Vec<Hit>> {
+    let names = match req.names()? {
+        Some(names) => Some(names),
+        None => NamePattern::parse(&req.query)?,
+    };
+    let Some(names) = names else {
+        return Ok(Vec::new());
+    };
+    // Every folder between a root (excluded) and its files, once.
+    let mut seen = HashSet::new();
+    let mut matching = BTreeSet::new();
+    for file in files {
+        let Some(root) = roots.iter().find(|root| inside(root, file).is_some_and(|tail| !tail.is_empty())) else {
+            continue;
+        };
+        for folder in Path::new(file).ancestors().skip(1) {
+            let path = folder.to_string_lossy();
+            if inside(root, &path).is_none_or(str::is_empty) || !seen.insert(path.to_string()) {
+                // The root, or a folder already seen with all its parents.
+                break;
+            }
+            if folder.file_name().is_some_and(|name| names.matches(&name.to_string_lossy())) {
+                matching.insert(path.into_owned());
+            }
+        }
+    }
+    let exclusions = Exclusions::new(excluded);
+    let within = req.within();
+    let disk = req.disk_check()?;
+    let limit = req.limit.unwrap_or(1000);
+    let mut hits = Vec::new();
+    for path in matching {
+        if hits.len() >= limit {
+            break;
+        }
+        let in_folder = req.folder().is_none_or(|f| inside(f, &path).is_some_and(|tail| !tail.is_empty()));
+        if !in_folder || exclusions.is_excluded(Path::new(&path)) || within.as_ref().is_some_and(|w| !w.contains(path.as_str())) {
+            continue;
+        }
+        // Gone since the last update: not listed.
+        let Ok(meta) = std::fs::metadata(&path) else {
+            continue;
+        };
+        let modified = meta.modified().ok().and_then(|t| t.duration_since(UNIX_EPOCH).ok()).map_or(0, |d| d.as_secs());
+        let facts = Facts::from_meta(Path::new(&path), &meta);
+        if !req.date_ok(modified, facts.created) || disk.as_ref().is_some_and(|d| !d.accepts_facts(&facts)) {
+            continue;
+        }
+        hits.push(name_hit(site_id, path, "folder", 0, modified, facts.created));
+    }
+    Ok(hits)
+}
+
 /// A result found by its name only: no text, no snippet.
 fn name_hit(site_id: &str, path: String, kind: &str, size: u64, modified: u64, created: u64) -> Hit {
     Hit {
@@ -342,6 +406,38 @@ fn passes_filters(req: &SearchRequest, kind: &str, size: u64, modified: u64, cre
 mod tests {
     use super::*;
     use crate::query::parse;
+
+    /// BUG-078: a folder at the first level of the site (`copy-app`) and a
+    /// deeper one are found from the files' paths; the root is not a result.
+    #[test]
+    fn folders_from_the_paths_of_indexed_files() {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path().join("GIT Repositories");
+        for sub in ["copy-app/src", "other/copy-app-old", "other/docs"] {
+            std::fs::create_dir_all(root.join(sub)).unwrap();
+        }
+        let file = |rel: &str| root.join(rel).to_string_lossy().into_owned();
+        let files = [file("copy-app/src/main.ts"), file("copy-app/README.md"), file("other/copy-app-old/a.txt"), file("other/docs/b.txt")];
+        let roots = [root.to_string_lossy().into_owned()];
+        let found = |req: &SearchRequest, excluded: &[String]| -> Vec<String> {
+            folders_from_files("s", &roots, files.iter().map(String::as_str), excluded, req)
+                .unwrap()
+                .into_iter()
+                .map(|h| h.path.strip_prefix(roots[0].as_str()).unwrap().replace('\\', "/"))
+                .collect()
+        };
+        let named = SearchRequest { name_pattern: "copy-app".into(), folders: true, ..Default::default() };
+        assert_eq!(found(&named, &[]), ["/copy-app", "/other/copy-app-old"]);
+        let all = SearchRequest { name_pattern: "*".into(), folders: true, ..Default::default() };
+        assert_eq!(found(&all, &[]), ["/copy-app", "/copy-app/src", "/other", "/other/copy-app-old", "/other/docs"], "root not listed");
+        // Excluded since the last update, or limited to a folder.
+        assert_eq!(found(&named, &[file("other")]), ["/copy-app"]);
+        let in_other = SearchRequest { in_folder: Some(file("other")), ..all.clone() };
+        assert_eq!(found(&in_other, &[]), ["/other/copy-app-old", "/other/docs"]);
+        // Removed from the disk since: not listed.
+        std::fs::remove_dir_all(root.join("other/docs")).unwrap();
+        assert_eq!(found(&all, &[]), ["/copy-app", "/copy-app/src", "/other", "/other/copy-app-old"]);
+    }
 
     #[test]
     fn boolean_logic_on_one_text() {

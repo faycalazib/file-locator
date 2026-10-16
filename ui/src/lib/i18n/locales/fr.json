@@ -73,9 +73,9 @@
     "shortcut": "Ctrl+{n}"
   },
   "share": {
-    "byThisPc": "Index partagé · tenu à jour par ce PC",
+    "byThisPc": "Index partagé (expérimental) · tenu à jour par ce PC",
     "holderHint": "Les autres PC qui utilisent ce dossier lisent ce que celui-ci indexe.",
-    "byOther": "Index partagé · tenu à jour par {pc}",
+    "byOther": "Index partagé (expérimental) · tenu à jour par {pc}",
     "readerHint": "Ce PC le lit seulement : les sites s’ajoutent et se mettent à jour depuis {pc}. Si {pc} reste éteint, ce PC prend le relais sous 2 minutes.",
     "localSite": "« {name} » est sur un disque de ce PC : les autres PC verront ses résultats et son aperçu, sans pouvoir ouvrir ses fichiers."
   },
@@ -194,7 +194,7 @@
     },
     "lead": "Je cherche :",
     "names": {
-      "toggle": "Nom de fichier",
+      "toggle": "Nom de fichier ou dossier",
       "lead": "Nommé",
       "placeholder": "*.pdf ; facture-* ; !brouillon*",
       "label": "Nom de fichier : jokers * et ?, ; entre plusieurs, ! pour exclure, /regex/",
@@ -478,6 +478,7 @@
     },
     "dataDir": "Dossier des index",
     "dataDirHint": "Les index peuvent prendre de la place : gardez-les sur le disque de votre choix. Les déplacer conserve vos sites de fouille.",
+    "dataDirShared": "Index partagé sur plusieurs PC (dossier des index sur un partage réseau) : fonction expérimentale.",
     "dataDirChange": "Déplacer…",
     "portable": "Mode portable",
     "portableHint": "Tout est enregistré ici, à côté du programme : rien n’est écrit sur ce PC. Si le support change de lettre, Prospector suit. Le menu de l’Explorateur et le lancement au démarrage ne sont pas proposés.",

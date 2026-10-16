@@ -1,8 +1,9 @@
 # Changelog
 
-## Unreleased
+## 1.0.0 — first public version (Windows), 16 October 2026
 
-- **File names and folders**: a file-name criterion (`*.pdf; facture-*`, `!exclude`, `/regex/`), alone or with words, and a search for folders.
+- **32 themes**: the palette button at the bottom of the side panel opens a menu of light and dark themes (Colored pencils, Sonar, Modeling clay, Notebook, Scrapbook, Brush, Electric, Gold mine…); each one works in Arabic and keeps the PDF report on a white page.
+- **File names and folders**: a file-name criterion (`*.pdf; facture-*`, `!exclude`, `/regex/`), alone or with words, and a search for folders by name (a project found by its folder name in an instant, from the index).
 - **Text in images and scanned PDFs** (Windows OCR, French, English, Spanish, Arabic).
 - **More formats**: Word 97-2003 (.doc), PowerPoint 97-2003 (.ppt), RTF, OpenDocument (.odt, .odp), EPUB; TAR, GZ, BZ2 and JAR archives; e-mail attachments (.msg, .eml, .pst, .ost) and Thunderbird mailboxes (mbox).
 - **Query language**: `a NEAR b` / `NEAR:20`, `LIKE word`, `LINES:3-5`, multi-line regular expressions.
@@ -15,10 +16,10 @@
 - **Meaning search**: the “≈ Meaning” chip adds the documents that say the same thing in other words or another language, with their closest passage (the preview opens on it); `--meaning` on the command line.
 - **Meaning search module**: install the optional local AI module (77 MB, runs on your processor, nothing leaves the PC) from Settings, then choose the sites to understand: each one is computed in the background at low priority, with its estimate shown first and its progress in the side panel. Meaning search itself comes next.
 - **Term lists**: search for a list of terms read from a text or CSV file (at least one, or all of them), with a count per term in the export and the PDF report; `--terms-file` on the command line.
-- **Shared index**: put the index folder on a network share; one PC keeps it up to date, the others search it and see its updates at once, and another PC takes over if it is switched off. Saved searches, alerts and groups stay on each PC.
+- **Shared index (experimental)**: put the index folder on a network share; one PC keeps it up to date, the others search it and see its updates at once, and another PC takes over if it is switched off. Saved searches, alerts and groups stay on each PC.
 - **Site groups**: name a set of sites (“Clients”, “Code”) and switch to it in one click or with Ctrl+1…9 (Ctrl+0: every site); the command line takes `--group` too.
 - **Command line**: `prospector-cli` searches the same sites from a script or a terminal (`search`, `scan`, `index`, `sites`), with every filter of the app, and prints text, JSON, JSON Lines or CSV; a click in Settings puts it in your PATH.
-- **Portable version**: a ZIP to unpack on a USB drive; settings and indexes stay on the drive, nothing is written on the PC, and when the drive gets another letter on another PC, everything follows at once, without indexing again.
+- **Portable version**: a ZIP to unpack in any folder or on a USB drive; settings and indexes stay next to the program, nothing is written on the PC, and when the drive gets another letter on another PC, everything follows at once, without indexing again.
 - **Extract from archives and e-mails**: "Extract to…" a file found inside a ZIP, 7z, RAR or TAR archive, or attached to an e-mail (.msg, .eml, Outlook .pst, Thunderbird mbox); "Open" opens that file itself; the bulk copy extracts them too; images inside archives and e-mails get their picture.
 - **Duplicates**: identical files (even under another name) and near-identical documents (even across formats), with the space you would reclaim; send the extra copies to the Recycle Bin, safely.
 - **Exports and bulk copy**: export to Excel (opens directly, right separator for your language), an HTML page or JSON, with the columns you choose and a keyword report (occurrences of each term per file); copy all the files found to a folder or a ZIP, keeping their folders if you want, without overwriting anything.
@@ -36,7 +37,7 @@
   - "Open at line N" in your code editor (VS Code, VSCodium, Cursor, Notepad++, Sublime Text, or a command of your own).
   - `.prospector` files open in Prospector with a double-click.
 
-## 0.1.0 — first public version (Windows)
+### The base of 1.0.0
 
 - **Search**
   - Full-text search in English, French, Spanish and Arabic. Accents and Arabic vowels are ignored, plurals are grouped, and typos are tolerated (approximate matches are shown apart).
@@ -53,6 +54,6 @@
   - Export as CSV or JSON, or as a PDF report.
 - **Interface**
   - Global shortcut Ctrl+Shift+Space.
-  - Themes "Colored pencils" and "Sonar", three layouts.
+  - Three layouts (Log, Ledger, Strata).
   - English, French, Spanish and Arabic (right to left).
 - **Installers**: Windows installers in 4 languages, and automatic updates.

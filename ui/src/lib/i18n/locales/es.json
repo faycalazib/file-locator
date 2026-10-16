@@ -73,9 +73,9 @@
     "shortcut": "Ctrl+{n}"
   },
   "share": {
-    "byThisPc": "Índice compartido · actualizado por este PC",
+    "byThisPc": "Índice compartido (experimental) · actualizado por este PC",
     "holderHint": "Los demás PC que usan esta carpeta leen lo que indexa este.",
-    "byOther": "Índice compartido · actualizado por {pc}",
+    "byOther": "Índice compartido (experimental) · actualizado por {pc}",
     "readerHint": "Este PC solo lo lee: los sitios se añaden y actualizan desde {pc}. Si {pc} sigue apagado, este PC toma el relevo en 2 minutos.",
     "localSite": "«{name}» está en un disco de este PC: los demás PC verán sus resultados y su vista previa, sin poder abrir sus archivos."
   },
@@ -194,7 +194,7 @@
     },
     "lead": "Busco:",
     "names": {
-      "toggle": "Nombre de archivo",
+      "toggle": "Nombre de archivo o carpeta",
       "lead": "Llamado",
       "placeholder": "*.pdf ; factura-* ; !borrador*",
       "label": "Nombre de archivo: comodines * y ?, ; entre varios, ! para excluir, /regex/",
@@ -478,6 +478,7 @@
     },
     "dataDir": "Carpeta de índices",
     "dataDirHint": "Los índices pueden ocupar mucho espacio: guárdalos en el disco que prefieras. Moverlos conserva tus yacimientos.",
+    "dataDirShared": "Índice compartido entre varios PC (carpeta de índices en un recurso de red): función experimental.",
     "dataDirChange": "Mover…",
     "portable": "Modo portátil",
     "portableHint": "Todo se guarda aquí, junto al programa: no se escribe nada en este PC. Si la unidad cambia de letra, Prospector la sigue. No se ofrecen el menú del Explorador ni el inicio con Windows.",

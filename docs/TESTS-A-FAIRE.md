@@ -112,10 +112,10 @@
 ### Thèmes (ajoutés le 15/10/2026)
 - [x] Captures des 5 nouveaux thèmes (Pâte à modeler, Carnet, Scrapbook, Appli douce, Pinceau) dans les 3 mises en page, en français et en arabe (`target/tmp/themes/`), validées une à une par l'utilisateur.
 - [x] Captures des 23 thèmes générés (3 mises en page, FR et AR), relues ; contrastes vérifiés par le générateur.
-- [ ] 👤 Dans l'appli : le bouton palette en bas du rail ouvre le menu des 32 thèmes en deux colonnes (Clairs, Sombres) ; un clic change le thème tout de suite ; il est retrouvé au lancement suivant ; en arabe, les colonnes sont en miroir.
-- [ ] 👤 Un thème sombre (Sonar, Électrique, Mine d'or…) : la barre de titre de Windows passe en sombre ; un thème clair la remet en clair.
-- [ ] 👤 Pinceau : une longue liste (plus de 200 résultats) défile sans saccade (les bords au pinceau sont un filtre SVG sur chaque bande).
-- [ ] 👤 Chaque thème : le rapport PDF (Ctrl + P) reste sur page blanche, lisible.
+- [x] 👤 Dans l'appli : le bouton palette en bas du rail ouvre le menu des 32 thèmes en deux colonnes (Clairs, Sombres) ; un clic change le thème tout de suite ; il est retrouvé au lancement suivant ; en arabe, les colonnes sont en miroir. (Vérifié par l'utilisateur le 16/10/2026 avec l'installeur du 16/10.)
+- [x] 👤 Un thème sombre (Sonar, Électrique, Mine d'or…) : la barre de titre de Windows passe en sombre ; un thème clair la remet en clair. (Vérifié par l'utilisateur le 16/10/2026 avec l'installeur du 16/10.)
+- [x] 👤 Pinceau : une longue liste (plus de 200 résultats) défile sans saccade (les bords au pinceau sont un filtre SVG sur chaque bande). (Vérifié par l'utilisateur le 16/10/2026 avec l'installeur du 16/10.)
+- [x] 👤 Chaque thème : le rapport PDF (Ctrl + P) reste sur page blanche, lisible. (Vérifié par l'utilisateur le 16/10/2026 avec l'installeur du 16/10.)
 
 ## Étape 4 — Installation et distribution
 
@@ -140,6 +140,14 @@
 - [x] Les 4 langues s'affichent. L'arabe se lit de droite à gauche.
 - [x] Le texte sur l'avertissement Windows (« Informations complémentaires → Exécuter quand même ») est clair.
 - [x] 👤 Le guide couvre bien tout ce que tu veux que les utilisateurs sachent. (Validé par l'utilisateur le 13/10/2026.)
+- [ ] 👤 (16/10/2026) Guide complété : 5 nouvelles sections (Formats, Alertes, Intégration Windows, Doublons, Détecteurs) et 8 sections mises à jour, dans les 4 langues ; relire en français et en arabe dans le navigateur (`site/guide.html?lang=fr`, `?lang=ar`).
+
+### 4.3 bis Publication de la 1.0.0 (16/10/2026)
+
+- [ ] 👤 `.\scripts\release.ps1` : vérifications vertes, commit, push, tag `v1.0.0` ; l'action « Release » de GitHub finit sans erreur.
+- [ ] 👤 Le brouillon de publication contient l'installeur `Prospector_1.0.0_x64-setup.exe`, les 4 MSI, `Prospector_1.0.0_x64-portable.zip` et `latest.json` ; « Publish release ».
+- [ ] 👤 La page de téléchargement (GitHub Pages) : le bouton propose la 1.0.0 avec sa taille, le lien « Version portable » télécharge le ZIP ; le guide s'ouvre dans les 4 langues.
+- [ ] 👤 L'installeur téléchargé s'installe (avertissement de Windows : « Informations complémentaires → Exécuter quand même ») ; le ZIP portable se lance depuis un dossier de D:.
 
 ### 4.4 Mises à jour (une fois la clé et le dépôt en place, voir docs/RELEASE.md)
 - [ ] 👤 Publier une version 0.1.1 : une copie installée en 0.1.0 affiche la carte « Prospector 0.1.1 est disponible ».
@@ -158,6 +166,8 @@
 - [x] `resume*` trouve « Résumé.pdf » : les accents et les majuscules ne comptent pas.
 - [x] `*.rar` liste les documents de chaque RAR.
 - [x] Option « Dossiers » : `clients` liste les dossiers dont le nom contient « clients ». L'aperçu dit « C'est un dossier », et « Ouvrir » l'affiche dans l'Explorateur. `node_modules` n'apparaît jamais. (👤 « Ouvrir » dans l'Explorateur reste à voir à la main.)
+- [ ] 👤 (BUG-078) Mode **Indexée**, « + Nom de fichier ou dossier » → « ✓ Dossiers », `copy-app` : `H:\GIT Repositories\copy-app` sort **en moins d'une seconde** (avant : 0 dossier, et plus de 50 minutes de parcours du disque USB par la ligne de commande). « Ouvrir » l'affiche dans l'Explorateur.
+- [x] (BUG-078) La pastille s'appelle « + Nom de fichier ou dossier » dans les 4 langues (`pnpm i18n:check`).
 - [x] Même chose en **scan direct** : les résultats sont les mêmes, et c'est rapide, car aucun fichier n'est ouvert quand la zone de texte est vide.
 - [x] Une recherche ★ enregistrée avec un nom de fichier le retrouve quand on la relance.
 - [x] Le rapport PDF affiche la ligne « Nom de fichier ».
@@ -233,7 +243,7 @@
 - [x] Réglages → Éditeur de code : les éditeurs installés sont listés (VS Code, Notepad++…). « Commande personnalisée » avec par ex. `"C:\Windows\notepad.exe" {file}` : le bouton ouvre le Bloc-notes. Une commande vide : message « Aucun éditeur de code trouvé ».
 - [x] Un fichier dont le nom contient des espaces et `&` s'ouvre correctement.
 - [x] 👤 **Version installée** : double-cliquer un fichier `.prospector` l'ouvre dans Prospector (dans la fenêtre déjà ouverte s'il y en a une), dans un nouvel onglet.
-- [ ] 👤 **Version installée** : désinstaller Prospector retire l'entrée du clic droit ; une **mise à jour** la garde. (14/10/2026 : la réinstallation par-dessus garde l'entrée, vérifié ; la désinstallation reste à vérifier.)
+- [x] 👤 **Version installée** : désinstaller Prospector retire l'entrée du clic droit ; une **mise à jour** la garde. (14/10/2026 : la réinstallation par-dessus garde l'entrée, vérifié. 16/10/2026 : désinstallation vérifiée par l'utilisateur, l'entrée a disparu.)
 - [x] 👤 En arabe : la pastille « في: » et la section des Réglages sont lisibles, le chemin reste dans le bon ordre.
 
 ### 5.8 Dates, attributs, empreintes
@@ -374,18 +384,18 @@
 
 ### 6.8 Mode portable
 
-- [ ] 👤 `pnpm tauri build`, puis `python scripts/portable.py` : le ZIP `target/release/bundle/portable/Prospector_…_x64-portable.zip` contient `prospector.exe`, `portable`, `README.txt` et `licenses\`.
-- [ ] 👤 Décompresser le ZIP sur une clé USB et lancer `prospector.exe` : un dossier `ProspectorData` apparaît à côté (`settings.json`, `data\`, `webview\`).
-- [ ] 👤 Rien de nouveau dans `%APPDATA%\app.prospector.desktop*` ni `%LOCALAPPDATA%\app.prospector.desktop*` (le dossier `…portable` ne doit pas y apparaître).
-- [ ] 👤 Réglages : la section « Mode portable » montre le dossier de la clé à la place de « Dossier des index » ; pas de case « Menu de l'Explorateur » ni « Lancer au démarrage de Windows ».
-- [ ] 👤 Thème, langue et mise en page choisis sont retrouvés au lancement suivant depuis la clé, et ne changent pas ceux du Prospector installé.
-- [ ] 👤 Avec le Prospector installé déjà ouvert : lancer la version portable ouvre bien une **deuxième** fenêtre (la portable), sans ramener l'installée.
-- [ ] 👤 Créer un site sur un dossier de la clé, indexer, chercher. Puis brancher la clé sur un autre PC (ou changer sa lettre dans « Gestion des disques ») : au lancement, le site montre la nouvelle lettre, la recherche trouve tout **tout de suite**, sans réindexation ; « Ouvrir » ouvre bien le fichier.
+- [x] `pnpm tauri build`, puis `python scripts/portable.py` : le ZIP `target/release/bundle/portable/Prospector_…_x64-portable.zip` contient `prospector.exe`, `portable`, `README.txt` et `licenses\`. (16/10/2026 : ZIP refait depuis l'installeur du 16/10, 20,1 Mo, contenu vérifié, `prospector-cli.exe` compris.)
+- [x] 👤 Décompresser le ZIP **dans n'importe quel dossier** (par ex. `D:\Outils\Prospector` ; une clé USB n'est pas nécessaire, pas sur C:) et lancer `prospector.exe` : un dossier `ProspectorData` apparaît à côté (`settings.json`, `data\`, `webview\`). (Vérifié par l'utilisateur le 16/10/2026, ZIP décompressé dans un dossier de D:.)
+- [x] 👤 Rien de nouveau dans `%APPDATA%\app.prospector.desktop*` ni `%LOCALAPPDATA%\app.prospector.desktop*` (le dossier `…portable` ne doit pas y apparaître). (Vérifié par l'utilisateur le 16/10/2026, ZIP décompressé dans un dossier de D:.)
+- [x] 👤 Réglages : la section « Mode portable » montre le dossier de la clé à la place de « Dossier des index » ; pas de case « Menu de l'Explorateur » ni « Lancer au démarrage de Windows ». (Vérifié par l'utilisateur le 16/10/2026, ZIP décompressé dans un dossier de D:.)
+- [x] 👤 Thème, langue et mise en page choisis sont retrouvés au lancement suivant depuis la clé, et ne changent pas ceux du Prospector installé. (Vérifié par l'utilisateur le 16/10/2026, ZIP décompressé dans un dossier de D:.)
+- [x] 👤 Avec le Prospector installé déjà ouvert : lancer la version portable ouvre bien une **deuxième** fenêtre (la portable), sans ramener l'installée. (Vérifié par l'utilisateur le 16/10/2026, ZIP décompressé dans un dossier de D:.)
+- [ ] 👤 *(seul test qui demande un disque amovible : clé USB ou disque externe)* Créer un site sur un dossier de ce disque, indexer, chercher. Puis brancher le disque sur un autre PC (ou changer sa lettre dans « Gestion des disques ») : au lancement, le site montre la nouvelle lettre, la recherche trouve tout **tout de suite**, sans réindexation ; « Ouvrir » ouvre bien le fichier.
 - [ ] 👤 Une recherche enregistrée limitée à un dossier de la clé, et son alerte : toujours valables après le changement de lettre.
 - [ ] 👤 Un site sur le disque du premier PC : sur l'autre PC, il est signalé comme débranché, ses documents restent (comme un disque débranché).
 - [ ] 👤 Mise à jour (quand le dépôt existera) : la bannière propose « Télécharger », qui ouvre la page de la nouvelle version, sans rien installer.
 - [x] Page de téléchargement : lien « Version portable (ZIP…) » sous le bouton, dans les 4 langues.
-- [ ] 👤 Supprimer le fichier `portable` : Prospector reprend les données du PC (installées).
+- [x] 👤 Supprimer le fichier `portable` : Prospector reprend les données du PC (installées). (Vérifié par l'utilisateur le 16/10/2026, ZIP décompressé dans un dossier de D:.)
 
 ### 7.1 Ligne de commande
 
@@ -398,8 +408,8 @@
 - [x] `echo %errorlevel%` (ou `$LASTEXITCODE`) : 0 si trouvé, 1 si rien, 2 pour une option inconnue, 3 pour un site inconnu.
 - [x] (👤 application fermée) Application ouverte : `prospector-cli index --all` refuse avec « Prospector is open… » ; application fermée : il met les sites à jour, puis l'application montre les nouveaux totaux.
 - [x] 👤 Installée (`pnpm tauri build --config src-tauri/tauri.release.conf.json`) : `prospector-cli.exe` est à côté de `prospector.exe` ; Réglages → Intégration Windows → **Ligne de commande dans le PATH** : dans un **nouveau** terminal, `prospector-cli sites` marche depuis n'importe quel dossier ; décocher : il n'est plus trouvé.
-- [ ] 👤 Désinstaller avec la case cochée : l'entrée disparaît du PATH (Paramètres → Variables d'environnement).
-- [ ] 👤 Version portable : `prospector-cli.exe` est dans le ZIP et utilise les données de la clé ; pas de case PATH dans les Réglages.
+- [x] 👤 Désinstaller avec la case cochée : l'entrée disparaît du PATH (Paramètres → Variables d'environnement). (Vérifié par l'utilisateur le 16/10/2026 : `prospector-cli` introuvable dans un nouveau terminal ; données de l'application gardées.)
+- [x] 👤 Version portable : `prospector-cli.exe` est dans le ZIP et utilise les données du dossier portable (`ProspectorData`) ; pas de case PATH dans les Réglages. (Vérifié par l'utilisateur le 16/10/2026, ZIP décompressé dans un dossier de D:.)
 - [x] Guide du site : sections « Ligne de commande » et « Version portable » dans les 4 langues.
 
 ### 7.2 Groupes de sites
@@ -421,7 +431,11 @@
 
 ### 7.3 Index partagé (deux PC et un dossier partagé)
 
-- [ ] 👤 PC A : Réglages → Dossier des index → un dossier sur un partage réseau (lecteur `Z:` ou `\\serveur\partage`) : le chemin affiché est le chemin réseau (`\\serveur\…`), le bandeau « Index partagé · tenu à jour par ce PC » apparaît.
+Livré en « expérimental » dans la v0.1.0 (décision de l'utilisateur, 16/10/2026) tant que les tests à deux PC ne sont pas faits.
+
+- [ ] Réglages → Dossier des index : sous l'explication, la ligne « Index partagé sur plusieurs PC (dossier des index sur un partage réseau) : fonction expérimentale. », dans les 4 langues ; absente en mode portable.
+- [x] Guide du site : le paragraphe s'appelle « Index partagé (expérimental) » et cite le bandeau avec « (expérimental) », dans les 4 langues. (16/10/2026.)
+- [ ] 👤 PC A : Réglages → Dossier des index → un dossier sur un partage réseau (lecteur `Z:` ou `\\serveur\partage`) : le chemin affiché est le chemin réseau (`\\serveur\…`), le bandeau « Index partagé (expérimental) · tenu à jour par ce PC » apparaît.
 - [ ] 👤 PC A : ajouter un site sur le partage, indexer.
 - [ ] 👤 PC B : choisir le même dossier des index : ses sites apparaissent, bandeau orange « … tenu à jour par PC-A » ; pas de bouton + ni de réindexation / suppression ; la recherche trouve les documents ; l'aperçu fonctionne ; « Ouvrir » ouvre les fichiers du partage.
 - [ ] 👤 PC A modifie un fichier du partage : quelques secondes après, PC B le trouve avec son nouveau contenu, sans rien faire.

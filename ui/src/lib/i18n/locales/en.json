@@ -68,9 +68,9 @@
     "shortcut": "Ctrl+{n}"
   },
   "share": {
-    "byThisPc": "Shared index · kept up to date by this PC",
+    "byThisPc": "Shared index (experimental) · kept up to date by this PC",
     "holderHint": "Other PCs using this folder read what this one indexes.",
-    "byOther": "Shared index · kept up to date by {pc}",
+    "byOther": "Shared index (experimental) · kept up to date by {pc}",
     "readerHint": "This PC only reads it: sites are added and updated from {pc}. If {pc} stays off, this PC takes over within 2 minutes.",
     "localSite": "“{name}” is on a disk of this PC: the other PCs will see its results and preview, but cannot open its files."
   },
@@ -185,7 +185,7 @@
     },
     "lead": "I'm looking for:",
     "names": {
-      "toggle": "File name",
+      "toggle": "File or folder name",
       "lead": "Named",
       "placeholder": "*.pdf ; invoice-* ; !draft*",
       "label": "File name: * and ? wildcards, ; between several, ! to exclude, /regex/",
@@ -462,6 +462,7 @@
     },
     "dataDir": "Index folder",
     "dataDirHint": "Indexes can take a lot of space: keep them on the disk you prefer. Moving them keeps your dig sites.",
+    "dataDirShared": "Shared index across several PCs (index folder on a network share): experimental feature.",
     "dataDirChange": "Move…",
     "portable": "Portable mode",
     "portableHint": "Everything is kept here, next to the program: nothing is written on this PC. If the drive gets another letter, Prospector follows. The Explorer menu and starting with Windows are not offered.",

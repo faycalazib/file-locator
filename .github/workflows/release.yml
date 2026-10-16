@@ -58,8 +58,9 @@ jobs:
           releaseDraft: true
           prerelease: false
           includeUpdaterJson: true
-          # Adds prospector-cli.exe to the installers (lot 7.1).
-          args: --config src-tauri/tauri.release.conf.json
+          # Adds prospector-cli.exe to the installers (lot 7.1), then signs the
+          # update files (only here: a local build has no private key).
+          args: --config src-tauri/tauri.release.conf.json --config src-tauri/tauri.updater.conf.json
 
       # Portable version (lot 6.8): the same program, with the `portable` file.
       - name: Portable ZIP

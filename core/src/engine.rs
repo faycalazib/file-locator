@@ -30,7 +30,7 @@ use crate::manifest::{is_within, FileStamp, Manifest};
 use crate::groups::{SiteGroup, SiteGroups};
 use crate::saved::{Alert, SavedSearch, SavedSearches};
 use crate::lang::detect;
-use crate::scan::{find_folders, ScanTarget};
+use crate::scan::{find_folders, folders_from_files, ScanTarget};
 use crate::dupes::{self, exact_groups, similar_groups, DupFile, DupOptions, DupPhase, DupProgress, DupReport};
 use crate::facets::{count_site, Facets};
 use crate::query::ParsedQuery;
@@ -849,13 +849,21 @@ impl Engine {
         Ok(SearchResponse { hits, total_files: total, exact_files, took_ms: started.elapsed().as_millis() as u64, detections, facets })
     }
 
-    /// Folders by name (lot 5.1). They are not indexed: the sites' folders are
-    /// walked (folder entries only), with each site's own exclusions.
+    /// Folders by name (lot 5.1). An indexed site answers from the paths of
+    /// its manifest, without walking the disk (BUG-078: minutes on a big
+    /// USB disk); a site not indexed yet is walked (folder entries only).
+    /// Each site keeps its own exclusions.
     fn search_folders(&self, site_ids: &[String], req: &SearchRequest, started: Instant) -> Result<SearchResponse> {
         let hits = Mutex::new(Vec::new());
         let never = AtomicBool::new(false);
-        // Limited to a folder: one walk of that folder (scope.rs), with the
-        // exclusions of the site holding it.
+        let from_manifest = |site: &SiteRecord, manifest: &Manifest| -> Result<()> {
+            let files = manifest.files.keys().map(String::as_str);
+            let found = folders_from_files(&site.id, &site.roots, files, &self.exclusions_list(&site.excluded), req)?;
+            lock(&hits).extend(found);
+            Ok(())
+        };
+        // Limited to a folder: the site holding it, or one walk of that
+        // folder (scope.rs), with the exclusions of the site holding it.
         if let Some(folder) = req.folder() {
             let targets: Vec<ScanTarget> = site_ids
                 .iter()
@@ -863,11 +871,21 @@ impl Engine {
                 .map(|s| ScanTarget { site_id: s.id, roots: s.roots.iter().map(PathBuf::from).collect() })
                 .collect();
             let restricted = restrict_targets(&targets, folder);
-            let excluded = self.site(&restricted[0].site_id).map(|s| s.excluded).unwrap_or_default();
-            find_folders(&restricted, &self.exclusions_list(&excluded), req, &never, &|hit| lock(&hits).push(hit))?;
+            let holder = self.site(&restricted[0].site_id).ok();
+            match holder.as_ref().and_then(|site| self.manifest(site).map(|m| (site, m))) {
+                Some((site, manifest)) => from_manifest(site, &manifest)?,
+                None => {
+                    let excluded = holder.map(|s| s.excluded).unwrap_or_default();
+                    find_folders(&restricted, &self.exclusions_list(&excluded), req, &never, &|hit| lock(&hits).push(hit))?;
+                }
+            }
         }
         for id in site_ids.iter().filter(|_| req.folder().is_none()) {
             let site = self.site(id)?;
+            if let Some(manifest) = self.manifest(&site) {
+                from_manifest(&site, &manifest)?;
+                continue;
+            }
             let target = ScanTarget { site_id: site.id.clone(), roots: site.roots.iter().map(PathBuf::from).collect() };
             let excluded = self.exclusions_list(&site.excluded);
             find_folders(std::slice::from_ref(&target), &excluded, req, &never, &|hit| lock(&hits).push(hit))?;

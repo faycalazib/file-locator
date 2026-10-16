@@ -4141,7 +4141,7 @@ dependencies = [
 
 [[package]]
 name = "prospector"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "base64 0.22.1",
  "prospector-core",
@@ -4166,7 +4166,7 @@ dependencies = [
 
 [[package]]
 name = "prospector-cli"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "clap",
  "prospector-core",
@@ -4178,7 +4178,7 @@ dependencies = [
 
 [[package]]
 name = "prospector-core"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "bzip2",
  "calamine",

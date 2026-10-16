@@ -736,3 +736,42 @@
   Live scan (`scan.rs`): the query is now checked on the document's own name and its text (`"{name}
 {text}"`), as the index looks in `body` and `name` for every word or phrase, `NOT` included; with `LINES`, on the text only (the index checks LINES on the text too). The parity test `attachments_of_an_eml_including_an_attached_zip` now expects the attachment as well (it answers to its own name).
 - **Prevention:** a phrase and a word follow the same rules (fields, boosts); only the order of the words differs. The index and the live scan read names the same way.
+
+## BUG-078: a folder search walked the whole disk at each search (and `copy-app` seemed missing)
+
+- **Date:** 2026-10-16 · **Step:** manual tests before the v0.1.0 (by the user, installed version)
+- **Status:** fixed on 2026-10-16 (fix approved by the user).
+- **Symptom:** site "GIT Repositories" (`H:\GIT Repositories`, 20,875 documents, a 16 TB USB hard disk). "+ File name" → "✓ Folders", `copy-app`, Indexed mode: "0 folders · 99 ms", although `H:\GIT Repositories\copy-app` exists at the first level, is not hidden and is not a default-excluded name.
+- **Investigation:**
+  - `search_folders` (`core/src/engine.rs`) does not use the index: it walks every folder of every site in scope on disk (`scan::find_folders` → `crawler::crawl_folders`), at each search.
+  - The same walk with the command line (`prospector-cli scan "" "H:\GIT Repositories" --folders --name copy-app`, empty data folder) was still running after 50 minutes (3.6 million file-system operations, about 650 per second on the USB disk), then stopped. A real walk of that site cannot take 99 ms: the app's answer did not come from a full walk. Cause of the 99 ms not found yet (the app's data are on C:, not read).
+- **Fix:** an indexed site now answers a folder search from its manifest (`scan::folders_from_files`, called by `Engine::search_folders`): every folder between a root and an indexed file is a candidate, each one once; only the folders whose name matches are read on disk (date, attributes, gone ones left out). Exclusions, "limited to a folder" (Explorer right-click), date and attribute filters still apply. A site not indexed yet, a folder outside every site, and the live scan still walk the disk. The 99 ms answer no longer matters: the indexed path does not walk anymore.
+  Visibility: the chip "+ File name" becomes "+ File or folder name" (`search.names.toggle`, 4 languages); the site guide gives the example of a project found by its folder name (`copy-app`).
+  Test `scan::tests::folders_from_the_paths_of_indexed_files` (a first-level folder, a deeper one, root not listed, exclusion, limited to a folder, folder removed since); `folders_are_found_by_name_but_never_excluded_ones` (core/tests/query.rs) checks that the index and the live scan still give the same folders.
+- **Real cause of the symptom (found after the fix, 2026-10-16):** the site "GIT Repositories" is `F:\GIT Repositories` (`prospector-cli sites`), not `H:\GIT Repositories`: the user has two folders with that name, and `copy-app` is only in the H: one. Prospector was right to find nothing. With the fix, `prospector-cli search "" --name accent-architect --folders` finds `F:\GIT Repositories\imeneemlouiv2\accent-architect` in 83 ms. The fix stays useful: a folder search no longer walks the disk at each search.
+  Prevention for the UI: the name of a site does not show its drive; a site's folder is only visible on hover. To consider: show the root (`F:\…`) under the site name.
+- **Limit:** a folder with no indexed file (empty, or only programs and videos) is not found in Indexed mode; the live scan finds it.
+- **Prevention:** a search in Indexed mode never walks a whole site on disk: what the index already knows (paths) answers. Test on a big external disk before calling a search "instant".
+
+## BUG-079: `scripts/release.ps1` stopped at clippy on cargo's "Compiling" line
+
+- **Date:** 2026-10-16 · **Step:** publishing the 1.0.0 (run by the user)
+- **Symptom:**
+  1. First run: `pnpm check` printed hundreds of `ERR_MODULE_NOT_FOUND` blocks (`@vitejs/plugin-react-swc`, `lovable-tagger`); the user stopped the script. Nothing was committed.
+  2. Second run: `clippy... cargo.exe : Compiling prospector v1.0.0` then `NativeCommandError`, the script stopped.
+- **Cause:**
+  1. `svelte-check` loads the `vite.config.ts` of the React projects copied by an old test into `target/tmp/drive/out/grosse-copie/` (see "À surveiller" in SUIVI.md); it still ends with 0 errors.
+  2. The script runs under `$ErrorActionPreference = 'Stop'`; in Windows PowerShell 5.1, a redirected stderr line of a native program (`*> $log`) becomes an error record, so cargo's progress on stderr stopped the script although cargo succeeded.
+- **Fix:**
+  1. Each check writes its whole output to `target/tmp/release-<name>.log` and prints one line (`ok`), or the last 30 lines and stops when it fails.
+  2. `Check` and `Run` set `$ErrorActionPreference = 'Continue'` for the native command and judge it by `$LASTEXITCODE` only (git also writes its progress on stderr). Checked with a command writing on stderr with exit code 0 (ok) and 3 (stops).
+- **Prevention:** in a PowerShell script, never judge a native program by its stderr: use the exit code. The user should delete `target/tmp/drive/out/grosse-copie/` (Claude cannot delete files).
+
+## BUG-080: `scripts/release.ps1` failed on `git add -A` ("Missing an argument for parameter 'Args'")
+
+- **Date:** 2026-10-16 · **Step:** publishing the 1.0.0 (run by the user, after BUG-079)
+- **Symptom:** checks all `ok`, then `git : Missing an argument for parameter 'Args'` on `git add -A`. Nothing committed.
+- **Cause:** in the user's PowerShell, `git` is not git.exe but a function or alias of the profile, with a parameter `-Args`: PowerShell took `-A` for an abbreviation of `-Args`. Second defect found while fixing: `if (git diff --cached --quiet)` tested the (always empty) output instead of the exit code, so "nothing to commit" could never be detected.
+- **Fix:** the script calls git.exe itself (`Get-Command git -CommandType Application`) through `$git`, for every git command; `add --all` instead of `-A`; "something staged" is read from the exit code of `diff --cached --quiet`.
+- **Prevention:** a script never calls a bare command name that a profile may wrap: resolve the application first. Judge native commands by their exit code (see BUG-079).
+

@@ -212,6 +212,7 @@
             <legend>{t('settings.dataDir')}</legend>
             <p class="path mono ltr-isolate" dir="ltr" title={info?.dataDir}>{info?.dataDir ?? '…'}</p>
             <p class="hint block">{t('settings.dataDirHint')}</p>
+            <p class="hint block">{t('settings.dataDirShared')}</p>
             <button type="button" class="move sketch" onclick={moveDataDir} disabled={moving}>
               {moving ? '…' : t('settings.dataDirChange')}
             </button>

@@ -106,20 +106,26 @@
 
 État au 16/10/2026 : le code est prêt (tests, clippy, `pnpm check` verts ; installeur du 15/10 à jour des corrections BUG-067 à BUG-077), mais **pas livrable** :
 
-1. **Thèmes à valider puis committer** : 32 thèmes (9 écrits à la main, 23 générés par `scripts/themegen.py`), menu en deux colonnes Clairs / Sombres. Rien n'est committé depuis le commit de BUG-077 (message de commit proposé dans la conversation du 15-16/10).
-2. **46 tests manuels ouverts** (`TESTS-A-FAIRE.md`) : index partagé 11 (2ᵉ PC), mode portable 11 (clé USB), thèmes dans l'appli 4, mises à jour 3 (clé + dépôt), fichiers de l'utilisateur 7 (Outlook / Thunderbird, .rar / .7z, vieux formats), divers 10 (désinstallation, lancement au démarrage, OCR décoché / recoché, durée du calcul du sens).
+1. ~~**Thèmes à valider puis committer**~~ : 32 thèmes (9 écrits à la main, 23 générés par `scripts/themegen.py`), menu en deux colonnes Clairs / Sombres. **Fait le 16/10/2026** : committés et poussés par l'utilisateur.
+2. **33 tests manuels ouverts** (`TESTS-A-FAIRE.md`) : index partagé 11 (2ᵉ PC), mode portable 4 (disque amovible ou dépôt GitHub ; les 7 autres validés le 16/10/2026), mises à jour 3 (clé + dépôt), fichiers de l'utilisateur 7 (Outlook / Thunderbird, .rar / .7z, vieux formats), divers 8 (lancement au démarrage, OCR décoché / recoché, durée du calcul du sens).
 3. **Publication pas préparée** :
-   - clé de mise à jour absente (`E:\keys\prospector` vide) et mise à jour automatique non configurée dans `src-tauri/tauri.conf.json` : **à faire avant la v0.1.0** (`docs/RELEASE.md` étape 2 ; la commande demande un mot de passe, l'utilisateur la lance lui-même) ;
+   - ~~clé de mise à jour absente et mise à jour automatique non configurée~~ **fait le 16/10/2026** (voir l'étape 4 ci-dessous) ;
    - aucune version publiée sur GitHub (les liens du site mènent à une page vide) ;
    - `MODULE_URL = None` (`core/src/sense/module.rs`) : le module du sens ne s'installe que depuis un fichier ; le joindre à la publication et renseigner l'adresse et le SHA-256 ;
    - pas de signature de code (choix de l'Étape 4, le site explique l'avertissement de Windows).
 
 **Ordre proposé :**
-1. L'utilisateur valide et committe les thèmes.
-2. Tests faisables tout de suite : les 4 tests des thèmes dans l'appli, puis la désinstallation (clic droit et PATH retirés).
-3. Décider des gros blocs : garder le mode portable dans la v0.1.0 (test avec une clé USB) ; annoncer l'index partagé comme « expérimental » tant que le test à deux PC n'est pas fait ; archives et Outlook couverts par les tests automatiques.
-4. Créer la clé de mise à jour, puis configurer la mise à jour automatique.
-5. Publier la v0.1.0 sur GitHub avec le module du sens.
+
+1. ~~L'utilisateur valide et committe les thèmes.~~ Fait le 16/10/2026.
+2. ~~Tests faisables tout de suite : les 4 tests des thèmes dans l'appli (installeur refait le 16/10/2026 à 10 h 35 avec les 32 thèmes), puis la désinstallation (clic droit et PATH retirés : **validée le 16/10/2026**, données gardées).~~ **Fait le 16/10/2026** : les 4 tests des thèmes et la désinstallation sont validés.
+3. ~~Décider des gros blocs~~ **Décidé le 16/10/2026 par l'utilisateur** :
+   - **index partagé** : livré dans la v0.1.0 avec l'étiquette « expérimental » (appli et site), tant que le test à deux PC n'est pas fait. Étiquette ajoutée le 16/10/2026 : bandeau du rail « Index partagé (expérimental) · … », ligne dans Réglages → Dossier des index (`settings.dataDirShared`), guide du site ; 4 langues, `pnpm check` et `pnpm i18n:check` verts (577 clés) ;
+   - **mode portable** : gardé dans la v0.1.0. Il marche depuis n'importe quel dossier (la clé USB n'était qu'un exemple) ; les tests de la section 6.8 se font dans un dossier de `D:` ; seul le test du changement de lettre demande un disque amovible (clé ou disque externe). ZIP refait le 16/10/2026 (`target/release/bundle/portable/`) ; 7 tests sur 11 validés par l'utilisateur le 16/10/2026 depuis `D:`, les 4 restants (changement de lettre, site débranché, recherche enregistrée, mise à jour) ne bloquent pas ;
+   - archives et Outlook : couverts par les tests automatiques, les tests sur les fichiers de l'utilisateur ne bloquent pas la publication.
+4. ~~Créer la clé de mise à jour, puis configurer la mise à jour automatique.~~ **Fait le 16/10/2026** : clé créée par l'utilisateur dans `E:\keys\prospector` (mot de passe gardé hors du projet), secrets `TAURI_SIGNING_PRIVATE_KEY` et `…_PASSWORD` ajoutés sur GitHub par l'utilisateur ; `plugins.updater` dans `src-tauri/tauri.conf.json` (clé publique, `latest.json` de `faycalazib/file-locator`, installation `passive`) ; `createUpdaterArtifacts` dans `src-tauri/tauri.updater.conf.json`, ajouté seulement par `release.yml` (un build local n'a pas la clé privée).
+5. **Demandé par l'utilisateur le 16/10/2026, avant la livraison** : retrouver un projet par le nom de son dossier. L'option « Dossiers » existait mais était cachée et ne trouvait pas `H:\GIT Repositories\copy-app` (BUG-078). **Corrigé le 16/10/2026** : en mode Indexée, les dossiers viennent de la liste des fichiers indexés (instantané), pastille renommée « + Nom de fichier ou dossier », guide et CHANGELOG à jour. Test de l'utilisateur : toujours 0 dossier, car le site « GIT Repositories » est `F:\GIT Repositories` et `copy-app` est dans `H:\GIT Repositories` (deux dossiers du même nom) ; la recherche marche (`accent-architect` trouvé en 83 ms sur F:). À faire par l'utilisateur : ajouter `H:\GIT Repositories` comme site s'il veut y chercher.
+6. **Version 1.0.0 (décision de l'utilisateur, 16/10/2026)** au lieu de 0.1.0 : `tauri.conf.json`, `Cargo.toml`, `package.json`, `Cargo.lock` et `CHANGELOG.md` (« 1.0.0 — first public version (Windows), 16 October 2026 »). Script `scripts/release.ps1` (vérifications, commit, push, tag `v1.0.0`) écrit pour l'utilisateur, qui le lance lui-même ; la publication reste un brouillon à publier à la main sur GitHub (le passage en publication directe a été refusé par le contrôle de sécurité de Claude Code : garde-fou de relecture conservé).
+7. **Étape suivante, livraison le soir du 16/10/2026 (démo)** : guide du site complété le 16/10/2026 dans les 4 langues après un audit face au CHANGELOG : 5 sections ajoutées (`formats`, `alerts`, `windows`, `duplicates`, `detectors`), 8 mises à jour (export, filtres, aperçu, recherche, options, portable « depuis n'importe quel dossier », réglages, lien de téléchargement portable), thèmes, index partagé « expérimental », dossiers ; 24 sections, mêmes clés dans les 4 langues. Reste connu : le guide espagnol dit encore souvent « sitio » là où l'appli dit « yacimiento » ; CHANGELOG passé en « 0.1.0 — 16 October 2026 » ; l'utilisateur committe, pousse, puis pose le tag `v0.1.0` (`release.yml` fait le brouillon de publication), et publie le brouillon. Module du sens : `MODULE_URL` reste vide pour la v0.1.0 (installation depuis un fichier), à brancher dans une 0.1.1.
 
 ## À faire après les tests manuels (demandé par l'utilisateur le 15/10/2026)
 
@@ -127,6 +133,7 @@
 
 ## À surveiller
 
+- **Bruit dans `pnpm check` (16/10/2026)** : `svelte-check` affiche une pile `ERR_MODULE_NOT_FOUND` (`@vitejs/plugin-react-swc`) avant son bilan (0 erreur, 0 avertissement). Ce n'est pas le projet : il tombe sur les `vite.config.ts` de projets React copiés pendant un test (`target/tmp/drive/out/grosse-copie/`). À supprimer par l'utilisateur (suppression interdite pour Claude) pour retrouver une sortie propre.
 - **Arrêter une grosse archive (13/10/2026)** : « Arrêter l'indexation » attend la fin du fichier en cours ; pour un ZIP de 2 Go de livres scannés, ça peut durer. À faire si besoin : vérifier l'arrêt entre deux documents d'une archive (BUG-068).
 - **Mémoire pendant le calcul du sens (15/10/2026)** : rythme normal 1,5 à 1,7 Go pour `prospector.exe` (plusieurs exemplaires du modèle, 8,3 cœurs sur 16), rythme économe 866 Mo (un exemplaire, 1,9 cœur). La prévision « environ 200 Mo de plus » était fausse : compter environ 700 Mo de plus en normal qu'en économe. À mesurer sans calcul en cours pour avoir la base ; si c'est trop pour des PC à 8 Go, limiter le nombre d'exemplaires du modèle en rythme normal.
 - **Test instable (15/10/2026)** : `detect::detectors_find_validated_data_only` a échoué une fois à l'indexation de son dossier de test (disque externe très chargé), puis est passé 3 fois sur 3. Même famille que BUG-022 / BUG-036.
