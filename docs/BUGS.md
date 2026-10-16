@@ -775,3 +775,11 @@
 - **Fix:** the script calls git.exe itself (`Get-Command git -CommandType Application`) through `$git`, for every git command; `add --all` instead of `-A`; "something staged" is read from the exit code of `diff --cached --quiet`.
 - **Prevention:** a script never calls a bare command name that a profile may wrap: resolve the application first. Judge native commands by their exit code (see BUG-079).
 
+## BUG-081: the GitHub "Release" workflow failed on the Arabic OCR test
+
+- **Date:** 2026-10-16 · **Step:** first run of `release.yml` (tag `v1.0.0`)
+- **Symptom:** "Test engine and command line" failed: `words_found_are_boxed_on_the_image` (core/tests/ocr.rs:113), `assertion failed: !engine().0.image_matches(&arabic, &req("المصعد")).unwrap().is_empty()`, then the test process ended with `STATUS_ACCESS_VIOLATION`. No installer was built, no draft release made. The "Site" workflow succeeded.
+- **Cause:** the GitHub `windows-latest` runner has no Arabic OCR language. `arabic_text_in_an_image_is_found` already skipped itself in that case; the Arabic part of `words_found_are_boxed_on_the_image` (lot 6.6) did not. It passes locally, where Windows has the Arabic OCR. `cargo test` stops at the first failing test file, so the files after `ocr.rs` were not run on the runner.
+- **Fix:** the Arabic boxes are only checked when `ocr::languages()` has an Arabic language, like the other Arabic OCR test. The 6 OCR tests pass locally. The tag `v1.0.0` must be moved to the commit with the fix (deleted and pushed again by the user), then `release.yml` runs again.
+- **Prevention:** a test that needs an optional Windows component (an OCR language, a module) checks for it and says "skipped", like the meaning-module tests. Run the release workflow once before the first public tag (`workflow_dispatch`) to find what differs on the runner.
+

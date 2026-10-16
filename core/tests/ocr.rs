@@ -108,7 +108,12 @@ fn words_found_are_boxed_on_the_image() {
         assert!(!b.fuzzy);
     }
     assert!(engine().0.image_matches(&image, &req("introuvablemot")).unwrap().is_empty());
-    // Arabic image, Arabic word.
+    // Arabic image, Arabic word: only where Windows has the Arabic OCR
+    // (not on the GitHub runner, BUG-081).
+    if !ocr::languages().iter().any(|l| l.starts_with("ar")) {
+        eprintln!("Arabic OCR not installed in Windows: Arabic boxes skipped");
+        return;
+    }
     let arabic = fixtures().join("images").join("اعلان.png").to_string_lossy().into_owned();
     assert!(!engine().0.image_matches(&arabic, &req("المصعد")).unwrap().is_empty());
 }
